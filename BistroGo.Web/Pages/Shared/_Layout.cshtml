@@ -14,7 +14,10 @@
         <!-- ── Sidebar ─────────────────────────────────── -->
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <a asp-page="/Index">BistroGo</a>
+                <a asp-page="/Index" class="brand-link">
+                    <span class="brand-emblem">🍽️</span>
+                    <span class="brand-text">Bistro<span class="brand-accent">Go</span></span>
+                </a>
             </div>
             <nav class="sidebar-nav">
                 <ul>
@@ -45,7 +48,7 @@
                     </li>
                     <li>
                         <a asp-page="/Inventory/Index" class="nav-link">
-                            <span class="nav-icon">📦</span> Inventory
+                            <span class="nav-icon">📦</span> Manage Inventory
                         </a>
                     </li>
                 </ul>
@@ -59,7 +62,6 @@
         <div class="main-area">
             <header class="topbar">
                 <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
-                <span class="topbar-title">@ViewData["Title"]</span>
             </header>
 
             <main class="content">

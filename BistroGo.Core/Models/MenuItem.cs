@@ -10,7 +10,7 @@ namespace BistroGo.Core.Models
         public string Name { get; set; } = ""; // Name of the item
         public string Description { get; set; } = ""; // Short description of the item
         public decimal Price { get; set; } // $$$
-        public string Category { get; set; } = ""; // Appetizer, Main, Dessert, etc.
+        public string Category { get; set; } = ""; // Appetizer, Entree, Dessert, etc.
         
     }
 }

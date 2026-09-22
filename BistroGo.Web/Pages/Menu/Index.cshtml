@@ -1,4 +1,136 @@
 ﻿@page
 @model BistroGo.Web.Pages.Menu.IndexModel
 @{
+    ViewData["Title"] = "Menu";
+}
+
+<div class="page-header">
+    <h1>🍴 Menu</h1>
+    <span class="text-muted">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+    <form method="get" class="d-flex align-items-center gap-2 mb-0">
+        <label for="category" class="form-label mb-0">Filter by category:</label>
+        <select id="category" name="category" class="form-select" style="width: 200px;" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            @foreach (var cat in Model.Categories)
+            {
+                <option value="@cat" selected="@(Model.SelectedCategory == cat)">@cat</option>
+            }
+        </select>
+        <noscript>
+            <button type="submit" class="btn btn-outline-primary">Apply</button>
+        </noscript>
+    </form>
+    <a asp-page="/Orders/Create" class="btn btn-primary mb-0">Go To Orders</a>
+</div>
+
+@if (!Model.MenuItems.Any())
+{
+    <div class="alert alert-info">No menu items found in this category.</div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var item in Model.MenuItems)
+        {
+            <div class="col-md-4 col-lg-3">
+                <div class="card h-100 menu-card"
+                     data-bs-toggle="modal"
+                     data-bs-target="#menuItemModal"
+                     data-item-id="@item.Id"
+                     data-item-name="@item.Name"
+                     data-item-category="@item.Category"
+                     data-item-price="@item.Price.ToString("0.00")"
+                     data-item-description="@item.Description">
+                    <div class="menu-card-image">
+                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                        {
+                            <img src="@item.ImageUrl" alt="@item.Name" />
+                        }
+                        else
+                        {
+                            <span class="menu-card-image-placeholder">[img]</span>
+                        }
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="menu-card-text">
+                            <h5 class="card-title mb-1">@item.Name</h5>
+                            <span class="badge bg-secondary menu-category-badge mb-2">@item.Category</span>
+                            <p class="text-muted flex-grow-1">@item.Description</p>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="card-price">$@item.Price.ToString("0.00")</span>
+                        </div>
+                        <form method="post" asp-page-handler="AddToOrder" class="text-end"
+                              onclick="event.stopPropagation();">
+                            <input type="hidden" name="menuItemId" value="@item.Id" />
+                            <input type="hidden" name="category" value="@Model.SelectedCategory" />
+                            <button type="submit" class="btn btn-sm btn-add-to-order">
+                                <span class="plus">+</span>Add
+                                
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- Shared modal for showing menu item details -->
+<div class="modal fade" id="menuItemModal" tabindex="-1" aria-labelledby="menuItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content menu-modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="menuItemModalLabel">Item Name</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="menu-modal-image">
+                    <span class="menu-modal-image img">[img]</span>
+                </div>
+                <span class="badge bg-secondary menu-category-badge mb-3" id="menuItemModalCategory">Category</span>
+                <p class="text-muted" id="menuItemModalDescription">Description goes here.</p>
+                <p class="card-price mb-0" id="menuItemModalPrice">$0.00</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Fill the shared modal with the clicked card's data
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('menuItemModal');
+            if (!modal) return;
+
+            modal.addEventListener('show.bs.modal', function (event) {
+                const card = event.relatedTarget;
+                if (!card) return;
+
+                const name = card.getAttribute('data-item-name') || '';
+                const category = card.getAttribute('data-item-category') || '';
+                const price = card.getAttribute('data-item-price') || '0.00';
+                const description = card.getAttribute('data-item-description') || '';
+
+                modal.querySelector('#menuItemModalLabel').textContent = name;
+                modal.querySelector('#menuItemModalCategory').textContent = category;
+                modal.querySelector('#menuItemModalPrice').textContent = '$' + price;
+                modal.querySelector('#menuItemModalDescription').textContent = description;
+            });
+        });
+    </script>
 }

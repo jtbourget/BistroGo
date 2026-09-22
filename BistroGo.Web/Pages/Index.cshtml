@@ -1,11 +1,11 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Home";
 }
 
 <div class="page-header">
-    <h1>🍽️ BistroGo Dashboard</h1>
+    <h1>🏠 Home</h1>
     <span class="text-muted">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
 </div>
 
@@ -13,17 +13,16 @@
     <h3>Quick Actions</h3>
 
     <div class="mt-3">
-        <a asp-page="/Orders/Create" class="btn btn-primary btn-lg quick-action-primary">
-            ➕ Place New Order
-        </a>
-    </div>
-
-    <div class="mt-3">
         <a asp-page="/Menu/Index" class="btn btn-outline-primary me-2">
             🍴 Browse Menu
         </a>
         <a asp-page="/Inventory/Index" class="btn btn-outline-primary">
             📦 Manage Inventory
+        </a>
+    </div>
+    <div class="mt-3">
+        <a asp-page="/Orders/Create" class="btn btn-primary btn-lg quick-action-primary">
+            Go To Orders
         </a>
     </div>
 </div>
