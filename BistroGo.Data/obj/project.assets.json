@@ -4064,23 +4064,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Monty\\.nuget\\packages\\": {},
+    "C:\\Users\\tinyd\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Data\\BistroGo.Data.csproj",
+      "projectUniqueName": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Data\\BistroGo.Data.csproj",
       "projectName": "BistroGo.Data",
-      "projectPath": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Data\\BistroGo.Data.csproj",
-      "packagesPath": "C:\\Users\\Monty\\.nuget\\packages\\",
-      "outputPath": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Data\\obj\\",
+      "projectPath": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Data\\BistroGo.Data.csproj",
+      "packagesPath": "C:\\Users\\tinyd\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Data\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Monty\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\tinyd\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -4097,8 +4097,8 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Core\\BistroGo.Core.csproj": {
-              "projectPath": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Core\\BistroGo.Core.csproj"
+            "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Core\\BistroGo.Core.csproj": {
+              "projectPath": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Core\\BistroGo.Core.csproj"
             }
           }
         }

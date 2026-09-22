@@ -1,17 +1,25 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "E:\\Users\\Monty\\source\\repos\\BistroGo\\",
+  "WorkspaceRootPath": "C:\\Users\\tinyd\\Desktop\\BistroGo\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{1071A701-5184-B9A9-D85C-80A88448525E}|BistroGo.Data\\BistroGo.Data.csproj|e:\\users\\monty\\source\\repos\\bistrogo\\bistrogo.data\\bistrogo.data.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "AbsoluteMoniker": "D:0:0:{97FBBFF2-0DD2-9367-8A55-AC991B6F512C}|BistroGo.Web\\BistroGo.Web.csproj|c:\\users\\tinyd\\desktop\\bistrogo\\bistrogo.web\\wwwroot\\css\\site.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{97FBBFF2-0DD2-9367-8A55-AC991B6F512C}|BistroGo.Web\\BistroGo.Web.csproj|solutionrelative:bistrogo.web\\wwwroot\\css\\site.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{97FBBFF2-0DD2-9367-8A55-AC991B6F512C}|BistroGo.Web\\BistroGo.Web.csproj|c:\\users\\tinyd\\desktop\\bistrogo\\bistrogo.web\\pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{97FBBFF2-0DD2-9367-8A55-AC991B6F512C}|BistroGo.Web\\BistroGo.Web.csproj|solutionrelative:bistrogo.web\\pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1071A701-5184-B9A9-D85C-80A88448525E}|BistroGo.Data\\BistroGo.Data.csproj|c:\\users\\tinyd\\desktop\\bistrogo\\bistrogo.data\\bistrogo.data.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
       "RelativeMoniker": "D:0:0:{1071A701-5184-B9A9-D85C-80A88448525E}|BistroGo.Data\\BistroGo.Data.csproj|solutionrelative:bistrogo.data\\bistrogo.data.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{D34AD0A8-B905-FDD9-F4EF-2702FF555715}|BistroGo.Core\\BistroGo.Core.csproj|e:\\users\\monty\\source\\repos\\bistrogo\\bistrogo.core\\bistrogo.core.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "AbsoluteMoniker": "D:0:0:{D34AD0A8-B905-FDD9-F4EF-2702FF555715}|BistroGo.Core\\BistroGo.Core.csproj|c:\\users\\tinyd\\desktop\\bistrogo\\bistrogo.core\\bistrogo.core.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
       "RelativeMoniker": "D:0:0:{D34AD0A8-B905-FDD9-F4EF-2702FF555715}|BistroGo.Core\\BistroGo.Core.csproj|solutionrelative:bistrogo.core\\bistrogo.core.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{924C3C1A-E94D-C95F-B102-36B0F02C76DA}|BistroGo.Api\\BistroGo.Api.csproj|e:\\users\\monty\\source\\repos\\bistrogo\\bistrogo.api\\bistrogo.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "AbsoluteMoniker": "D:0:0:{924C3C1A-E94D-C95F-B102-36B0F02C76DA}|BistroGo.Api\\BistroGo.Api.csproj|c:\\users\\tinyd\\desktop\\bistrogo\\bistrogo.api\\bistrogo.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
       "RelativeMoniker": "D:0:0:{924C3C1A-E94D-C95F-B102-36B0F02C76DA}|BistroGo.Api\\BistroGo.Api.csproj|solutionrelative:bistrogo.api\\bistrogo.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     }
   ],
@@ -22,46 +30,96 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 7,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{fabf9319-47eb-497e-b8f6-d9f73fba5f55}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:2:0:{fabf9319-47eb-497e-b8f6-d9f73fba5f55}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:3:0:{fabf9319-47eb-497e-b8f6-d9f73fba5f55}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{75188d03-9892-4ae2-abf1-207126247ce5}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "BistroGo.Data",
-              "DocumentMoniker": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Data\\BistroGo.Data.csproj",
-              "RelativeDocumentMoniker": "BistroGo.Data\\BistroGo.Data.csproj",
-              "ToolTip": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Data\\BistroGo.Data.csproj",
-              "RelativeToolTip": "BistroGo.Data\\BistroGo.Data.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAOAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-09-22T01:09:20.941Z",
+              "Title": "site.css",
+              "DocumentMoniker": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Web\\wwwroot\\css\\site.css",
+              "RelativeDocumentMoniker": "BistroGo.Web\\wwwroot\\css\\site.css",
+              "ToolTip": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Web\\wwwroot\\css\\site.css",
+              "RelativeToolTip": "BistroGo.Web\\wwwroot\\css\\site.css",
+              "ViewState": "AgIAACoBAAAAAAAAAAAwwE8BAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-09-22T03:54:18.524Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "BistroGo.Core",
-              "DocumentMoniker": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Core\\BistroGo.Core.csproj",
-              "RelativeDocumentMoniker": "BistroGo.Core\\BistroGo.Core.csproj",
-              "ToolTip": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Core\\BistroGo.Core.csproj",
-              "RelativeToolTip": "BistroGo.Core\\BistroGo.Core.csproj",
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Web\\Pages\\Shared\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "BistroGo.Web\\Pages\\Shared\\_Layout.cshtml",
+              "ToolTip": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Web\\Pages\\Shared\\_Layout.cshtml",
+              "RelativeToolTip": "BistroGo.Web\\Pages\\Shared\\_Layout.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-09-22T01:08:59.59Z",
-              "EditorCaption": ""
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-22T03:52:11.873Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "BistroGo.Api",
-              "DocumentMoniker": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Api\\BistroGo.Api.csproj",
+              "Title": "BistroGo.Data.csproj",
+              "DocumentMoniker": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Data\\BistroGo.Data.csproj",
+              "RelativeDocumentMoniker": "BistroGo.Data\\BistroGo.Data.csproj",
+              "ToolTip": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Data\\BistroGo.Data.csproj",
+              "RelativeToolTip": "BistroGo.Data\\BistroGo.Data.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-09-22T01:09:20.941Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "BistroGo.Core.csproj",
+              "DocumentMoniker": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Core\\BistroGo.Core.csproj",
+              "RelativeDocumentMoniker": "BistroGo.Core\\BistroGo.Core.csproj",
+              "ToolTip": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Core\\BistroGo.Core.csproj",
+              "RelativeToolTip": "BistroGo.Core\\BistroGo.Core.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-09-22T01:08:59.59Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "BistroGo.Api.csproj",
+              "DocumentMoniker": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Api\\BistroGo.Api.csproj",
               "RelativeDocumentMoniker": "BistroGo.Api\\BistroGo.Api.csproj",
-              "ToolTip": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Api\\BistroGo.Api.csproj",
+              "ToolTip": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Api\\BistroGo.Api.csproj",
               "RelativeToolTip": "BistroGo.Api\\BistroGo.Api.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-09-22T01:08:46.783Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-22T01:08:46.783Z"
             }
           ]
         }

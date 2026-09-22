@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Web\\BistroGo.Web.csproj": {}
+    "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Web\\BistroGo.Web.csproj": {}
   },
   "projects": {
-    "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Web\\BistroGo.Web.csproj": {
+    "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Web\\BistroGo.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Web\\BistroGo.Web.csproj",
+        "projectUniqueName": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Web\\BistroGo.Web.csproj",
         "projectName": "BistroGo.Web",
-        "projectPath": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Web\\BistroGo.Web.csproj",
-        "packagesPath": "C:\\Users\\Monty\\.nuget\\packages\\",
-        "outputPath": "E:\\Users\\Monty\\source\\repos\\BistroGo\\BistroGo.Web\\obj\\",
+        "projectPath": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Web\\BistroGo.Web.csproj",
+        "packagesPath": "C:\\Users\\tinyd\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\tinyd\\Desktop\\BistroGo\\BistroGo.Web\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Monty\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\tinyd\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
