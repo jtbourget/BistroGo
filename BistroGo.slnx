@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="BistroGo.Api/BistroGo.Api.csproj" />
+  <Project Path="BistroGo.Core/BistroGo.Core.csproj" />
+  <Project Path="BistroGo.Data/BistroGo.Data.csproj" />
+  <Project Path="BistroGo.Web/BistroGo.Web.csproj" />
+</Solution>

@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "BistroGo.Api\\BistroGo.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "BistroGo.Web\\BistroGo.Web.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

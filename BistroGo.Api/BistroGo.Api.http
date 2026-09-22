@@ -1,0 +1,6 @@
+@BistroGo.Api_HostAddress = http://localhost:5028
+
+GET {{BistroGo.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

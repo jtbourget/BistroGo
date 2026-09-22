@@ -1,0 +1,59 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="page-header">
+    <h1>🍽️ BistroGo Dashboard</h1>
+    <span class="text-muted">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Menu Items</h5>
+                <p class="display-6 card-price">[placeholder for menu item count]</p>
+                <a asp-page="/Menu/Index" class="btn btn-outline-primary btn-sm">View Menu</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Open Orders</h5>
+                <p class="display-6 card-price">[placeholder for order count]</p>
+                <a asp-page="/Orders/Index" class="btn btn-outline-primary btn-sm">View Orders</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Low Stock</h5>
+                <p class="display-6 card-price">[placeholder for stock count]</p>
+                <a asp-page="/Inventory/Index" class="btn btn-outline-primary btn-sm">View Inventory</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-5">
+    <h3>Quick Actions</h3>
+
+    <div class="mt-3">
+        <a asp-page="/Orders/Create" class="btn btn-primary btn-lg quick-action-primary">
+            ➕ Place New Order
+        </a>
+    </div>
+
+    <div class="mt-3">
+        <a asp-page="/Menu/Index" class="btn btn-outline-primary me-2">
+            🍴 Browse Menu
+        </a>
+        <a asp-page="/Inventory/Index" class="btn btn-outline-primary">
+            📦 Manage Inventory
+        </a>
+    </div>
+</div>
