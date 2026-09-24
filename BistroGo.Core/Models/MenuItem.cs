@@ -6,11 +6,12 @@ namespace BistroGo.Core.Models
 {
     public class MenuItem
     {
-        public int Id { get; set; } // Unique ID for the item
-        public string Name { get; set; } = ""; // Name of the item
-        public string Description { get; set; } = ""; // Short description of the item
-        public decimal Price { get; set; } // $$$
-        public string Category { get; set; } = ""; // Appetizer, Entree, Dessert, etc.
-        
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public decimal Price { get; set; }
+        public string Category { get; set; } = "";
+        public string? ImageUrl { get; set; }
+        public bool IsAvailable { get; set; } = true;
     }
 }

@@ -32,6 +32,12 @@
         </noscript>
     </form>
     <a asp-page="/Orders/Create" class="btn btn-primary mb-0">Go To Orders</a>
+        <button type="button"
+                class="btn btn-outline-primary mb-0"
+                data-bs-toggle="modal"
+                data-bs-target="#currentOrderModal">
+            Show Current Order
+        </button>
 </div>
 
 @if (!Model.MenuItems.Any())
@@ -77,7 +83,6 @@ else
                             <input type="hidden" name="category" value="@Model.SelectedCategory" />
                             <button type="submit" class="btn btn-sm btn-add-to-order">
                                 <span class="plus">+</span>Add
-                                
                             </button>
                         </form>
                     </div>
@@ -104,12 +109,64 @@ else
                 <p class="card-price mb-0" id="menuItemModalPrice">$0.00</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
+                 <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
+<!-- ═══════════════════════════════════════════════════════════════
+     Replace inner content when the Api exists
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="currentOrderModal" tabindex="-1" aria-labelledby="currentOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content menu-modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="currentOrderModalLabel">Current Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
 
+                <!-- TODO: Replace this table with a foreach over real data.
+                     Source will be GET /api/orders/current. -->
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-center" style="width: 160px;">Quantity</th>
+                            <th class="text-end">Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- TODO: foreach (var line in Model.CurrentOrderLines) { ... } -->
+                        <tr>
+                            <td class="text-muted">Sample Item</td>
+                            <td class="text-end text-muted">$0.00</td>
+                            <td class="text-center text-muted">1</td>
+                            <td class="text-end text-muted">$0.00</td>
+                            <td class="text-end text-muted">✕</td>
+                        </tr>
+                        <!-- TODO: } -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">Total:</td>
+                            <!-- TODO: Replace with Model.CurrentOrderTotal -->
+                            <td class="text-end card-price">$0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
+                <!-- TODO: Later this should POST the order to the Api, then redirect. -->
+                <a asp-page="/Orders/Create" class="btn btn-primary">Continue to Checkout</a>
+            </div>
+        </div>
+    </div>
+</div>
 @section Scripts {
     <script>
         // Fill the shared modal with the clicked card's data
