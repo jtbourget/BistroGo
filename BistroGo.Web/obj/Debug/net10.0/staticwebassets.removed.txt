@@ -1,0 +1,4 @@
+E:\Users\Monty\source\repos\BistroGo\BistroGo.Web\wwwroot\lib\bootstrap\dist\css\bootstrap.min.css
+E:\Users\Monty\source\repos\BistroGo\BistroGo.Web\wwwroot\lib\bootstrap\dist\css\bootstrap.min.css.map
+E:\Users\Monty\source\repos\BistroGo\BistroGo.Web\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js
+E:\Users\Monty\source\repos\BistroGo\BistroGo.Web\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js.map

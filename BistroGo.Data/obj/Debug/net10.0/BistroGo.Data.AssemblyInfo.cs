@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BistroGo.Data")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ab8045df4403d669611fa62d7a05864359b241dd")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+07f6666de7613b0bb9b7253483f8541f0f03c400")]
 [assembly: System.Reflection.AssemblyProductAttribute("BistroGo.Data")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BistroGo.Data")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
