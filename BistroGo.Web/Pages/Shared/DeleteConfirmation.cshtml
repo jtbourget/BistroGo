@@ -1,0 +1,24 @@
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="DeleteItem">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmationModalLabel">Warning</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">
+                        Art thou positively certain thou hath the desire to send
+                        <strong id="deleteItemName">this item</strong>
+                        to the depths of oblivion?
+                    </p>
+                    <input type="hidden" name="id" id="deleteItemId" value="0" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Negatory</button>
+                    <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">Positively</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
