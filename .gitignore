@@ -1,3 +1,11 @@
+<<<<<<< HEAD
 .vs/
 bin/
 obj/
+=======
+@"
+.vs/
+bin/
+obj/
+"@ | Set-Content .gitignore
+>>>>>>> oc-2
