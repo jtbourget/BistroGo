@@ -124,6 +124,7 @@ body {
     letter-spacing: 0.3px;
     line-height: 1;
     background: linear-gradient(135deg, #4a2c17 0%, #b5651d 100%);
+    /* green squiggles are valid, make the fancy design gradient on the sidebar nav for BistroGo */
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -133,6 +134,7 @@ body {
 /* "Go" accent — slightly warmer/darker tone */
 .brand-accent {
     background: linear-gradient(135deg, #b5651d 0%, #f5b942 100%);
+    /* green squiggles are valid, make the fancy design gradient on the sidebar nav for BistroGo */
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -140,691 +142,635 @@ body {
 }
 
 /* Scrollable area containing the nav links */
-.sidebar-nav {
-    flex: 1;
-    padding: 1.0rem 0;
-    overflow-y: auto;
-}
-
-    /* Remove default list styling */
-    .sidebar-nav ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
+    .sidebar-nav {
+        flex: 1;
+        padding: 1.0rem 0;
+        overflow-y: auto;
     }
-
-    /* Spacing around each nav item */
-    .sidebar-nav li {
-        margin: 0.2rem 0.85rem;
+        /* Remove default list styling */
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        /* Spacing around each nav item */
+        .sidebar-nav li {
+            margin: 0.2rem 0.85rem;
+        }
+        /* Individual sidebar link (icon + label) */
+        .sidebar-nav .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            color: #4a2c17;
+            padding: 0.85rem 1.1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1rem;
+            transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        }
+            /* Hover: soft orange tint + small orange shadow */
+            .sidebar-nav .nav-link:hover {
+                background-color: rgba(245, 185, 66, 0.12);
+                color: #b5651d;
+                box-shadow: 0 2px 6px rgba(181, 101, 29, 0.25);
+            }
+            /* Active link (current page) — filled orange */
+            .sidebar-nav .nav-link.active {
+                background-color: #b5651d;
+                color: #fff;
+                box-shadow: 0 2px 6px rgba(181, 101, 29, 0.3);
+            }
+    /* Emoji/icon column inside each nav link */
+    .nav-icon {
+        font-size: 1.35rem;
+        width: 1.8rem;
+        text-align: center;
     }
-
-    /* Individual sidebar link (icon + label) */
-    .sidebar-nav .nav-link {
+    /* Bottom of sidebar with copyright text */
+    .sidebar-footer {
+        padding: 1.0rem 1.5rem;
+        border-top: 1px solid #e8d9c5;
+        color: #7a6a58;
+        font-size: 0.8rem;
+    }
+    /* ═══════════════════════════════════════════════════
+   MAIN AREA
+   ═══════════════════════════════════════════════════ */
+    /* Content area to the right of the fixed sidebar */
+    .main-area {
+        flex: 1;
+        min-width: 0;
+        margin-left: 260px;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        transition: margin-left 0.25s ease;
+    }
+    /* Sticky bar at the top of the main area showing page title */
+    .topbar {
+        background-color: #fff;
+        border-bottom: 1px solid #e8d9c5;
+        padding: 0.65rem 1.25rem;
         display: flex;
         align-items: center;
-        gap: 0.85rem;
+        gap: 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 1020;
+    }
+    /* Text label inside the topbar */
+    .topbar-title {
+        font-weight: 600;
         color: #4a2c17;
-        padding: 0.85rem 1.1rem;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 1.1rem;
-        transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        font-size: 1rem;
+    }
+    /* Hamburger menu button — only shown on mobile */
+    .sidebar-toggle {
+        display: none;
+        background: none;
+        border: none;
+        font-size: 1.4rem;
+        color: #4a2c17;
+        cursor: pointer;
+        padding: 0;
+    }
+    /* Inner padding for page content */
+    .content {
+        flex: 1;
+        padding: 1.25rem;
+    }
+    /* Bottom page footer */
+    .footer {
+        border-top: 1px solid #e8d9c5;
+        padding: 1rem 1.25rem;
+        color: #7a6a58;
+        font-size: 0.875rem;
+        background-color: #fdfaf6;
+    }
+    /* ═══════════════════════════════════════════════════
+   HEADINGS & BUTTONS
+   ═══════════════════════════════════════════════════ */
+    /* Warm brown headings with a soft bottom shadow for section separation */
+    h1, h2, h3 {
+        color: #4a2c17;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        padding-bottom: 0.35rem;
+        margin-bottom: 0.75rem;
+        text-shadow: 0 1px 0 rgba(74, 44, 23, 0.08), 0 2px 4px rgba(74, 44, 23, 0.12);
     }
 
-        /* Hover: soft orange tint + small orange shadow */
-        .sidebar-nav .nav-link:hover {
-            background-color: rgba(245, 185, 66, 0.12);
-            color: #b5651d;
-            box-shadow: 0 2px 6px rgba(181, 101, 29, 0.25);
+    h3 {
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+        /* Line fades out gradually on h3 headings */
+        h3::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient( 90deg, rgba(74, 44, 23, 0.40) 0%, rgba(74, 44, 23, 0.10) 25%, rgba(74, 44, 23, 0) 75%, rgba(74, 44, 23, 0) 100% );
+            border-radius: 2px;
+        }
+    /* Slightly smaller text for all primary-styled buttons */
+    .btn-primary,
+    .btn-outline-primary {
+        font-size: 0.9rem;
+    }
+    /* Filled orange primary button */
+    .btn-primary {
+        background-color: #b5651d;
+        border-color: #b5651d;
+    }
+        /* Darker orange on hover */
+        .btn-primary:hover {
+            background-color: #8a4a12;
+            border-color: #8a4a12;
+        }
+    /* Outlined orange secondary button */
+    .btn-outline-primary {
+        color: #b5651d;
+        border-color: #b5651d;
+    }
+        /* Fills with orange on hover */
+        .btn-outline-primary:hover {
+            background-color: #b5651d;
+            border-color: #b5651d;
+            color: #fff;
+        }
+    /* ═══════════════════════════════════════════════════
+   HOME HEADER
+   ═══════════════════════════════════════════════════ */
+    .home-hero {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        background: linear-gradient(135deg, #fdfaf6 0%, #f5e6d3 100%);
+        border: 1px solid #e8d9c5;
+        border-radius: 14px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .home-hero-text {
+        flex: 1;
+    }
+
+        .home-hero-text h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
         }
 
-        /* Active link (current page) — filled orange */
-        .sidebar-nav .nav-link.active {
+        .home-hero-text p {
+            color: #7a6a58;
+            font-size: 1.05rem;
+            margin-bottom: 1.25rem;
+        }
+
+    .home-hero-image {
+        width: 200px;
+        height: 160px;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid #e8d9c5;
+        box-shadow: 0 4px 12px rgba(74, 44, 23, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .home-hero-image-placeholder {
+        font-size: 3rem;
+        opacity: 0.5;
+    }
+
+    @media (max-width: 768px) {
+        .home-hero {
+            flex-direction: column-reverse;
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .home-hero-image {
+            width: 100%;
+        }
+    }
+    /* ═══════════════════════════════════════════════════
+   QUICK ACTION CARDS
+   ═══════════════════════════════════════════════════ */
+    .quick-action-card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+        width: 90%;
+        padding: 1rem;
+        background: #fff;
+        border: 1px solid #e8d9c5;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #4a2c17;
+        text-align: left;
+        box-shadow: 0 2px 6px rgba(74, 44, 23, 0.06);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+        .quick-action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(74, 44, 23, 0.12);
+            border-color: #b5651d;
+            color: #4a2c17;
+        }
+
+    .quick-action-icon {
+        font-size: 1.75rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .quick-action-label {
+        font-weight: 700;
+        font-size: 1.05rem;
+    }
+
+    .quick-action-desc {
+        color: #7a6a58;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+    /* ═══════════════════════════════════════════════════
+   CATEGORY CHIPS
+   ═══════════════════════════════════════════════════ */
+    .category-chips {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .category-chip {
+        display: inline-block;
+        padding: 0.5rem 1.1rem;
+        background: #fff;
+        border: 1px solid #e8d9c5;
+        border-radius: 50px;
+        color: #4a2c17;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+        .category-chip:hover {
             background-color: #b5651d;
+            border-color: #b5651d;
+            color: #fff;
+        }
+    /* ═══════════════════════════════════════════════════
+   POPULAR NOW SLIDER
+   ═══════════════════════════════════════════════════ */
+    .popular-slider {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding: 0.25rem 0.25rem 1rem;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .popular-slider::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .popular-slider::-webkit-scrollbar-thumb {
+            background-color: #e8d9c5;
+            border-radius: 4px;
+        }
+
+            .popular-slider::-webkit-scrollbar-thumb:hover {
+                background-color: #b5651d;
+            }
+
+    .popular-card {
+        flex: 0 0 auto;
+        width: 200px;
+        background: #fff;
+        border: 1px solid #e8d9c5;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(74, 44, 23, 0.06);
+        overflow: hidden;
+        scroll-snap-align: start;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+        .popular-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(74, 44, 23, 0.12);
+        }
+
+    .popular-card-image {
+        width: 100%;
+        height: 130px;
+        background: linear-gradient(135deg, #fdfaf6 0%, #e8d9c5 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+        .popular-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+    .popular-card-image-placeholder {
+        color: #7a6a58;
+        font-size: 0.9rem;
+        opacity: 0.6;
+        user-select: none;
+    }
+
+    .popular-card-info {
+        padding: 0.75rem;
+    }
+
+    .popular-card-name {
+        display: block;
+        font-weight: 600;
+        color: #4a2c17;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .popular-card-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    /* ═══════════════════════════════════════════════════
+   CARDS
+   ═══════════════════════════════════════════════════ */
+    /* Rounded white box with soft shadow used across the app */
+    .card {
+        border: 1px solid #e8d9c5;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(74, 44, 23, 0.06);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+        /* Lifts the card slightly on hover */
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(74, 44, 23, 0.12);
+        }
+    /* Card heading text */
+    .card-title {
+        color: #4a2c17;
+        font-weight: 600;
+    }
+    /* Emphasized price text inside cards */
+    .card-price {
+        color: #b5651d;
+        font-weight: 700;
+        font-size: 1.05rem;
+    }
+    /* ═══════════════════════════════════════════════════
+   SHOW CURRENT ORDER BUTTON
+   ═══════════════════════════════════════════════════ */
+    .btn-outline-primary {
+        color: #b5651d;
+        border-color: #b5651d;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #b5651d;
+            border-color: #b5651d;
+            color: #fff;
+        }
+    /* ═══════════════════════════════════════════════════
+   ADD TO ORDER BUTTON
+   ═══════════════════════════════════════════════════ */
+    /* Small orange button inside menu cards */
+    .btn-add-to-order {
+        background-color: #b5651d;
+        border: 1px solid #b5651d;
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.8rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+        /* Darker + soft shadow on hover */
+        .btn-add-to-order:hover {
+            background-color: #8a4a12;
+            border-color: #8a4a12;
             color: #fff;
             box-shadow: 0 2px 6px rgba(181, 101, 29, 0.3);
         }
-
-/* Emoji/icon column inside each nav link */
-.nav-icon {
-    font-size: 1.35rem;
-    width: 1.8rem;
-    text-align: center;
-}
-
-/* Bottom of sidebar with copyright text */
-.sidebar-footer {
-    padding: 1.0rem 1.5rem;
-    border-top: 1px solid #e8d9c5;
-    color: #7a6a58;
-    font-size: 0.8rem;
-}
-
-/* ═══════════════════════════════════════════════════
-   MAIN AREA
-   ═══════════════════════════════════════════════════ */
-/* Content area to the right of the fixed sidebar */
-.main-area {
-    flex: 1;
-    min-width: 0;
-    margin-left: 260px;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    transition: margin-left 0.25s ease;
-}
-
-/* Sticky bar at the top of the main area showing page title */
-.topbar {
-    background-color: #fff;
-    border-bottom: 1px solid #e8d9c5;
-    padding: 0.65rem 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    position: sticky;
-    top: 0;
-    z-index: 1020;
-}
-
-/* Text label inside the topbar */
-.topbar-title {
-    font-weight: 600;
-    color: #4a2c17;
-    font-size: 1rem;
-}
-
-/* Hamburger menu button — only shown on mobile */
-.sidebar-toggle {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 1.4rem;
-    color: #4a2c17;
-    cursor: pointer;
-    padding: 0;
-}
-
-/* Inner padding for page content */
-.content {
-    flex: 1;
-    padding: 1.25rem;
-}
-
-/* Bottom page footer */
-.footer {
-    border-top: 1px solid #e8d9c5;
-    padding: 1rem 1.25rem;
-    color: #7a6a58;
-    font-size: 0.875rem;
-    background-color: #fdfaf6;
-}
-
-/* ═══════════════════════════════════════════════════
-   HEADINGS & BUTTONS
-   ═══════════════════════════════════════════════════ */
-/* Warm brown headings with a soft bottom shadow for section separation */
-h1, h2, h3 {
-    color: #4a2c17;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-    padding-bottom: 0.35rem;
-    margin-bottom: 0.75rem;
-    text-shadow: 0 1px 0 rgba(74, 44, 23, 0.08), 0 2px 4px rgba(74, 44, 23, 0.12);
-}
-
-h3 {
-    position: relative;
-    padding-bottom: 0.5rem;
-}
-
-    /* Line fades out gradually on h3 headings */
-    h3::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        height: 2px;
-        background: linear-gradient( 90deg, rgba(74, 44, 23, 0.40) 0%, rgba(74, 44, 23, 0.10) 25%, rgba(74, 44, 23, 0) 75%, rgba(74, 44, 23, 0) 100% );
-        border-radius: 2px;
-    }
-
-/* Slightly smaller text for all primary-styled buttons */
-.btn-primary,
-.btn-outline-primary {
-    font-size: 0.9rem;
-}
-
-/* Filled orange primary button */
-.btn-primary {
-    background-color: #b5651d;
-    border-color: #b5651d;
-}
-
-    /* Darker orange on hover */
-    .btn-primary:hover {
-        background-color: #8a4a12;
-        border-color: #8a4a12;
-    }
-
-/* Outlined orange secondary button */
-.btn-outline-primary {
-    color: #b5651d;
-    border-color: #b5651d;
-}
-
-    /* Fills with orange on hover */
-    .btn-outline-primary:hover {
-        background-color: #b5651d;
-        border-color: #b5651d;
-        color: #fff;
-    }
-
-/* ═══════════════════════════════════════════════════
-   HOME HEADER
-   ═══════════════════════════════════════════════════ */
-.home-hero {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    background: linear-gradient(135deg, #fdfaf6 0%, #f5e6d3 100%);
-    border: 1px solid #e8d9c5;
-    border-radius: 14px;
-    padding: 2.5rem;
-    margin-bottom: 2rem;
-}
-
-.home-hero-text {
-    flex: 1;
-}
-
-    .home-hero-text h1 {
-        font-size: 2.2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .home-hero-text p {
-        color: #7a6a58;
-        font-size: 1.05rem;
-        margin-bottom: 1.25rem;
-    }
-
-.home-hero-image {
-    width: 200px;
-    height: 160px;
-    border-radius: 12px;
-    background: #fff;
-    border: 1px solid #e8d9c5;
-    box-shadow: 0 4px 12px rgba(74, 44, 23, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.home-hero-image-placeholder {
-    font-size: 3rem;
-    opacity: 0.5;
-}
-
-@media (max-width: 768px) {
-    .home-hero {
-        flex-direction: column-reverse;
-        text-align: center;
-        padding: 1.5rem;
-    }
-
-    .home-hero-image {
-        width: 100%;
-    }
-}
-
-/* ═══════════════════════════════════════════════════
-   QUICK ACTION CARDS
-   ═══════════════════════════════════════════════════ */
-.quick-action-card {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.35rem;
-    width: 90%;
-    padding: 1rem;
-    background: #fff;
-    border: 1px solid #e8d9c5;
-    border-radius: 12px;
-    text-decoration: none;
-    color: #4a2c17;
-    text-align: left;
-    box-shadow: 0 2px 6px rgba(74, 44, 23, 0.06);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-    cursor: pointer;
-    font-family: inherit;
-}
-
-    .quick-action-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 16px rgba(74, 44, 23, 0.12);
-        border-color: #b5651d;
-        color: #4a2c17;
-    }
-
-.quick-action-icon {
-    font-size: 1.75rem;
-    margin-bottom: 0.25rem;
-}
-
-.quick-action-label {
-    font-weight: 700;
-    font-size: 1.05rem;
-}
-
-.quick-action-desc {
-    color: #7a6a58;
-    font-size: 0.85rem;
-    line-height: 1.4;
-}
-
-/* ═══════════════════════════════════════════════════
-   CATEGORY CHIPS
-   ═══════════════════════════════════════════════════ */
-.category-chips {
-    display: flex;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-}
-
-.category-chip {
-    display: inline-block;
-    padding: 0.5rem 1.1rem;
-    background: #fff;
-    border: 1px solid #e8d9c5;
-    border-radius: 50px;
-    color: #4a2c17;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.9rem;
-    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-    .category-chip:hover {
-        background-color: #b5651d;
-        border-color: #b5651d;
-        color: #fff;
-    }
-
-/* ═══════════════════════════════════════════════════
-   POPULAR NOW SLIDER
-   ═══════════════════════════════════════════════════ */
-.popular-slider {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    padding: 0.25rem 0.25rem 1rem;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-}
-
-    .popular-slider::-webkit-scrollbar {
-        height: 8px;
-    }
-
-    .popular-slider::-webkit-scrollbar-thumb {
-        background-color: #e8d9c5;
-        border-radius: 4px;
-    }
-
-        .popular-slider::-webkit-scrollbar-thumb:hover {
-            background-color: #b5651d;
+        /* The "+" glyph inside the button */
+        .btn-add-to-order .plus {
+            font-weight: 700;
+            margin-right: 0.15rem;
+            color: #fff;
         }
-
-.popular-card {
-    flex: 0 0 auto;
-    width: 200px;
-    background: #fff;
-    border: 1px solid #e8d9c5;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(74, 44, 23, 0.06);
-    overflow: hidden;
-    scroll-snap-align: start;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-    .popular-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 16px rgba(74, 44, 23, 0.12);
-    }
-
-.popular-card-image {
-    width: 100%;
-    height: 130px;
-    background: linear-gradient(135deg, #fdfaf6 0%, #e8d9c5 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-    .popular-card-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
-
-.popular-card-image-placeholder {
-    color: #7a6a58;
-    font-size: 0.9rem;
-    opacity: 0.6;
-    user-select: none;
-}
-
-.popular-card-info {
-    padding: 0.75rem;
-}
-
-.popular-card-name {
-    display: block;
-    font-weight: 600;
-    color: #4a2c17;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.popular-card-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* ═══════════════════════════════════════════════════
-   CARDS
-   ═══════════════════════════════════════════════════ */
-/* Rounded white box with soft shadow used across the app */
-.card {
-    border: 1px solid #e8d9c5;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(74, 44, 23, 0.06);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-    /* Lifts the card slightly on hover */
-    .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 16px rgba(74, 44, 23, 0.12);
-    }
-
-/* Card heading text */
-.card-title {
-    color: #4a2c17;
-    font-weight: 600;
-}
-
-/* Emphasized price text inside cards */
-.card-price {
-    color: #b5651d;
-    font-weight: 700;
-    font-size: 1.05rem;
-}
-
-/* ═══════════════════════════════════════════════════
-   SHOW CURRENT ORDER BUTTON
-   ═══════════════════════════════════════════════════ */
-.btn-outline-primary {
-    color: #b5651d;
-    border-color: #b5651d;
-}
-
-    .btn-outline-primary:hover {
-        background-color: #b5651d;
-        border-color: #b5651d;
-        color: #fff;
-    }
-
-/* ═══════════════════════════════════════════════════
-   ADD TO ORDER BUTTON
-   ═══════════════════════════════════════════════════ */
-/* Small orange button inside menu cards */
-.btn-add-to-order {
-    background-color: #b5651d;
-    border: 1px solid #b5651d;
-    color: #fff;
-    font-weight: 600;
-    font-size: 0.8rem;
-    padding: 0.35rem 0.75rem;
-    border-radius: 6px;
-    transition: background-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-    /* Darker + soft shadow on hover */
-    .btn-add-to-order:hover {
-        background-color: #8a4a12;
-        border-color: #8a4a12;
-        color: #fff;
-        box-shadow: 0 2px 6px rgba(181, 101, 29, 0.3);
-    }
-
-    /* The "+" glyph inside the button */
-    .btn-add-to-order .plus {
-        font-weight: 700;
-        margin-right: 0.15rem;
-        color: #fff;
-    }
-
-/* ═══════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════
    MENU CARD
    ═══════════════════════════════════════════════════ */
-/* Menu card needs relative positioning for the corner image */
-.menu-card {
-    position: relative;
-    overflow: hidden;
-}
-
-/* Square image placeholder pinned to the top-right of each menu card */
-.menu-card-image {
-    position: absolute;
-    top: 0.6rem;
-    right: 0.6rem;
-    width: 100px;
-    height: 100px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(74, 44, 23, 0.1);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-    /* Real image fills the rounded container without stretching */
-    .menu-card-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
+    /* Menu card needs relative positioning for the corner image */
+    .menu-card {
+        position: relative;
+        overflow: hidden;
     }
-
-/* Reserve horizontal space so the title doesn't slide under the image */
-.menu-card-text {
-    padding-right: 6rem;
-}
-
-/* Showing the item's category */
-.menu-category-badge {
-    display: inline-block;
-    align-self: flex-start; /* prevents stretching to full width in flex column */
-    font-size: 0.7rem;
-    padding: 0.3rem 0.55rem;
-    font-weight: 500;
-}
-
-/* ═══════════════════════════════════════════════════
+    /* Square image placeholder pinned to the top-right of each menu card */
+    .menu-card-image {
+        position: absolute;
+        top: 0.6rem;
+        right: 0.6rem;
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(74, 44, 23, 0.1);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+        /* Real image fills the rounded container without stretching */
+        .menu-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+    /* Reserve horizontal space so the title doesn't slide under the image */
+    .menu-card-text {
+        padding-right: 6rem;
+    }
+    /* Showing the item's category */
+    .menu-category-badge {
+        display: inline-block;
+        align-self: flex-start; /* prevents stretching to full width in flex column */
+        font-size: 0.7rem;
+        padding: 0.3rem 0.55rem;
+        font-weight: 500;
+    }
+    /* ═══════════════════════════════════════════════════
    MENU ITEM MODAL
    ═══════════════════════════════════════════════════ */
-/* Rounded corners on the modal to match the rest of the app */
-.menu-modal-content {
-    border-radius: 12px;
-    border: 1px solid #e8d9c5;
-    box-shadow: 0 8px 24px rgba(74, 44, 23, 0.15);
-}
-
-/* Large image area inside the modal */
-.menu-modal-image {
-    width: 100%;
-    height: 260px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    box-shadow: 0 2px 6px rgba(74, 44, 23, 0.1);
-    margin-bottom: 1rem;
-}
-
-/* Real image fills the modal image area */
-.menu-modal-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-/* Make the card feel clickable */
-.menu-card {
-    cursor: pointer;
-}
-
-/* ═══════════════════════════════════════════════════
+    /* Rounded corners on the modal to match the rest of the app */
+    .menu-modal-content {
+        border-radius: 12px;
+        border: 1px solid #e8d9c5;
+        box-shadow: 0 8px 24px rgba(74, 44, 23, 0.15);
+    }
+    /* Large image area inside the modal */
+    .menu-modal-image {
+        width: 100%;
+        height: 260px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(74, 44, 23, 0.1);
+        margin-bottom: 1rem;
+    }
+        /* Real image fills the modal image area */
+        .menu-modal-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+    /* Make the card feel clickable */
+    .menu-card {
+        cursor: pointer;
+    }
+    /* ═══════════════════════════════════════════════════
    TABLES
    ═══════════════════════════════════════════════════ */
-/* Base table styling — white background, rounded corners */
-.table {
-    background-color: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-    /* Dark brown header row */
-    .table thead {
-        background-color: #4a2c17;
-        color: #fff;
+    /* Base table styling — white background, rounded corners */
+    .table {
+        background-color: #fff;
+        border-radius: 8px;
+        overflow: hidden;
     }
-
-        /* Remove default Bootstrap bottom border on header cells */
-        .table thead th {
-            border-bottom: none;
-            font-weight: 500;
+        /* Dark brown header row */
+        .table thead {
+            background-color: #4a2c17;
+            color: #fff;
         }
-
-/* ═══════════════════════════════════════════════════
+            /* Remove default Bootstrap bottom border on header cells */
+            .table thead th {
+                border-bottom: none;
+                font-weight: 500;
+            }
+    /* ═══════════════════════════════════════════════════
    BADGES
    ═══════════════════════════════════════════════════ */
-/* Green badge — "Available" */
-.badge-available {
-    background-color: #2e7d32;
-    color: #fff;
-}
-
-/* Red badge — "Occupied" */
-.badge-occupied {
-    background-color: #c62828;
-    color: #fff;
-}
-
-/* Yellow badge — "Reserved" */
-.badge-reserved {
-    background-color: #f5b942;
-    color: #4a2c17;
-}
-
-/* ═══════════════════════════════════════════════════
-   PAGE HEADER
-   ═══════════════════════════════════════════════════ */
-/* Page title with a divider line below it */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
-    padding-bottom: 0.6rem;
-    border-bottom: 2px solid #e8d9c5;
-}
-
-    /* Reset heading margin inside the header */
-    .page-header h1 {
-        margin: 0;
+    /* Green badge — "Available" */
+    .badge-available {
+        background-color: #2e7d32;
+        color: #fff;
     }
-
-/* ═══════════════════════════════════════════════════
-   TABLE GRID (Floor plan)
-   ═══════════════════════════════════════════════════ */
-/* Auto-filling grid for the floor-plan table cards */
-.table-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 1rem;
-}
-
-/* Individual table card in the floor-plan grid */
-.table-card {
-    background: #fff;
-    border: 1px solid #e8d9c5;
-    border-radius: 10px;
-    padding: 1rem;
-    text-align: center;
-    box-shadow: 0 2px 6px rgba(74, 44, 23, 0.06);
-}
-
-    /* Big table number inside a table card */
-    .table-card .table-number {
-        font-size: 1.5rem;
-        font-weight: 700;
+    /* Red badge — "Occupied" */
+    .badge-occupied {
+        background-color: #c62828;
+        color: #fff;
+    }
+    /* Yellow badge — "Reserved" */
+    .badge-reserved {
+        background-color: #f5b942;
         color: #4a2c17;
     }
-
-    /* Small capacity label inside a table card */
-    .table-card .table-capacity {
-        color: #7a6a58;
-        font-size: 0.85rem;
+    /* ═══════════════════════════════════════════════════
+   PAGE HEADER
+   ═══════════════════════════════════════════════════ */
+    /* Page title with a divider line below it */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 2px solid #e8d9c5;
     }
-
-/* ═══════════════════════════════════════════════════
+        /* Reset heading margin inside the header */
+        .page-header h1 {
+            margin: 0;
+        }
+    /* ═══════════════════════════════════════════════════
+   TABLE GRID (Floor plan)
+   ═══════════════════════════════════════════════════ */
+    /* Auto-filling grid for the floor-plan table cards */
+    .table-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+    }
+    /* Individual table card in the floor-plan grid */
+    .table-card {
+        background: #fff;
+        border: 1px solid #e8d9c5;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(74, 44, 23, 0.06);
+    }
+        /* Big table number inside a table card */
+        .table-card .table-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4a2c17;
+        }
+        /* Small capacity label inside a table card */
+        .table-card .table-capacity {
+            color: #7a6a58;
+            font-size: 0.85rem;
+        }
+    /* ═══════════════════════════════════════════════════
    RESPONSIVE — collapse sidebar on small screens
    ═══════════════════════════════════════════════════ */
-/* Below 768px the sidebar slides off-screen and shows a toggle button */
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-    }
+    /* Below 768px the sidebar slides off-screen and shows a toggle button */
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
 
-    .main-area {
-        margin-left: 0;
-    }
+        .main-area {
+            margin-left: 0;
+        }
 
-    .sidebar-toggle {
-        display: block;
-    }
+        .sidebar-toggle {
+            display: block;
+        }
 
-    .app-wrapper.sidebar-collapsed .sidebar {
-        transform: translateX(0);
-    }
-
-    /* ═══════════════════════════════════════════════════
+        .app-wrapper.sidebar-collapsed .sidebar {
+            transform: translateX(0);
+        }
+        /* ═══════════════════════════════════════════════════
    INVENTORY PAGE
    ═══════════════════════════════════════════════════ */
-    /* Tighten delete-button spacing in the item cards */
-    .inventory-delete-btn {
-        line-height: 1;
-        font-size: 1rem;
-        text-decoration: none;
+        /* Tighten delete-button spacing in the item cards */
+        .inventory-delete-btn {
+            line-height: 1;
+            font-size: 1rem;
+            text-decoration: none;
+        }
+        /* Small tweak so the category count reads properly */
+        .list-group-item .text-muted {
+            font-size: 0.8rem;
+        }
     }
-
-    /* Small tweak so the category count reads properly */
-    .list-group-item .text-muted {
-        font-size: 0.8rem;
-    }
-}
