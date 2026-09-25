@@ -4,57 +4,181 @@
     ViewData["Title"] = "Home";
 }
 
-<div class="page-header">
-    <h1>🏠 Home</h1>
-    <span class="text-muted">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+<!-- ═══════════════════════════════════════════════════════════════
+     HEADER
+     ═══════════════════════════════════════════════════════════════ -->
+<!-- TODO: Text and image are hardcoded for now.
+     Later, this could pull from settings or a featured promo from the Api. -->
+<div class="home-hero">
+    <div class="home-hero-text">
+        <h1>Welcome to BistroGo</h1>
+        <p>Fresh ingredients, warm atmosphere, and your favorites ready to order.</p>
+    </div>
+    <div class="home-hero-image">
+        <!-- TODO: Replace with a real image from the Api or static assets -->
+        <span class="home-hero-image-placeholder">🍽️</span>
+    </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     QUICK ACTIONS
+     ═══════════════════════════════════════════════════════════════ -->
 <div>
     <h3>Quick Actions</h3>
-
-    <div class="mt-3">
-        <a asp-page="/Menu/Index" class="btn btn-outline-primary me-2">
-            🍴 Browse Menu
-        </a>
-        <a asp-page="/Inventory/Index" class="btn btn-outline-primary">
-            📦 Manage Inventory
-        </a>
-    </div>
-    <div class="mt-3">
-        <a asp-page="/Orders/Create" class="btn btn-primary btn-lg quick-action-primary">
-            Go To Orders
-        </a>
+    <div class="row g-3 mt-1">
+        <div class="col-md-6">
+            <a asp-page="/Menu/Index" class="quick-action-card">
+                <span class="quick-action-icon">🍴</span>
+                <span class="quick-action-label">Browse Menu</span>
+                <span class="quick-action-desc">See everything we're serving today</span>
+            </a>
+        </div>
+        <div class="col-md-6">
+            <button type="button" class="quick-action-card" data-bs-toggle="modal" data-bs-target="#currentOrderModal">
+                <span class="quick-action-icon">🛒</span>
+                <span class="quick-action-label">Current Order</span>
+                <span class="quick-action-desc">Review what's in your cart</span>
+            </button>
+        </div>
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     POPULAR NOW
+     ═══════════════════════════════════════════════════════════════ -->
 <div class="mt-5">
-    <h3>Overview</h3>
-    <div class="row g-4">
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Menu Items</h5>
-                    <p class="display-6 card-price">24</p>
-                    <a asp-page="/Menu/Index" class="btn btn-outline-primary btn-sm">View Menu</a>
+    <h3>Popular Now!</h3>
+
+    <!-- TODO: Replace the static cards below with a @@foreach over real data
+         from the Api (e.g., GET /api/menuitems/popular).
+         Card structure stays the same — only the data source changes. -->
+    <div class="popular-slider mt-3">
+
+        <!-- TODO: @@foreach (var item in Model.PopularItems) { ... } -->
+
+        <div class="popular-card">
+            <div class="popular-card-image">
+                <span class="popular-card-image-placeholder">[img]</span>
+            </div>
+            <div class="popular-card-info">
+                <span class="popular-card-name">Margherita Pizza</span>
+                <div class="popular-card-bottom">
+                    <span class="card-price">$14.00</span>
+                    <button type="button" class="btn btn-sm btn-add-to-order">
+                        <span class="plus">+</span>Add
+                    </button>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Open Orders</h5>
-                    <p class="display-6 card-price">7</p>
-                    <a asp-page="/Orders/Index" class="btn btn-outline-primary btn-sm">View Orders</a>
+
+        <div class="popular-card">
+            <div class="popular-card-image">
+                <span class="popular-card-image-placeholder">[img]</span>
+            </div>
+            <div class="popular-card-info">
+                <span class="popular-card-name">Grilled Salmon</span>
+                <div class="popular-card-bottom">
+                    <span class="card-price">$22.00</span>
+                    <button type="button" class="btn btn-sm btn-add-to-order">
+                        <span class="plus">+</span>Add
+                    </button>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Low Stock</h5>
-                    <p class="display-6 card-price">3</p>
-                    <a asp-page="/Inventory/Index" class="btn btn-outline-primary btn-sm">View Inventory</a>
+
+        <div class="popular-card">
+            <div class="popular-card-image">
+                <span class="popular-card-image-placeholder">[img]</span>
+            </div>
+            <div class="popular-card-info">
+                <span class="popular-card-name">Ribeye Steak</span>
+                <div class="popular-card-bottom">
+                    <span class="card-price">$28.00</span>
+                    <button type="button" class="btn btn-sm btn-add-to-order">
+                        <span class="plus">+</span>Add
+                    </button>
                 </div>
+            </div>
+        </div>
+
+        <div class="popular-card">
+            <div class="popular-card-image">
+                <span class="popular-card-image-placeholder">[img]</span>
+            </div>
+            <div class="popular-card-info">
+                <span class="popular-card-name">Tiramisu</span>
+                <div class="popular-card-bottom">
+                    <span class="card-price">$9.00</span>
+                    <button type="button" class="btn btn-sm btn-add-to-order">
+                        <span class="plus">+</span>Add
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="popular-card">
+            <div class="popular-card-image">
+                <span class="popular-card-image-placeholder">[img]</span>
+            </div>
+            <div class="popular-card-info">
+                <span class="popular-card-name">Bruschetta</span>
+                <div class="popular-card-bottom">
+                    <span class="card-price">$8.50</span>
+                    <button type="button" class="btn btn-sm btn-add-to-order">
+                        <span class="plus">+</span>Add
+                    </button>
+                </div>
+            </div>
+        </div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CURRENT ORDER MODAL same modal used on the Menu page
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="currentOrderModal" tabindex="-1" aria-labelledby="currentOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content menu-modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="currentOrderModalLabel">Current Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- TODO: Replace this table with a @@foreach over real data.
+                     Source will be GET /api/orders/current. -->
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-center" style="width: 160px;">Quantity</th>
+                            <th class="text-end">Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- TODO: @@foreach (var line in Model.CurrentOrderLines) { ... } -->
+                        <tr>
+                            <td class="text-muted">Sample Item</td>
+                            <td class="text-end text-muted">$0.00</td>
+                            <td class="text-center text-muted">1</td>
+                            <td class="text-end text-muted">$0.00</td>
+                            <td class="text-end text-muted">✕</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">Total:</td>
+                            <!-- TODO: Replace with Model.CurrentOrderTotal -->
+                            <td class="text-end card-price">$0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
+                <!-- TODO: Later this should POST the order to the Api, then redirect. -->
+                <a asp-page="/Orders/Create" class="btn btn-primary">Continue to Checkout</a>
             </div>
         </div>
     </div>
