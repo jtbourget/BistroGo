@@ -117,4 +117,139 @@
             @if (!Model.Customers.Any())
             {
                 <div class="dashboard-empty">No customers yet.</div>
+            }
+            else
+            {
+                <div class="dashboard-list">
+                    @foreach (var c in Model.Customers)
+                    {
+                        <div class="thin-card">
+                            <span class="thin-card-icon">👤</span>
+                            <span class="thin-card-body">
+                                <span class="thin-card-title">@c.Name</span>
+                                <span class="thin-card-sub">@c.Phone</span>
+                            </span>
+                            <span class="thin-card-meta">
+                                <span class="text-muted small">@c.VisitCount visits</span>
+                            </span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ORDER DETAIL MODAL
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content menu-modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderModalLabel">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="order-modal-header">
+                    <span class="order-modal-id" id="orderModalId">#000</span>
+                    <span class="badge" id="orderModalStatusBadge">Status</span>
+                </div>
+
+                <div class="order-modal-rows">
+                    <div class="order-modal-row">
+                        <span class="order-modal-label">Customer</span>
+                        <span class="order-modal-value" id="orderModalCustomer">—</span>
+                    </div>
+                    <div class="order-modal-row">
+                        <span class="order-modal-label">Table</span>
+                        <span class="order-modal-value" id="orderModalTable">—</span>
+                    </div>
+                    <div class="order-modal-row">
+                        <span class="order-modal-label">Placed</span>
+                        <span class="order-modal-value" id="orderModalTime">—</span>
+                    </div>
+                    <div class="order-modal-row">
+                        <span class="order-modal-label">Total</span>
+                        <span class="order-modal-value card-price" id="orderModalTotal">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Change status -->
+                <div class="order-modal-section">
+                    <label class="form-label">Change Status</label>
+                    <form method="post" asp-page-handler="SetStatus" id="orderStatusForm">
+                        <input type="hidden" name="id" id="orderStatusId" value="" />
+                        <div class="d-flex gap-2">
+                            <select name="status" class="form-select">
+                                <option value="Waiting">Waiting</option>
+                                <option value="Preparing">Preparing</option>
+                            </select>
+                            <button type="submit" class="btn btn-outline-primary">Update</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
+                <form method="post" asp-page-handler="Complete" id="orderCompleteForm" class="d-inline">
+                    <input type="hidden" name="id" id="orderCompleteId" value="" />
+                    <button type="submit" class="btn btn-primary">
+                        ✓ Complete Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Fill the order modal when a card is clicked
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('orderModal');
+            if (!modal) return;
+
+            modal.addEventListener('show.bs.modal', function (event) {
+                const card = event.relatedTarget;
+                if (!card) return;
+
+                const id       = card.getAttribute('data-order-id') || '';
+                const customer = card.getAttribute('data-order-customer') || '';
+                const table    = card.getAttribute('data-order-table') || '';
+                const status   = card.getAttribute('data-order-status') || '';
+                const total    = card.getAttribute('data-order-total') || '0.00';
+                const time     = card.getAttribute('data-order-time') || '';
+
+                modal.querySelector('#orderModalId').textContent = '#' + id;
+                modal.querySelector('#orderModalCustomer').textContent = customer;
+                modal.querySelector('#orderModalTable').textContent = 'Table ' + table;
+                modal.querySelector('#orderModalTime').textContent = time;
+                modal.querySelector('#orderModalTotal').textContent = '$' + total;
+
+                // Status badge color
+                const badge = modal.querySelector('#orderModalStatusBadge');
+                badge.textContent = status;
+                badge.className = 'badge ' + (
+                    status === 'Waiting'   ? 'badge-reserved' :
+                    status === 'Preparing' ? 'badge-occupied' :
+                    status === 'Served'    ? 'badge-available' :
+                    'bg-secondary'
+                );
+
+                // Wire the hidden inputs on both forms
+                modal.querySelector('#orderStatusId').value = id;
+                modal.querySelector('#orderCompleteId').value = id;
+
+                // Pre-select the current status in the dropdown (if it's Waiting/Preparing)
+                const select = modal.querySelector('select[name="status"]');
+                if (select && (status === 'Waiting' || status === 'Preparing')) {
+                    select.value = status;
+                }
+            });
+        });
+    </script>
 }
