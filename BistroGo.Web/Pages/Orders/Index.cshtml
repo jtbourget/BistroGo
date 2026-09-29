@@ -1,4 +1,75 @@
 ﻿@page
 @model BistroGo.Web.Pages.Orders.IndexModel
 @{
+    ViewData["Title"] = "Orders";
+}
+
+<div class="page-header">
+    <h1>📋 Cook Dashboard</h1>
+    <span class="text-muted">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row g-4">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         COLUMN 1 — CURRENT ORDERS
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="col-lg-4">
+        <div class="dashboard-panel">
+            <div class="dashboard-panel-header">
+                <h3>Current Orders</h3>
+            </div>
+
+            @if (!Model.CurrentOrders.Any())
+            {
+                <div class="dashboard-empty">
+                    No open orders. <a asp-page="/Menu/Index">Start one from the menu</a>.
+                </div>
+            }
+            else
+            {
+                <div class="dashboard-list">
+                    @foreach (var order in Model.CurrentOrders)
+                    {
+                        var badgeClass = order.Status switch
+                        {
+                            "Waiting" => "badge-reserved",
+                            "Preparing" => "badge-occupied",
+                            "Served" => "badge-available",
+                            _ => "bg-secondary"
+                        };
+                        <button type="button"
+                                class="thin-card thin-card-clickable"
+                                data-bs-toggle="modal"
+                                data-bs-target="#orderModal"
+                                data-order-id="@order.Id"
+                                data-order-customer="@order.CustomerName"
+                                data-order-table="@order.TableNumber"
+                                data-order-status="@order.Status"
+                                data-order-total="@order.Total.ToString("0.00")"
+                                data-order-time="@order.PlacedAt.ToString("h:mm tt")">
+                            <span class="thin-card-icon">🧾</span>
+                            <span class="thin-card-body">
+                                <span class="thin-card-title">#@order.Id — @order.CustomerName</span>
+                                <span class="thin-card-sub">Table @order.TableNumber · @order.PlacedAt.ToString("h:mm tt")</span>
+                            </span>
+                            <span class="thin-card-meta">
+                                <span class="badge @badgeClass">@order.Status</span>
+                                <span class="card-price">$@order.Total.ToString("0.00")</span>
+                            </span>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
 }
