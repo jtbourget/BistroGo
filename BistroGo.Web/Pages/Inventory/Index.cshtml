@@ -99,11 +99,16 @@
                             <strong>@cat.Name</strong>
                             <span class="text-muted small ms-2">(@count)</span>
                         </span>
-                        <form method="post" asp-page-handler="DeleteCategory"
-                              onsubmit="return confirm('Delete category @cat.Name and its items?');">
-                            <input type="hidden" name="id" value="@cat.Id" />
-                            <button type="submit" class="btn btn-sm btn-link text-danger p-0">✕</button>
-                        </form>
+                            <button type="button"
+                                            class="btn btn-sm btn-link text-danger p-0"
+                                            title="Delete"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteConfirmationModal"
+                                            data-item-id="@cat.Id"
+                                            data-item-name="@cat.Name"
+                                            data-delete-handler="DeleteCategory">
+                                        ✕
+                                    </button>
                     </li>
                 }
             </ul>
@@ -166,11 +171,16 @@
         document.addEventListener('DOMContentLoaded', function () {
             const deleteItemId = document.getElementById('deleteItemId');
             const deleteItemName = document.getElementById('deleteItemName');
+            const deleteForm = document.querySelector('#deleteConfirmationModal form');
 
             document.querySelectorAll('[data-bs-target="#deleteConfirmationModal"]').forEach(function (button) {
                 button.addEventListener('click', function () {
                     deleteItemId.value = this.dataset.itemId;
                     deleteItemName.textContent = this.dataset.itemName;
+
+                    const formAction = new URL(deleteForm.action);
+                    formAction.searchParams.set('handler', this.dataset.deleteHandler || 'DeleteItem');
+                    deleteForm.action = formAction;
                 });
             });
 

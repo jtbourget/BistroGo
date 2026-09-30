@@ -67,7 +67,7 @@ public static class MenuStore
     }
 }
 
-public class MenuItemDto
+public class MenuItemDto : IIdentifiable
 {
     public int Id { get; set; }
     public string Name { get; set; } = "";
@@ -77,7 +77,7 @@ public class MenuItemDto
     public string? ImageUrl { get; set; }
 }
 
-public class CategoryDto
+public class CategoryDto : IIdentifiable
 {
     public int Id { get; set; }
     public string Name { get; set; } = "";
