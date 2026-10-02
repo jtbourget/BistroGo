@@ -744,22 +744,193 @@ body {
    RESPONSIVE — collapse sidebar on small screens
    ═══════════════════════════════════════════════════ */
     /* Below 768px the sidebar slides off-screen and shows a toggle button */
-    @media (max-width: 768px) {
-        .sidebar {
-            transform: translateX(-100%);
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .main-area {
+        margin-left: 0;
+    }
+
+    .sidebar-toggle {
+        display: block;
+    }
+
+    .app-wrapper.sidebar-collapsed .sidebar {
+        transform: translateX(0);
+    }
+}
+/* ═══════════════════════════════════════════════════
+   ORDERS DASHBOARD
+   ═══════════════════════════════════════════════════ */
+.dashboard-panel {
+    background: #fff;
+    border: 1px solid #e8d9c5;
+    border-radius: 10px;
+    padding: 1.25rem;
+    height: 100%;
+    box-shadow: 0 2px 6px rgba(74, 44, 23, 0.06);
+}
+
+.dashboard-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid #e8d9c5;
+}
+
+    .dashboard-panel-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+.dashboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.dashboard-empty {
+    color: #7a6a58;
+    font-size: 0.85rem;
+    padding: 1.5rem 0;
+    text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════
+   THIN CARD — matches Manage Inventory card style,
+   but compact enough for dashboard columns
+   ═══════════════════════════════════════════════════ */
+.thin-card {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    background: #fff;
+    border: 1px solid #e8d9c5;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(74, 44, 23, 0.06);
+    text-align: left;
+    text-decoration: none;
+    color: inherit;
+    font-family: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Clickable variant — for Current Orders cards only */
+.thin-card-clickable {
+    cursor: pointer;
+}
+
+    /* Hover matches the .card:hover pattern used everywhere else */
+    .thin-card-clickable:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(74, 44, 23, 0.12);
+    }
+
+/* Icon on the left */
+.thin-card-icon {
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    width: 1.75rem;
+    text-align: center;
+}
+
+/* Middle: title + subtitle */
+.thin-card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.thin-card-title {
+    font-weight: 600;
+    color: #4a2c17;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.thin-card-sub {
+    color: #7a6a58;
+    font-size: 0.72rem;
+}
+
+/* Right: badge + price */
+.thin-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+        /* ═══════════════════════════════════════════════════
+   ORDER DETAIL MODAL
+   ═══════════════════════════════════════════════════ */
+        .order-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e8d9c5;
         }
 
-        .main-area {
-            margin-left: 0;
+        .order-modal-id {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #4a2c17;
         }
 
-        .sidebar-toggle {
-            display: block;
+        .order-modal-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
         }
 
-        .app-wrapper.sidebar-collapsed .sidebar {
-            transform: translateX(0);
+        .order-modal-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0e6d6;
         }
+
+            .order-modal-row:last-child {
+                border-bottom: none;
+            }
+
+        .order-modal-label {
+            color: #7a6a58;
+            font-size: 0.85rem;
+        }
+
+        .order-modal-value {
+            color: #4a2c17;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .order-modal-section {
+            padding-top: 0.75rem;
+            border-top: 1px solid #e8d9c5;
+        }
+
+            .order-modal-section .form-label {
+                font-size: 0.85rem;
+                color: #7a6a58;
+                margin-bottom: 0.4rem;
+            }
         /* ═══════════════════════════════════════════════════
    INVENTORY PAGE
    ═══════════════════════════════════════════════════ */
