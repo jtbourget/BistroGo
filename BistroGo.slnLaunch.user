@@ -1,6 +1,6 @@
 [
   {
-    "Name": "New Profile",
+    "Name": "Api + Web",
     "Projects": [
       {
         "Path": "BistroGo.Api\\BistroGo.Api.csproj",

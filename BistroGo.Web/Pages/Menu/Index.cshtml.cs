@@ -24,11 +24,20 @@ public class IndexModel : PageModel
             : all.Where(m => m.Category == category).ToList();
     }
 
+    /// <summary>
+    /// Handles the POST request when a user adds a menu item to their order.
+    /// Increments the global CartCount and sets a success message in TempData.
+    /// </summary>
+    /// <param name="menuItemId">The unique identifier of the menu item to add.</param>
+    /// <param name="category">The currently selected category to redirect back to.</param>
+    /// <returns>A redirect to the current menu page, maintaining the selected category filter.</returns>
     public IActionResult OnPostAddToOrder(int menuItemId, string? category)
     {
         var item = MenuStore.Items.FirstOrDefault(m => m.Id == menuItemId);
         if (item != null)
         {
+            // Increment the shopping cart ticker when a new item is added
+            MenuStore.AddToCart(item);
             TempData["Message"] = $"Added \"{item.Name}\" to your order.";
         }
         return RedirectToPage(new { category });
