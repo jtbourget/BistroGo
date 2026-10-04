@@ -1,11 +1,9 @@
-<<<<<<< HEAD
+# Visual Studio / build output
 .vs/
 bin/
 obj/
-=======
-@"
-.vs/
-bin/
-obj/
-"@ | Set-Content .gitignore
->>>>>>> oc-2
+
+# Local SQLite database files
+*.db
+*.db-shm
+*.db-wal
