@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BistroGo.Data.Identity
 {
-    internal class ApplicationUser : IdentityUser
+    public class ApplicationUser : IdentityUser
     {
         // Additional properties for the application user
         public string FirstName { get; set; } = string.Empty;

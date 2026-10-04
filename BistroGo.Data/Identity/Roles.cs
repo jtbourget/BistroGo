@@ -4,7 +4,11 @@ using System.Text;
 
 namespace BistroGo.Data.Identity
 {
-    internal class Roles
+    /// <summary>
+    /// Defines the roles used in the application for authorization purposes.
+    /// Not an enum because roles are typically represented as strings in ASP.NET Core Identity.
+    /// </summary>
+    public static class Roles
     {
         public const string Guest = "Guest";
         public const string KitchenStaff = "KitchenStaff";
