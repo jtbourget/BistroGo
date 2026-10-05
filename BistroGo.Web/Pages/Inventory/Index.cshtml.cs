@@ -12,6 +12,34 @@ public static class MenuStore
     private static int _nextItemId = 100;
     private static int _nextCategoryId = 100;
 
+    /// <summary>
+    /// Tracks the total number of items added to the current user's shopping cart.
+    /// Used by the layout sidebar to display the cart ticker.
+    /// </summary>
+    public static int CartCount { get; set; } = 0;
+
+    public static List<CartItemDto> CartItems { get; } = new();
+
+    public static void AddToCart(MenuItemDto item)
+    {
+        var existing = CartItems.FirstOrDefault(c => c.MenuItemId == item.Id);
+        if (existing != null)
+        {
+            existing.Quantity++;
+        }
+        else
+        {
+            CartItems.Add(new CartItemDto
+            {
+                MenuItemId = item.Id,
+                Name = item.Name,
+                Price = item.Price,
+                Quantity = 1
+            });
+        }
+        CartCount++;
+    }
+
     public static List<MenuItemDto> Items { get; } = new()
     {
         new() { Id = 1, Name = "Bruschetta",      Description = "Grilled bread, tomatoes, basil",  Price = 8.50m,  Category = "Appetizer" },
@@ -81,6 +109,15 @@ public class CategoryDto : IIdentifiable
 {
     public int Id { get; set; }
     public string Name { get; set; } = "";
+}
+
+public class CartItemDto
+{
+    public int MenuItemId { get; set; }
+    public string Name { get; set; } = "";
+    public decimal Price { get; set; }
+    public int Quantity { get; set; }
+    public decimal Total => Price * Quantity;
 }
 
 public class IndexModel : PageModel
