@@ -1,0 +1,17 @@
+﻿@inject SignInManager<ApplicationUser> SignInManager
+
+<div class="ms-auto d-flex align-items-center gap-2">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <span class="small text-muted">Hi, @User.Identity?.Name</span>
+
+        <form method="post" asp-page="/Account/Logout" class="m-0">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Log out</button>
+        </form>
+    }
+    else
+    {
+        <a asp-page="/Account/Login" class="btn btn-outline-secondary btn-sm">Log in</a>
+        <a asp-page="/Account/Register" class="btn btn-primary btn-sm">Create account</a>
+    }
+</div>
