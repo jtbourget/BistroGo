@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BistroGo.Web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/introjs/introjs.min.css" />
 </head>
 <body>
     <div class="app-wrapper">
@@ -54,8 +55,9 @@
                     </li>
                 </ul>
             </nav>
-            <div class="sidebar-footer">
+            <div class="sidebar-footer d-flex align-items-center justify-content-between px-3">
                 <small>&copy; @DateTime.Now.Year BistroGo</small>
+                <button type="button" id="startWalkthroughBtn" class="btn btn-sm btn-outline-secondary py-0" style="font-size: 0.75rem;">Walkthrough</button>
             </div>
         </aside>
 
@@ -135,13 +137,86 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/introjs/intro.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
-            // Toggle sidebar on mobile
-            document.getElementById('sidebarToggle')?.addEventListener('click', function () {
-                document.querySelector('.app-wrapper').classList.toggle('sidebar-collapsed');
-            });
+        // Toggle sidebar on mobile
+        document.getElementById('sidebarToggle')?.addEventListener('click', function () {
+            document.querySelector('.app-wrapper').classList.toggle('sidebar-collapsed');
+        });
+
+        // --- Walkthrough Feature ---
+        // Attaches a click event to the walkthrough button in the footer.
+        // If the user is not currently on the Menu page, it redirects them there
+        // with a query string 'walkthrough=true' to trigger it after the page loads.
+        document.getElementById('startWalkthroughBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            var path = window.location.pathname.toLowerCase();
+            if (!path.includes('/menu')) {
+                window.location.href = '/Menu?walkthrough=true';
+                return;
+            }
+            startWalkthrough();
+        });
+
+        // Initializes and starts the Intro.js walkthrough tour.
+        // Dynamically builds the steps array to ensure elements exist on the page
+        // before attaching a tooltip to them, preventing silent failures.
+        function startWalkthrough() {
+            var steps = [];
+            
+            // Step 1: Highlight the category filter dropdown
+            var categoryEl = document.querySelector('#category');
+            if (categoryEl) {
+                steps.push({
+                    element: categoryEl,
+                    intro: "Welcome to BistroGo! Let's get started by selecting a category to filter the menu items.",
+                    position: 'right'
+                });
+            }
+
+            // Step 2: Highlight the first 'Add to Order' button on a menu item
+            var addBtn = document.querySelector('.btn-add-to-order');
+            if (addBtn) {
+                steps.push({
+                    element: addBtn,
+                    intro: "Once you find an item you like, click here to add it to your cart.",
+                    position: 'top'
+                });
+            }
+
+            // Step 3: Highlight the Cart button in the sidebar
+            var cartEl = document.querySelector('a[data-bs-target="#currentOrderModal"]');
+            if (cartEl) {
+                steps.push({
+                    element: cartEl,
+                    intro: "Click here to view your cart and proceed to checkout when you're ready.",
+                    position: 'right'
+                });
+            }
+
+            // Execute the tour only if there is at least one step available
+            if (steps.length > 0) {
+                introJs().setOptions({
+                    steps: steps,
+                    showProgress: true,
+                    showBullets: false
+                }).start();
+            } else {
+                alert("Walkthrough steps are not available on this page.");
+            }
+        }
+
+        // Auto-start the walkthrough if redirected from another page.
+        // Uses a slight timeout to ensure all DOM elements and layout are fully rendered.
+        if (window.location.search.includes('walkthrough=true')) {
+            setTimeout(startWalkthrough, 500);
+            
+            // Clean up the URL to remove the query parameter so refreshing the page
+            // doesn't immediately restart the walkthrough again.
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
