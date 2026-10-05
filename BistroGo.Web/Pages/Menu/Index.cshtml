@@ -31,8 +31,11 @@
             <button type="submit" class="btn btn-outline-primary">Apply</button>
         </noscript>
     </form>
-    <a asp-page="/Orders/Create" class="btn btn-primary mb-0">Go To Orders</a>
-
+            <button type="button"
+                class="btn btn-outline-primary mb-0"
+                data-bs-toggle="modal"
+                data-bs-target="#currentOrderModal">🛒 Shopping Cart
+            </button>
 </div>
 
 @if (!Model.MenuItems.Any())
