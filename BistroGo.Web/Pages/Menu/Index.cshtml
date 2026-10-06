@@ -72,17 +72,18 @@ else
                             <span class="badge bg-secondary menu-category-badge mb-2">@item.Category</span>
                             <p class="text-muted flex-grow-1">@item.Description</p>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+
+                        <div class="menu-card-actions">
                             <span class="card-price">$@item.Price.ToString("0.00")</span>
+                            <form method="post" asp-page-handler="AddToOrder"
+                                  onclick="event.stopPropagation();">
+                                <input type="hidden" name="menuItemId" value="@item.Id" />
+                                <input type="hidden" name="category" value="@Model.SelectedCategory" />
+                                <button type="submit" class="btn btn-sm btn-add-to-order">
+                                    <span class="plus">+</span>Add
+                                </button>
+                            </form>
                         </div>
-                        <form method="post" asp-page-handler="AddToOrder" class="text-end"
-                              onclick="event.stopPropagation();">
-                            <input type="hidden" name="menuItemId" value="@item.Id" />
-                            <input type="hidden" name="category" value="@Model.SelectedCategory" />
-                            <button type="submit" class="btn btn-sm btn-add-to-order">
-                                <span class="plus">+</span>Add
-                            </button>
-                        </form>
                     </div>
                 </div>
             </div>

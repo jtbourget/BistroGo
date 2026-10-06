@@ -617,6 +617,7 @@ body {
     /* Reserve horizontal space so the title doesn't slide under the image */
     .menu-card-text {
         padding-right: 6rem;
+        padding-bottom: 1rem;
     }
     /* Showing the item's category */
     .menu-category-badge {
@@ -625,6 +626,18 @@ body {
         font-size: 0.7rem;
         padding: 0.3rem 0.55rem;
         font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════════════
+    MENU CARD ACTIONS
+    ═══════════════════════════════════════════════════ */
+    /* Price + Add button pinned to the bottom of the card */
+    .menu-card-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto; /* pushes this row to the bottom of the flex column */
+        padding-top: 2rem;
     }
     /* ═══════════════════════════════════════════════════
    MENU ITEM MODAL
@@ -944,4 +957,3 @@ body {
         .list-group-item .text-muted {
             font-size: 0.8rem;
         }
-    }
