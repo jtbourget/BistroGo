@@ -616,7 +616,7 @@ body {
         }
     /* Reserve horizontal space so the title doesn't slide under the image */
     .menu-card-text {
-        padding-right: 6rem;
+        padding-right: 7rem;
         padding-bottom: 1rem;
     }
     /* Showing the item's category */
