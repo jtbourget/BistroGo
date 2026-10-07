@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Authorization;
+using BistroGo.Data.Identity;
 
 namespace BistroGo.Web.Pages.Inventory;
 
@@ -120,6 +122,7 @@ public class CartItemDto
     public decimal Total => Price * Quantity;
 }
 
+[Authorize(Roles = Roles.Manager)]
 public class IndexModel : PageModel
 {
     public List<MenuItemDto> Items { get; set; } = new();

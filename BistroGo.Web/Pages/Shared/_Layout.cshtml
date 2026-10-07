@@ -43,16 +43,29 @@
                             <span class="badge bg-danger rounded-pill ms-2" id="cartTicker">@BistroGo.Web.Pages.Inventory.MenuStore.CartCount</span>
                         </a>
                     </li>
-                    <li>
-                        <a asp-page="/Orders/Index" class="nav-link">
-                            <span class="nav-icon">📋</span> Orders
-                        </a>
-                    </li>
-                    <li>
-                        <a asp-page="/Inventory/Index" class="nav-link">
-                            <span class="nav-icon">📦</span> Manage Inventory
-                        </a>
-                    </li>
+                    @* Hide Orders from customers/logged-out users. Only Manager and KitchenStaff can see orders. *@
+                    @if (User.Identity?.IsAuthenticated == true && (User.IsInRole(Roles.Manager) || User.IsInRole(Roles.KitchenStaff)))
+                    {
+                        <li>
+                            <a asp-page="/Orders/Index" class="nav-link">
+                                <span class="nav-icon">📋</span> Orders
+                            </a>
+                        </li>
+                    }
+                    @* Only Manager can manage inventory and generate staff logins. *@
+                    @if (User.Identity?.IsAuthenticated == true && User.IsInRole(Roles.Manager))
+                    {
+                        <li>
+                            <a asp-page="/Inventory/Index" class="nav-link">
+                                <span class="nav-icon">📦</span> Manage Inventory
+                            </a>
+                        </li>
+                        <li>
+                            <a asp-page="/Account/ManageStaff" class="nav-link">
+                                <span class="nav-icon">👥</span> Manage Staff
+                            </a>
+                        </li>
+                    }
                 </ul>
             </nav>
             <div class="sidebar-footer d-flex align-items-center justify-content-between px-3">

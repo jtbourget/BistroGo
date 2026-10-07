@@ -41,6 +41,24 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
+
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var adminEmail = "manager@bistrogo.com";
+    if (await userManager.FindByEmailAsync(adminEmail) == null)
+    {
+        var adminUser = new ApplicationUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            FirstName = "System",
+            LastName = "Manager"
+        };
+        var result = await userManager.CreateAsync(adminUser, "Manager@123");
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(adminUser, Roles.Manager);
+        }
+    }
 }
 
 // Configure the HTTP request pipeline.
