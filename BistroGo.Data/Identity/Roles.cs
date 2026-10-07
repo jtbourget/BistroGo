@@ -10,7 +10,7 @@ namespace BistroGo.Data.Identity
     /// </summary>
     public static class Roles
     {
-        public const string Guest = "Guest";
+        public const string Customer = "Customer";
         public const string KitchenStaff = "KitchenStaff";
         public const string Manager = "Manager";
     }

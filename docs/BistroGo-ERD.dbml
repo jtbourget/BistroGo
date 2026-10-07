@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------
 // Users & roles (ASP.NET Core Identity)
 // Replaces the old staff_user table. A user can hold many roles
-// (e.g. KitchenStaff who also orders as a customer).
+// (e.g. a user who is both KitchenStaff and Customer).
 // Only the columns we care about are shown; Identity adds more
 // (SecurityStamp, LockoutEnd, etc.).
 // ---------------------------------------------------------------
@@ -25,7 +25,7 @@ Table AspNetUsers {
 
 Table AspNetRoles {
   Id varchar(450) [pk]
-  Name varchar(256) [unique, note: 'Seeded: Guest, KitchenStaff, Manager']
+  Name varchar(256) [unique, note: 'Seeded: Customer, KitchenStaff, Manager']
   Note: 'The "Role" lookup table'
 }
 
@@ -95,15 +95,20 @@ Table Orders {
   GuestName varchar(100)
   GuestPhone varchar(20)
   GuestEmail varchar(256)
+  GuestToken uuid [unique, note: 'NEW - cookie value that identifies a guest cart; null for logged-in users']
   Subtotal decimal(10,2) [not null, default: 0]
   Tax decimal(10,2) [not null, default: 0]
   Total decimal(10,2) [not null, default: 0]
   ConfirmationCode varchar(12) [unique, note: 'null until finalized']
   CreatedAt datetime [not null, default: `CURRENT_TIMESTAMP`, note: 'NEW - when the cart was started']
-  PlacedAt datetime [note: 'now nullable - set when IsFinalized flips to 1']
+  FinalizedAt datetime [note: 'NEW (replaces placed_at) - null while a cart; set when IsFinalized flips to 1']
+  IsArchived boolean [not null, default: false, note: 'NEW - soft delete; archived orders stay for kitchen review']
+  ArchivedAt datetime [note: 'NEW - set when IsArchived flips to 1']
   indexes {
     (UserId, IsFinalized) [name: 'IX_Orders_UserId_IsFinalized', note: 'fast "find my cart" lookup']
   }
+  Note: '''Rule: IsFinalized = 1 <=> FinalizedAt, StatusId, ConfirmationCode, PickupSlotId are all set.
+Rule: IsArchived = 1 <=> ArchivedAt is set. Orders are archived, not deleted.'''
 }
 
 Ref: Orders.UserId > AspNetUsers.Id [delete: set null]

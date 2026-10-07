@@ -7,14 +7,14 @@ public class InMemoryMenuItemRepository : IMenuItemRepository
 {
     private static readonly List<MenuItem> _items = new()
     {
-        new() { Id = 1, Name = "Bruschetta",      Description = "Grilled bread, tomatoes, basil",  Price = 8.50m,  Category = "Appetizer" },
-        new() { Id = 2, Name = "Caesar Salad",     Description = "Romaine, parmesan, croutons",     Price = 10.00m, Category = "Appetizer" },
-        new() { Id = 3, Name = "Margherita Pizza", Description = "Tomato, mozzarella, basil",       Price = 14.00m, Category = "Entree"    },
-        new() { Id = 4, Name = "Grilled Salmon",   Description = "Lemon butter, seasonal veg",      Price = 22.00m, Category = "Entree"    },
-        new() { Id = 5, Name = "Ribeye Steak",     Description = "12oz, garlic butter",             Price = 28.00m, Category = "Entree"    },
-        new() { Id = 6, Name = "Tiramisu",         Description = "Classic Italian dessert",         Price = 9.00m,  Category = "Dessert"   },
-        new() { Id = 7, Name = "Espresso",         Description = "Double shot",                     Price = 4.00m,  Category = "Drink"     },
-        new() { Id = 8, Name = "House Red",        Description = "Glass of Cabernet",               Price = 11.00m, Category = "Drink"     },
+        new() { Id = 1, Name = "Bruschetta",      Description = "Grilled bread, tomatoes, basil",  Price = 8.50m,  CategoryId = 1 },
+        new() { Id = 2, Name = "Caesar Salad",     Description = "Romaine, parmesan, croutons",     Price = 10.00m, CategoryId = 1 },
+        new() { Id = 3, Name = "Margherita Pizza", Description = "Tomato, mozzarella, basil",       Price = 14.00m, CategoryId = 2 },
+        new() { Id = 4, Name = "Grilled Salmon",   Description = "Lemon butter, seasonal veg",      Price = 22.00m, CategoryId = 2 },
+        new() { Id = 5, Name = "Ribeye Steak",     Description = "12oz, garlic butter",             Price = 28.00m, CategoryId = 2 },
+        new() { Id = 6, Name = "Tiramisu",         Description = "Classic Italian dessert",         Price = 9.00m,  CategoryId = 3 },
+        new() { Id = 7, Name = "Espresso",         Description = "Double shot",                     Price = 4.00m,  CategoryId = 4 },
+        new() { Id = 8, Name = "House Red",        Description = "Glass of Cabernet",               Price = 11.00m, CategoryId = 4 },
     };
 
     private static int _nextId = 100;
@@ -40,7 +40,8 @@ public class InMemoryMenuItemRepository : IMenuItemRepository
         existing.Name = item.Name;
         existing.Description = item.Description;
         existing.Price = item.Price;
-        existing.Category = item.Category;
+        existing.CategoryId = item.CategoryId;
+        existing.IsAvailable = item.IsAvailable;
         existing.ImageUrl = item.ImageUrl;
 
         return Task.FromResult(true);

@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Attributes only ([Index], [Precision], [DeleteBehavior]); no EF runtime/provider -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.12" />
+  </ItemGroup>
+
 </Project>
