@@ -45,6 +45,9 @@ namespace BistroGo.Data.DataAccess
             ConfigureOrderItems(builder);
             ConfigureRatings(builder);
             ConfigureExpenses(builder);
+
+            // Reference data (OrderStatuses, MenuCategories) - see SeedData.cs
+            SeedData.Apply(builder);
         }
 
         // ------------------------------------------------------------------
