@@ -1,4 +1,5 @@
-using BistroGo.Core.Models;
+
+﻿using BistroGo.Core.Models;
 using BistroGo.Data.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
