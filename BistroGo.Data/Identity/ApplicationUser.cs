@@ -16,7 +16,9 @@ namespace BistroGo.Data.Identity
         [Required, MaxLength(100)]
         public string LastName { get; set; } = string.Empty;
 
-        // Carried over from the old staff_user.created_at
-        public DateTime CreatedAt { get; set; }
+        // Carried over from the old staff_user.created_at.
+        // Set in C# (not a database default) because SQLite can't ADD a column to an
+        // existing table with a CURRENT_TIMESTAMP default - see step 5 notes.
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

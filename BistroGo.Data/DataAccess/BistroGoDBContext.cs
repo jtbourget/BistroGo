@@ -38,7 +38,6 @@ namespace BistroGo.Data.DataAccess
             // MUST run first: this is where Identity configures its own tables.
             base.OnModelCreating(builder);
 
-            ConfigureUsers(builder);
             ConfigureMenu(builder);
             ConfigurePickupTimeSlots(builder);
             ConfigureOrders(builder);
@@ -48,18 +47,6 @@ namespace BistroGo.Data.DataAccess
 
             // Reference data (OrderStatuses, MenuCategories) - see SeedData.cs
             SeedData.Apply(builder);
-        }
-
-        // ------------------------------------------------------------------
-        // Users (AspNetUsers)
-        // ------------------------------------------------------------------
-        private static void ConfigureUsers(ModelBuilder builder)
-        {
-            builder.Entity<ApplicationUser>(user =>
-            {
-                user.Property(u => u.CreatedAt)
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
-            });
         }
 
         // ------------------------------------------------------------------
