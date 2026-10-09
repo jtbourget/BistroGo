@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Authorization;
+using BistroGo.Data.Identity;
 
 namespace BistroGo.Web.Pages.Orders;
 
+[Authorize(Roles = Roles.Manager + "," + Roles.KitchenStaff)]
 public class IndexModel : PageModel
 {
     public List<OrderSummaryDto> CurrentOrders { get; set; } = new();
