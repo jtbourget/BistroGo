@@ -76,7 +76,7 @@ namespace BistroGo.Web.Pages.Account
                 return Page();
             }
 
-            await _userManager.AddToRoleAsync(user, Roles.Guest);
+            await _userManager.AddToRoleAsync(user, Roles.Customer);
 
             await _signInManager.SignInAsync(user, isPersistent: false);
 
