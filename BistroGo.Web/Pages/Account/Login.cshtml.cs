@@ -69,5 +69,29 @@ namespace BistroGo.Web.Pages.Account
 
             return Page();
         }
+
+        public IActionResult OnPostForgotPassword(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                TempData["ResetMessage"] = "Please enter an email address.";
+                return RedirectToPage();
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // TODO: Replace with real reset-password logic:
+            //   1. Look up the user by email (via Api or UserManager)
+            //   2. If found, generate a reset token
+            //   3. Send an email with a link like:
+            //        /Account/ResetPassword?token=...&email=...
+            //   4. If not found, do nothing (but still show the same confirmation
+            //      message, so attackers can't tell which emails exist)
+            // ═══════════════════════════════════════════════════════════════
+
+            // Always show the same confirmation message — good security practice,
+            // avoids leaking whether an email exists in the system.
+            TempData["ResetMessage"] = $"If an account exists for {email}, a reset link has been sent.";
+            return RedirectToPage();
+        }
     }
 }
