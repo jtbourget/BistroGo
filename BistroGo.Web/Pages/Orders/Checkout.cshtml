@@ -1,0 +1,157 @@
+﻿@page
+@model BistroGo.Web.Pages.Orders.CheckoutModel
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<div class="page-header">
+    <h1>🧾 Checkout Confirmation</h1>
+    <a asp-page="/Menu/Index" class="btn btn-outline-primary">← Back to Menu</a>
+</div>
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@error.ErrorMessage</div>
+        }
+    </div>
+}
+
+<div class="row g-4">
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         LEFT: Order review
+         Data source: GET /api/orders/current → { items: [...] }
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="col-lg-7">
+        <div class="dashboard-panel">
+            <div class="dashboard-panel-header">
+                <h3>Your Order</h3>
+                <span class="text-muted small">@Model.Lines.Sum(i => i.Quantity) items</span>
+            </div>
+
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th class="text-end">Unit Price</th>
+                        <th class="text-center">Qty</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in Model.Lines)
+                    {
+                        <tr>
+                            <!-- Name lives on the linked MenuItem -->
+                            <td>@line.MenuItem?.Name</td>
+                            <td class="text-end">$@line.UnitPrice.ToString("0.00")</td>
+                            <td class="text-center">@line.Quantity</td>
+                            <!-- No Total property — compute it -->
+                            <td class="text-end">$@((line.UnitPrice * line.Quantity).ToString("0.00"))</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="text-end text-muted">Subtotal:</td>
+                        <td class="text-end">$@Model.Subtotal.ToString("0.00")</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="text-end text-muted">Tax:</td>
+                        <td class="text-end">$@Model.Tax.ToString("0.00")</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="text-end fw-bold">Total:</td>
+                        <td class="text-end card-price">$@Model.Total.ToString("0.00")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         RIGHT: Customer details
+         Persisted via POST /api/orders
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="col-lg-5">
+        <div class="dashboard-panel">
+            <div class="dashboard-panel-header">
+                <h3>Your Details</h3>
+            </div>
+
+            <form method="post">
+
+                <!-- ── NAME ───────────────────────────────────────────────
+                     TODO: When auth is live, pre-fill from User.Identity
+                     and hide the guest fields.
+                     ─────────────────────────────────────────────────────── -->
+                <div class="mb-3">
+                    <label asp-for="GuestName" class="form-label">Name</label>
+                    <input asp-for="GuestName" class="form-control"
+                           placeholder="e.g. Alice Johnson" required />
+                </div>
+
+                <!-- ── PHONE ──────────────────────────────────────────────
+                     TODO: Persist via POST /api/orders (GuestPhone).
+                     ─────────────────────────────────────────────────────── -->
+                <div class="mb-3">
+                    <label asp-for="GuestPhone" class="form-label">
+                        Phone <span class="text-muted small">(optional)</span>
+                    </label>
+                    <input asp-for="GuestPhone" type="tel" class="form-control"
+                           placeholder="555-0101" />
+                </div>
+
+                <!-- ── EMAIL ──────────────────────────────────────────────
+                     TODO: Persist via POST /api/orders (GuestEmail).
+                     ─────────────────────────────────────────────────────── -->
+                <div class="mb-3">
+                    <label asp-for="GuestEmail" class="form-label">
+                        Email <span class="text-muted small">(optional)</span>
+                    </label>
+                    <input asp-for="GuestEmail" type="email" class="form-control"
+                           placeholder="you@example.com" />
+                </div>
+
+                <!-- ── PICKUP SLOT ────────────────────────────────────────
+                     TODO: Populate options from GET /api/pickupslots?date=today
+                     and bind the selected value to PickupSlotId.
+                     ─────────────────────────────────────────────────────── -->
+                <div class="mb-3">
+                    <label asp-for="PickupSlotId" class="form-label">
+                        Pickup Time <span class="text-muted small">(optional)</span>
+                    </label>
+                    <input asp-for="PickupSlotId" type="number" class="form-control"
+                           placeholder="Slot ID (placeholder)" />
+                </div>
+
+                <!-- ── SPECIAL INSTRUCTIONS ───────────────────────────────
+                     TODO: This belongs on EACH OrderItem.SpecialInstructions.
+                     For now, could apply to all items or move to the line editor.
+                     ─────────────────────────────────────────────────────── -->
+                <div class="mb-3">
+                    <label asp-for="SpecialInstructions" class="form-label">
+                        Notes for kitchen <span class="text-muted small">(optional)</span>
+                    </label>
+                    <textarea asp-for="SpecialInstructions" class="form-control" rows="2"
+                              placeholder="e.g. No onions, allergy: peanuts"></textarea>
+                </div>
+
+                <!-- ── CONFIRM ────────────────────────────────────────────
+                     TODO: POST /api/orders with finalized Order,
+                     then CurrentOrder.Clear(),
+                     then redirect to /Orders/Confirmation?id={newOrderId}.
+                     ─────────────────────────────────────────────────────── -->
+                <button type="submit" class="btn btn-primary w-100 mb-2">
+                    ✓ Place Order
+                </button>
+                <a asp-page="/Menu/Index" class="btn btn-outline-primary w-100">Cancel</a>
+
+            </form>
+        </div>
+    </div>
+
+</div>
