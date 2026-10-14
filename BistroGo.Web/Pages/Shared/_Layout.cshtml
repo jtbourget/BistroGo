@@ -1,3 +1,4 @@
+@using BistroGo.Web.Stores
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,15 +33,11 @@
                             <span class="nav-icon">🍴</span> Menu
                         </a>
                     </li>
-                    <!-- 
-                        Shopping Cart Sidebar Item 
-                        Displays the current total items added to the cart via the global CartCount.
-                        Clicking this item triggers the globally accessible currentOrderModal. 
-                    -->
                     <li>
                         <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#currentOrderModal">
                             <span class="nav-icon">🛒</span> Cart
-                            <span class="badge bg-danger rounded-pill ms-2" id="cartTicker">@BistroGo.Web.Pages.Inventory.MenuStore.CartCount</span>
+                            <span class="badge bg-danger rounded-pill ms-2 @(CurrentOrder.TotalItems > 0 ? "" : "d-none")"
+                                  id="cartTicker">@CurrentOrder.TotalItems</span>
                         </a>
                     </li>
                     @* Hide Orders from customers/logged-out users. Only Manager and KitchenStaff can see orders. *@
@@ -70,6 +67,7 @@
             </nav>
             <div class="sidebar-footer d-flex align-items-center justify-content-between px-3">
                 <small>&copy; @DateTime.Now.Year BistroGo</small>
+                <!-- Walkthrough for user onboarding -->
                 <button type="button" id="startWalkthroughBtn" class="btn btn-sm btn-outline-secondary py-0" style="font-size: 0.75rem;">Walkthrough</button>
             </div>
         </aside>
@@ -87,54 +85,58 @@
         </div>
     </div>
 
-    <!-- 
-        Global Current Order Modal 
-        Contains the shopping cart functionality and details.
-        Moved to the shared layout so it can be invoked from any page via the Cart sidebar item.
-    -->
-    <div class="modal fade" id="currentOrderModal" tabindex="-1" aria-labelledby="currentOrderModalLabel" aria-hidden="true">
+    <!-- ═══════════════════════════════════════════════════════════════
+         GLOBAL CART MODAL — same modal on every page
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="modal fade" id="currentOrderModal"
+         tabindex="-1"
+         aria-labelledby="currentOrderModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content menu-modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="currentOrderModalLabel">Current Order</h5>
+                    <h5 class="modal-title" id="currentOrderModalLabel">🛒 Shopping Cart</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <table class="table align-middle mb-0">
+                    <div id="cartEmptyState" class="alert alert-info mb-0 @(CurrentOrder.Lines.Any() ? "d-none" : "")">
+                        Your cart is empty. Add items from the menu to get started.
+                    </div>
+
+                    <table class="table align-middle mb-0 @(CurrentOrder.Lines.Any() ? "" : "d-none")" id="cartTable">
                         <thead>
                             <tr>
                                 <th>Item</th>
                                 <th class="text-end">Price</th>
                                 <th class="text-center" style="width: 160px;">Quantity</th>
-                                <th class="text-end">Total</th>
+                                <th class="text-end">Subtotal</th>
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @if (!BistroGo.Web.Pages.Inventory.MenuStore.CartItems.Any())
+                        <tbody id="cartTableBody">
+                            @foreach (var line in CurrentOrder.Lines)
                             {
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted">Your cart is empty.</td>
+                                <tr data-menu-item-id="@line.MenuItemId">
+                                    <td>@line.MenuItem?.Name</td>
+                                    <td class="text-end">$@line.UnitPrice.ToString("0.00")</td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <button type="button" class="btn btn-sm btn-outline-primary js-qty-decrease">−</button>
+                                            <span class="px-2 align-self-center js-qty">@line.Quantity</span>
+                                            <button type="button" class="btn btn-sm btn-outline-primary js-qty-increase">+</button>
+                                        </div>
+                                    </td>
+                                    <td class="text-end js-line-total">$@((line.UnitPrice * line.Quantity).ToString("0.00"))</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-sm btn-link text-danger p-0 js-remove-line" title="Remove">✕</button>
+                                    </td>
                                 </tr>
-                            }
-                            else
-                            {
-                                @foreach (var cartItem in BistroGo.Web.Pages.Inventory.MenuStore.CartItems)
-                                {
-                                    <tr>
-                                        <td>@cartItem.Name</td>
-                                        <td class="text-end">$@cartItem.Price.ToString("0.00")</td>
-                                        <td class="text-center">@cartItem.Quantity</td>
-                                        <td class="text-end">$@cartItem.Total.ToString("0.00")</td>
-                                        <td class="text-end text-muted">✕</td>
-                                    </tr>
-                                }
                             }
                         </tbody>
                         <tfoot>
                             <tr>
                                 <td colspan="3" class="text-end fw-bold">Total:</td>
-                                <td class="text-end card-price">$@BistroGo.Web.Pages.Inventory.MenuStore.CartItems.Sum(c => c.Total).ToString("0.00")</td>
+                                <td class="text-end card-price" id="cartTotal">$@CurrentOrder.TotalPrice.ToString("0.00")</td>
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -142,11 +144,16 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
-                    <a asp-page="/Orders/Create" class="btn btn-primary">Continue to Checkout</a>
+                    <a asp-page="/Orders/Checkout" class="btn btn-primary">Continue to Checkout</a>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- CSRF token for the cart AJAX POSTs -->
+    <form id="csrfForm" method="post" style="display:none;">
+        @Html.AntiForgeryToken()
+    </form>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -154,82 +161,171 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
-        // Toggle sidebar on mobile
-        document.getElementById('sidebarToggle')?.addEventListener('click', function () {
-            document.querySelector('.app-wrapper').classList.toggle('sidebar-collapsed');
-        });
+            // ── Sidebar toggle (mobile) ──────────────────────────────────
+            document.getElementById('sidebarToggle')?.addEventListener('click', function () {
+                document.querySelector('.app-wrapper').classList.toggle('sidebar-collapsed');
+            });
 
-        // --- Walkthrough Feature ---
-        // Attaches a click event to the walkthrough button in the footer.
-        // If the user is not currently on the Menu page, it redirects them there
-        // with a query string 'walkthrough=true' to trigger it after the page loads.
-        document.getElementById('startWalkthroughBtn')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            var path = window.location.pathname.toLowerCase();
-            if (!path.includes('/menu')) {
-                window.location.href = '/Menu?walkthrough=true';
-                return;
-            }
-            startWalkthrough();
-        });
+            // ── Cart modal AJAX (works from any page) ────────────────────
+            (function () {
+                const csrfToken = document.querySelector('#csrfForm input[name="__RequestVerificationToken"]')?.value || '';
+                const cartTableBody = document.getElementById('cartTableBody');
+                const cartTotal = document.getElementById('cartTotal');
+                const cartTable = document.getElementById('cartTable');
+                const cartEmptyState = document.getElementById('cartEmptyState');
 
-        // Initializes and starts the Intro.js walkthrough tour.
-        // Dynamically builds the steps array to ensure elements exist on the page
-        // before attaching a tooltip to them, preventing silent failures.
-        function startWalkthrough() {
-            var steps = [];
-            
-            // Step 1: Highlight the category filter dropdown
-            var categoryEl = document.querySelector('#category');
-            if (categoryEl) {
-                steps.push({
-                    element: categoryEl,
-                    intro: "Welcome to BistroGo! Let's get started by selecting a category to filter the menu items.",
-                    position: 'right'
+                if (!cartTableBody) return;
+
+                cartTableBody.addEventListener('click', async function (e) {
+                    const row = e.target.closest('tr');
+                    if (!row) return;
+
+                    const menuItemId = parseInt(row.getAttribute('data-menu-item-id'), 10);
+                    const qtySpan = row.querySelector('.js-qty');
+                    const currentQty = parseInt(qtySpan.textContent, 10);
+
+                    let endpoint = null;
+                    let body = null;
+
+                    if (e.target.classList.contains('js-qty-increase')) {
+                        endpoint = '/Menu?handler=UpdateQuantityJson';
+                        body = new URLSearchParams({ menuItemId, quantity: currentQty + 1 });
+                    } else if (e.target.classList.contains('js-qty-decrease')) {
+                        endpoint = '/Menu?handler=UpdateQuantityJson';
+                        body = new URLSearchParams({ menuItemId, quantity: currentQty - 1 });
+                    } else if (e.target.classList.contains('js-remove-line')) {
+                        endpoint = '/Menu?handler=RemoveLineJson';
+                        body = new URLSearchParams({ menuItemId });
+                    }
+
+                    if (!endpoint) return;
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': csrfToken
+                        },
+                        body: body.toString()
+                    });
+
+                    if (!response.ok) {
+                        console.error('[Cart] Update failed:', response.status);
+                        return;
+                    }
+
+                    const data = await response.json();
+                    renderCart(data);
+                    updateBadges(data.itemCount);
                 });
+
+                function renderCart(data) {
+                    const hasLines = data.lines.length > 0;
+                    cartTable.classList.toggle('d-none', !hasLines);
+                    cartEmptyState.classList.toggle('d-none', hasLines);
+
+                    cartTableBody.innerHTML = '';
+                    for (const line of data.lines) {
+                        const tr = document.createElement('tr');
+                        tr.setAttribute('data-menu-item-id', line.menuItemId);
+                        tr.innerHTML = `
+                                    <td>${escapeHtml(line.itemName)}</td>
+                                    <td class="text-end">$${line.unitPrice.toFixed(2)}</td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <button type="button" class="btn btn-sm btn-outline-primary js-qty-decrease">−</button>
+                                            <span class="px-2 align-self-center js-qty">${line.quantity}</span>
+                                            <button type="button" class="btn btn-sm btn-outline-primary js-qty-increase">+</button>
+                                        </div>
+                                    </td>
+                                    <td class="text-end js-line-total">$${line.total.toFixed(2)}</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-sm btn-link text-danger p-0 js-remove-line" title="Remove">✕</button>
+                                    </td>`;
+                        cartTableBody.appendChild(tr);
+                    }
+
+                    cartTotal.textContent = '$' + data.total.toFixed(2);
+                }
+
+                function updateBadges(count) {
+                    // Sidebar badge
+                    const cartTicker = document.getElementById('cartTicker');
+                    if (cartTicker) {
+                        cartTicker.textContent = count;
+                        cartTicker.classList.toggle('d-none', count === 0);
+                    }
+                    // Menu page badge (only present on Menu)
+                    const menuBadge = document.getElementById('menuCartBadge');
+                    if (menuBadge) {
+                        menuBadge.textContent = count;
+                        menuBadge.classList.toggle('d-none', count === 0);
+                    }
+                }
+
+                function escapeHtml(str) {
+                    const div = document.createElement('div');
+                    div.textContent = str;
+                    return div.innerHTML;
+                }
+            })();
+
+            // ── Walkthrough ──────────────────────────────────────────────
+            document.getElementById('startWalkthroughBtn')?.addEventListener('click', function (e) {
+                e.preventDefault();
+                var path = window.location.pathname.toLowerCase();
+                if (!path.includes('/menu')) {
+                    window.location.href = '/Menu?walkthrough=true';
+                    return;
+                }
+                startWalkthrough();
+            });
+
+            function startWalkthrough() {
+                var steps = [];
+
+                var categoryEl = document.querySelector('#category');
+                if (categoryEl) {
+                    steps.push({
+                        element: categoryEl,
+                        intro: "Welcome to BistroGo! Let's get started by selecting a category to filter the menu items.",
+                        position: 'right'
+                    });
+                }
+
+                var addBtn = document.querySelector('.btn-add-to-order');
+                if (addBtn) {
+                    steps.push({
+                        element: addBtn,
+                        intro: "Once you find an item you like, click here to add it to your cart.",
+                        position: 'top'
+                    });
+                }
+
+                var cartEl = document.querySelector('a[data-bs-target="#currentOrderModal"]');
+                if (cartEl) {
+                    steps.push({
+                        element: cartEl,
+                        intro: "Click here to view your cart and proceed to checkout when you're ready.",
+                        position: 'right'
+                    });
+                }
+
+                if (steps.length > 0) {
+                    introJs().setOptions({
+                        steps: steps,
+                        showProgress: true,
+                        showBullets: false
+                    }).start();
+                } else {
+                    alert("Walkthrough steps are not available on this page.");
+                }
             }
 
-            // Step 2: Highlight the first 'Add to Order' button on a menu item
-            var addBtn = document.querySelector('.btn-add-to-order');
-            if (addBtn) {
-                steps.push({
-                    element: addBtn,
-                    intro: "Once you find an item you like, click here to add it to your cart.",
-                    position: 'top'
-                });
+            if (window.location.search.includes('walkthrough=true')) {
+                setTimeout(startWalkthrough, 500);
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
-
-            // Step 3: Highlight the Cart button in the sidebar
-            var cartEl = document.querySelector('a[data-bs-target="#currentOrderModal"]');
-            if (cartEl) {
-                steps.push({
-                    element: cartEl,
-                    intro: "Click here to view your cart and proceed to checkout when you're ready.",
-                    position: 'right'
-                });
-            }
-
-            // Execute the tour only if there is at least one step available
-            if (steps.length > 0) {
-                introJs().setOptions({
-                    steps: steps,
-                    showProgress: true,
-                    showBullets: false
-                }).start();
-            } else {
-                alert("Walkthrough steps are not available on this page.");
-            }
-        }
-
-        // Auto-start the walkthrough if redirected from another page.
-        // Uses a slight timeout to ensure all DOM elements and layout are fully rendered.
-        if (window.location.search.includes('walkthrough=true')) {
-            setTimeout(startWalkthrough, 500);
-            
-            // Clean up the URL to remove the query parameter so refreshing the page
-            // doesn't immediately restart the walkthrough again.
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
