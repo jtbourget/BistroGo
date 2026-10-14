@@ -957,3 +957,32 @@ body {
         .list-group-item .text-muted {
             font-size: 0.8rem;
         }
+
+/* ═══════════════════════════════════════════════════
+   PASSWORD TOOLTIP ICON
+   ═══════════════════════════════════════════════════ */
+
+/* Small orange info badge next to the Password label */
+.password-tooltip {
+    display: inline-flex;
+    align-items: center; 
+    justify-content: center; 
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 50%; /* makes it a circle */
+    background-color: #b5651d;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-left: 0.4rem;
+    vertical-align: middle;
+    transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+}
+
+    .password-tooltip:hover {
+        background-color: #8a4a12;
+        transform: scale(1.1);
+        box-shadow: 0 2px 6px rgba(181, 101, 29, 0.35);
+    }
