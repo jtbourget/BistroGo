@@ -4,6 +4,10 @@
     ViewData["Title"] = "Checkout";
 }
 
+<form id="csrfForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
 <div class="page-header">
     <h1>🧾 Checkout Confirmation</h1>
     <a asp-page="/Menu/Index" class="btn btn-outline-primary">← Back to Menu</a>
@@ -22,136 +26,176 @@
 <div class="row g-4">
 
     <!-- ═══════════════════════════════════════════════════════════════
-         LEFT: Order review
-         Data source: GET /api/orders/current → { items: [...] }
+         LEFT: Order review with inline cart editing
          ═══════════════════════════════════════════════════════════════ -->
     <div class="col-lg-7">
         <div class="dashboard-panel">
             <div class="dashboard-panel-header">
                 <h3>Your Order</h3>
-                <span class="text-muted small">@Model.Lines.Sum(i => i.Quantity) items</span>
+                <span class="text-muted small" id="checkoutItemCount">@Model.Lines.Sum(i => i.Quantity) items</span>
             </div>
 
-            <table class="table align-middle mb-0">
+            <div id="checkoutEmptyState" class="alert alert-info mb-0 @(Model.Lines.Any() ? "d-none" : "")">
+                Your cart is empty. <a asp-page="/Menu/Index">Browse the menu</a> to add items.
+            </div>
+
+            <table class="table align-middle mb-0 @(Model.Lines.Any() ? "" : "d-none")" id="checkoutTable">
                 <thead>
                     <tr>
                         <th>Item</th>
                         <th class="text-end">Unit Price</th>
-                        <th class="text-center">Qty</th>
+                        <th class="text-center" style="width: 160px;">Quantity</th>
                         <th class="text-end">Subtotal</th>
+                        <th></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="checkoutTableBody">
                     @foreach (var line in Model.Lines)
                     {
-                        <tr>
-                            <!-- Name lives on the linked MenuItem -->
+                        <tr data-menu-item-id="@line.MenuItemId">
                             <td>@line.MenuItem?.Name</td>
                             <td class="text-end">$@line.UnitPrice.ToString("0.00")</td>
-                            <td class="text-center">@line.Quantity</td>
-                            <!-- No Total property — compute it -->
-                            <td class="text-end">$@((line.UnitPrice * line.Quantity).ToString("0.00"))</td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-1">
+                                    <button type="button" class="btn btn-sm btn-outline-primary js-qty-decrease">−</button>
+                                    <span class="px-2 align-self-center js-qty">@line.Quantity</span>
+                                    <button type="button" class="btn btn-sm btn-outline-primary js-qty-increase">+</button>
+                                </div>
+                            </td>
+                            <td class="text-end js-line-total">$@((line.UnitPrice * line.Quantity).ToString("0.00"))</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0 js-remove-line" title="Remove">✕</button>
+                            </td>
                         </tr>
                     }
                 </tbody>
                 <tfoot>
                     <tr>
                         <td colspan="3" class="text-end text-muted">Subtotal:</td>
-                        <td class="text-end">$@Model.Subtotal.ToString("0.00")</td>
+                        <td class="text-end" id="checkoutSubtotal">$@Model.Subtotal.ToString("0.00")</td>
+                        <td></td>
                     </tr>
                     <tr>
                         <td colspan="3" class="text-end text-muted">Tax:</td>
-                        <td class="text-end">$@Model.Tax.ToString("0.00")</td>
+                        <td class="text-end" id="checkoutTax">$@Model.Tax.ToString("0.00")</td>
+                        <td></td>
                     </tr>
                     <tr>
                         <td colspan="3" class="text-end fw-bold">Total:</td>
-                        <td class="text-end card-price">$@Model.Total.ToString("0.00")</td>
+                        <td class="text-end card-price" id="checkoutTotal">$@Model.Total.ToString("0.00")</td>
+                        <td></td>
                     </tr>
                 </tfoot>
             </table>
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         RIGHT: Customer details
-         Persisted via POST /api/orders
-         ═══════════════════════════════════════════════════════════════ -->
-    <div class="col-lg-5">
-        <div class="dashboard-panel">
-            <div class="dashboard-panel-header">
-                <h3>Your Details</h3>
-            </div>
+@section Scripts {
+    <script>
+        // ── Inline cart editing on the checkout page ─────────────────
+        (function () {
+            const csrfToken = document.querySelector('#csrfForm input[name="__RequestVerificationToken"]')?.value || '';
+            const tableBody = document.getElementById('checkoutTableBody');
+            const table = document.getElementById('checkoutTable');
+            const emptyState = document.getElementById('checkoutEmptyState');
+            const subtotalEl = document.getElementById('checkoutSubtotal');
+            const taxEl = document.getElementById('checkoutTax');
+            const totalEl = document.getElementById('checkoutTotal');
+            const itemCountEl = document.getElementById('checkoutItemCount');
 
-            <form method="post">
+            if (!tableBody) return;
 
-                <!-- ── NAME ───────────────────────────────────────────────
-                     TODO: When auth is live, pre-fill from User.Identity
-                     and hide the guest fields.
-                     ─────────────────────────────────────────────────────── -->
-                <div class="mb-3">
-                    <label asp-for="GuestName" class="form-label">Name</label>
-                    <input asp-for="GuestName" class="form-control"
-                           placeholder="e.g. Alice Johnson" required />
-                </div>
+            tableBody.addEventListener('click', async function (e) {
+                const row = e.target.closest('tr');
+                if (!row) return;
 
-                <!-- ── PHONE ──────────────────────────────────────────────
-                     TODO: Persist via POST /api/orders (GuestPhone).
-                     ─────────────────────────────────────────────────────── -->
-                <div class="mb-3">
-                    <label asp-for="GuestPhone" class="form-label">
-                        Phone <span class="text-muted small">(optional)</span>
-                    </label>
-                    <input asp-for="GuestPhone" type="tel" class="form-control"
-                           placeholder="555-0101" />
-                </div>
+                const menuItemId = parseInt(row.getAttribute('data-menu-item-id'), 10);
+                const qtySpan = row.querySelector('.js-qty');
+                const currentQty = parseInt(qtySpan.textContent, 10);
 
-                <!-- ── EMAIL ──────────────────────────────────────────────
-                     TODO: Persist via POST /api/orders (GuestEmail).
-                     ─────────────────────────────────────────────────────── -->
-                <div class="mb-3">
-                    <label asp-for="GuestEmail" class="form-label">
-                        Email <span class="text-muted small">(optional)</span>
-                    </label>
-                    <input asp-for="GuestEmail" type="email" class="form-control"
-                           placeholder="you@example.com" />
-                </div>
+                let endpoint = null;
+                let body = null;
 
-                <!-- ── PICKUP SLOT ────────────────────────────────────────
-                     TODO: Populate options from GET /api/pickupslots?date=today
-                     and bind the selected value to PickupSlotId.
-                     ─────────────────────────────────────────────────────── -->
-                <div class="mb-3">
-                    <label asp-for="PickupSlotId" class="form-label">
-                        Pickup Time <span class="text-muted small">(optional)</span>
-                    </label>
-                    <input asp-for="PickupSlotId" type="number" class="form-control"
-                           placeholder="Slot ID (placeholder)" />
-                </div>
+                if (e.target.classList.contains('js-qty-increase')) {
+                    endpoint = '?handler=UpdateQuantityJson';
+                    body = new URLSearchParams({ menuItemId, quantity: currentQty + 1 });
+                } else if (e.target.classList.contains('js-qty-decrease')) {
+                    endpoint = '?handler=UpdateQuantityJson';
+                    body = new URLSearchParams({ menuItemId, quantity: currentQty - 1 });
+                } else if (e.target.classList.contains('js-remove-line')) {
+                    endpoint = '?handler=RemoveLineJson';
+                    body = new URLSearchParams({ menuItemId });
+                }
 
-                <!-- ── SPECIAL INSTRUCTIONS ───────────────────────────────
-                     TODO: This belongs on EACH OrderItem.SpecialInstructions.
-                     For now, could apply to all items or move to the line editor.
-                     ─────────────────────────────────────────────────────── -->
-                <div class="mb-3">
-                    <label asp-for="SpecialInstructions" class="form-label">
-                        Notes for kitchen <span class="text-muted small">(optional)</span>
-                    </label>
-                    <textarea asp-for="SpecialInstructions" class="form-control" rows="2"
-                              placeholder="e.g. No onions, allergy: peanuts"></textarea>
-                </div>
+                if (!endpoint) return;
 
-                <!-- ── CONFIRM ────────────────────────────────────────────
-                     TODO: POST /api/orders with finalized Order,
-                     then CurrentOrder.Clear(),
-                     then redirect to /Orders/Confirmation?id={newOrderId}.
-                     ─────────────────────────────────────────────────────── -->
-                <button type="submit" class="btn btn-primary w-100 mb-2">
-                    ✓ Place Order
-                </button>
-                <a asp-page="/Menu/Index" class="btn btn-outline-primary w-100">Cancel</a>
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': csrfToken
+                    },
+                    body: body.toString()
+                });
 
-            </form>
-        </div>
-    </div>
+                if (!response.ok) {
+                    console.error('[Checkout Cart] Update failed:', response.status);
+                    return;
+                }
 
-</div>
+                const data = await response.json();
+                renderCheckout(data);
+            });
+
+            function renderCheckout(data) {
+                const hasLines = data.lines.length > 0;
+                table.classList.toggle('d-none', !hasLines);
+                emptyState.classList.toggle('d-none', hasLines);
+
+                tableBody.innerHTML = '';
+                for (const line of data.lines) {
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-menu-item-id', line.menuItemId);
+                    tr.innerHTML = `
+                        <td>${escapeHtml(line.itemName)}</td>
+                        <td class="text-end">$${line.unitPrice.toFixed(2)}</td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <button type="button" class="btn btn-sm btn-outline-primary js-qty-decrease">−</button>
+                                <span class="px-2 align-self-center js-qty">${line.quantity}</span>
+                                <button type="button" class="btn btn-sm btn-outline-primary js-qty-increase">+</button>
+                            </div>
+                        </td>
+                        <td class="text-end js-line-total">$${line.total.toFixed(2)}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-link text-danger p-0 js-remove-line" title="Remove">✕</button>
+                        </td>`;
+                    tableBody.appendChild(tr);
+                }
+
+                subtotalEl.textContent = '$' + data.subtotal.toFixed(2);
+                taxEl.textContent = '$' + data.tax.toFixed(2);
+                totalEl.textContent = '$' + data.total.toFixed(2);
+                itemCountEl.textContent = data.itemCount + ' items';
+
+                // Syncs the sidebar cart number also with updating the number from inside the checkout screen
+                const cartTicker = document.getElementById('cartTicker');
+                if (cartTicker) {
+                    cartTicker.textContent = data.itemCount;
+                    cartTicker.classList.toggle('d-none', data.itemCount === 0);
+                }
+                const menuBadge = document.getElementById('menuCartBadge');
+                if (menuBadge) {
+                    menuBadge.textContent = data.itemCount;
+                    menuBadge.classList.toggle('d-none', data.itemCount === 0);
+                }
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+        })();
+    </script>
+}

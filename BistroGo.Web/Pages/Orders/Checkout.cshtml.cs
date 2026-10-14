@@ -108,6 +108,35 @@ public class CheckoutModel : PageModel
         return RedirectToPage("/Orders/Index");
     }
 
+    // ── AJAX handlers (mirror Menu/Index for the inline cart editor) ──
+    public IActionResult OnPostUpdateQuantityJson(int menuItemId, int quantity)
+    {
+        CurrentOrder.UpdateQuantity(menuItemId, quantity);
+        return new JsonResult(BuildCartJson());
+    }
+
+    public IActionResult OnPostRemoveLineJson(int menuItemId)
+    {
+        CurrentOrder.RemoveItem(menuItemId);
+        return new JsonResult(BuildCartJson());
+    }
+
+    private object BuildCartJson() => new
+    {
+        lines = CurrentOrder.Lines.Select(l => new
+        {
+            menuItemId = l.MenuItemId,
+            itemName = l.MenuItem?.Name ?? "",
+            unitPrice = l.UnitPrice,
+            quantity = l.Quantity,
+            total = l.UnitPrice * l.Quantity
+        }),
+        itemCount = CurrentOrder.TotalItems,
+        subtotal = CurrentOrder.Cart.Subtotal,
+        tax = CurrentOrder.Cart.Tax,
+        total = CurrentOrder.TotalPrice
+    };
+
     private void LoadCart()
     {
         // TODO: Replace with Api call:
