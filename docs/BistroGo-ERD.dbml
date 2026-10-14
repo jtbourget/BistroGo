@@ -127,15 +127,15 @@ Table OrderItems {
 Ref: OrderItems.OrderId > Orders.Id [delete: cascade]
 Ref: OrderItems.MenuItemId > MenuItems.Id [delete: restrict]
 
-Table Ratings {
+Table Reviews {
   Id int [pk, increment]
-  OrderId int [not null]
-  Stars int [not null, note: 'CHECK Stars BETWEEN 1 AND 5']
-  Comment varchar(500)
-  SubmittedAt datetime [not null, default: `CURRENT_TIMESTAMP`]
+  CustomerId varchar(450) [note: 'FK to AspNetUsers.Id']
+  Rating int [not null, note: 'CHECK Rating BETWEEN 1 AND 5']
+  ReviewText varchar(1000)
+  CreatedAt datetime [not null, default: `CURRENT_TIMESTAMP`]
 }
 
-Ref: Ratings.OrderId > Orders.Id [delete: cascade]
+Ref: Reviews.CustomerId > AspNetUsers.Id [delete: set null]
 
 // ---------------------------------------------------------------
 // Back office
