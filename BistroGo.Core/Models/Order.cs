@@ -73,6 +73,5 @@ namespace BistroGo.Core.Models
         public DateTime? ArchivedAt { get; set; }
 
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
-        public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
     }
 }
