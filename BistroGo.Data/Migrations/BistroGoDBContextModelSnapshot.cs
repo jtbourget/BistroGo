@@ -155,6 +155,80 @@ namespace BistroGo.Data.Migrations
                         {
                             t.HasCheckConstraint("CK_MenuItems_Price_NonNegative", "CAST(\"Price\" AS REAL) >= 0");
                         });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CategoryId = 1,
+                            Description = "Grilled bread, tomatoes, basil",
+                            IsAvailable = true,
+                            Name = "Bruschetta",
+                            Price = 8.50m
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CategoryId = 1,
+                            Description = "Romaine, parmesan, croutons",
+                            IsAvailable = true,
+                            Name = "Caesar Salad",
+                            Price = 10.00m
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CategoryId = 2,
+                            Description = "Tomato, mozzarella, basil",
+                            IsAvailable = true,
+                            Name = "Margherita Pizza",
+                            Price = 14.00m
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CategoryId = 2,
+                            Description = "Lemon butter, seasonal veg",
+                            IsAvailable = true,
+                            Name = "Grilled Salmon",
+                            Price = 22.00m
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CategoryId = 2,
+                            Description = "12oz, garlic butter",
+                            IsAvailable = true,
+                            Name = "Ribeye Steak",
+                            Price = 28.00m
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CategoryId = 3,
+                            Description = "Classic Italian dessert",
+                            IsAvailable = true,
+                            Name = "Tiramisu",
+                            Price = 9.00m
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CategoryId = 4,
+                            Description = "Double shot",
+                            IsAvailable = true,
+                            Name = "Espresso",
+                            Price = 4.00m
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CategoryId = 4,
+                            Description = "Glass of Cabernet",
+                            IsAvailable = true,
+                            Name = "House Red",
+                            Price = 11.00m
+                        });
                 });
 
             modelBuilder.Entity("BistroGo.Core.Models.Order", b =>
@@ -242,6 +316,11 @@ namespace BistroGo.Data.Migrations
                     b.HasIndex("PickupSlotId");
 
                     b.HasIndex("StatusId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Orders_UserId_OpenCart")
+                        .HasFilter("\"IsFinalized\" = 0");
 
                     b.HasIndex("UserId", "IsFinalized");
 
