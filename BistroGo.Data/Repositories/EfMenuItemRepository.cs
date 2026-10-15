@@ -21,14 +21,14 @@ namespace BistroGo.Data.Repositories
         public async Task<List<MenuItem>> GetAllAsync()
         {
             return await _db.MenuItems
-                .AsNoTracking()
+                .AsNoTracking() // Only reads items, does not edit them
                 .Include(i => i.Category)
                 .OrderBy(i => i.Category!.DisplayOrder)
                 .ThenBy(i => i.Name)
                 .ToListAsync();
         }
 
-        public async Task<MenuItem?> GetByIdAsync(int id)
+        public async Task<MenuItem?> GetByIdAsync(int id) // ID can return a null menu item, to ensure error message
         {
             return await _db.MenuItems
                 .AsNoTracking()

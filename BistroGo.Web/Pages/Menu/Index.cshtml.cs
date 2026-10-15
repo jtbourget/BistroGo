@@ -1,4 +1,6 @@
-using BistroGo.Web.Pages.Inventory;
+using BistroGo.Core.Interfaces;
+using BistroGo.Core.Models;
+using BistroGo.Web.Pages.Inventory;      // still needed: OnPostAddToOrder uses MenuStore for now
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -6,22 +8,31 @@ namespace BistroGo.Web.Pages.Menu;
 
 public class IndexModel : PageModel
 {
-    public List<MenuItemDto> MenuItems { get; set; } = new();
+    private readonly IMenuItemRepository _menu;
+
+    public IndexModel(IMenuItemRepository menu)
+    {
+        _menu = menu;
+    }
+
+    public List<MenuItem> MenuItems { get; set; } = new();     // was List<MenuItemDto>
     public List<string> Categories { get; set; } = new();
     public string? SelectedCategory { get; set; }
 
-    public void OnGet(string? category)
+    public async Task OnGetAsync(string? category)             // was: public void OnGet
     {
         SelectedCategory = category;
 
-        // TODO: replace with Api call to GET /api/menuitems
-        var all = MenuStore.Items;
+        // Already sorted by category DisplayOrder, then name.
+        var all = (await _menu.GetAllAsync()).Where(m => m.IsAvailable).ToList(); // IsAvailable filters items markes as unavailable
 
-        Categories = all.Select(m => m.Category).Distinct().OrderBy(c => c).ToList();
+        // Distinct() keeps first-seen order, so the dropdown follows DisplayOrder
+        // (the old OrderBy(c => c) sorted alphabetically).
+        Categories = all.Select(m => m.Category!.Name).Distinct().ToList();
 
         MenuItems = string.IsNullOrEmpty(category)
-            ? all.ToList()
-            : all.Where(m => m.Category == category).ToList();
+            ? all
+            : all.Where(m => m.Category!.Name == category).ToList();
     }
 
     /// <summary>

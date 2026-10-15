@@ -60,5 +60,12 @@ namespace BistroGo.Data.DataAccess
                 new MenuItem { Id = 8, CategoryId = 4, Name = "House Red", Description = "Glass of Cabernet", Price = 11.00m, IsAvailable = true }
             );
         }
+
+        private static void SeedOrders(ModelBuilder builder) // Finish Later
+        {
+            builder.Entity<Order>().HasData(
+                new Order { Id = 1, }
+            );
+        }
     }
 }
