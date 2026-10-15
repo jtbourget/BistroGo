@@ -2,6 +2,8 @@ using BistroGo.Data.DataAccess;
 using BistroGo.Data.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using BistroGo.Core.Interfaces;
+using BistroGo.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +12,8 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddDbContext<BistroGoDBContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IMenuItemRepository, EfMenuItemRepository>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
