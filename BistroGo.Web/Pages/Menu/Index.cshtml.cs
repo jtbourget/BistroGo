@@ -3,16 +3,19 @@ using BistroGo.Core.Models;
 using BistroGo.Web.Pages.Inventory;      // still needed: OnPostAddToOrder uses MenuStore for now
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using BistroGo.Web.Cart;
 
 namespace BistroGo.Web.Pages.Menu;
 
 public class IndexModel : PageModel
 {
     private readonly IMenuItemRepository _menu;
+    private readonly ICartService _cart;
 
-    public IndexModel(IMenuItemRepository menu)
+    public IndexModel(IMenuItemRepository menu, ICartService cart)
     {
         _menu = menu;
+        _cart = cart;
     }
 
     public List<MenuItem> MenuItems { get; set; } = new();     // was List<MenuItemDto>
@@ -36,21 +39,26 @@ public class IndexModel : PageModel
     }
 
     /// <summary>
-    /// Handles the POST request when a user adds a menu item to their order.
-    /// Increments the global CartCount and sets a success message in TempData.
+    /// Handles the POST when a user adds a menu item to their order.
+    /// The cart is saved in the database, owned by the logged-in user or a guest cookie.
     /// </summary>
-    /// <param name="menuItemId">The unique identifier of the menu item to add.</param>
+    /// <param name="menuItemId">The database id of the menu item to add.</param>
     /// <param name="category">The currently selected category to redirect back to.</param>
-    /// <returns>A redirect to the current menu page, maintaining the selected category filter.</returns>
-    public IActionResult OnPostAddToOrder(int menuItemId, string? category)
+    public async Task<IActionResult> OnPostAddToOrderAsync(int menuItemId, string? category)
     {
-        var item = MenuStore.Items.FirstOrDefault(m => m.Id == menuItemId);
-        if (item != null)
+        var owner = CartOwnerResolver.FindOrCreate(HttpContext);   // user from login, or guest cookie
+        var added = await _cart.AddItemAsync(owner, menuItemId);
+
+        if (added)
         {
-            // Increment the shopping cart ticker when a new item is added
-            MenuStore.AddToCart(item);
-            TempData["Message"] = $"Added \"{item.Name}\" to your order.";
+            var item = await _menu.GetByIdAsync(menuItemId);
+            TempData["Message"] = $"Added \"{item?.Name}\" to your order.";
         }
+        else
+        {
+            TempData["Message"] = "Sorry, that item isn't available.";
+        }
+
         return RedirectToPage(new { category });
     }
 }
