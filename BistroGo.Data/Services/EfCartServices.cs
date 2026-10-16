@@ -34,7 +34,7 @@ namespace BistroGo.Data.Services
 
         public async Task<Order?> GetCartAsync(CartOwner owner) =>
             await OpenCarts(owner).AsNoTracking()
-                .Include(o => o.Items).ThenInclude(i => i.MenuItem)
+                .Include(or => or.Items).ThenInclude(i => i.MenuItem)
                 .FirstOrDefaultAsync();
 
         public async Task<bool> AddItemAsync(CartOwner owner, int menuItemId, int quantity = 1)
@@ -45,7 +45,7 @@ namespace BistroGo.Data.Services
                 .FirstOrDefaultAsync(m => m.Id == menuItemId && m.IsAvailable);
             if (menuItem == null) return false;
 
-            var cart = await OpenCarts(owner).Include(o => o.Items).FirstOrDefaultAsync();
+            var cart = await OpenCarts(owner).Include(or => or.Items).FirstOrDefaultAsync();
             if (cart == null)
             {
                 cart = new Order { UserId = owner.UserId, GuestToken = owner.GuestToken };
@@ -70,7 +70,7 @@ namespace BistroGo.Data.Services
 
         public async Task<bool> SetQuantityAsync(CartOwner owner, int menuItemId, int quantity)
         {
-            var cart = await OpenCarts(owner).Include(o => o.Items).FirstOrDefaultAsync();
+            var cart = await OpenCarts(owner).Include(or => or.Items).FirstOrDefaultAsync();
             var line = cart?.Items.FirstOrDefault(i => i.MenuItemId == menuItemId);
             if (cart == null || line == null) return false;
 
@@ -94,12 +94,12 @@ namespace BistroGo.Data.Services
 
         public async Task MergeGuestCartAsync(Guid guestToken, string userId)
         {
-            var guestCart = await _db.Orders.Include(o => o.Items)
-                .FirstOrDefaultAsync(o => !o.IsFinalized && o.GuestToken == guestToken);
+            var guestCart = await _db.Orders.Include(or => or.Items)
+                .FirstOrDefaultAsync(or => !or.IsFinalized && or.GuestToken == guestToken);
             if (guestCart == null) return;
 
-            var userCart = await _db.Orders.Include(o => o.Items)
-                .FirstOrDefaultAsync(o => !o.IsFinalized && o.UserId == userId);
+            var userCart = await _db.Orders.Include(or => or.Items)
+                .FirstOrDefaultAsync(or => !or.IsFinalized && or.UserId == userId);
 
             if (userCart == null)
             {
@@ -109,19 +109,19 @@ namespace BistroGo.Data.Services
             }
             else
             {
-                foreach (var g in guestCart.Items)
+                foreach (var gl in guestCart.Items)
                 {
-                    var existing = userCart.Items.FirstOrDefault(i => i.MenuItemId == g.MenuItemId);
+                    var existing = userCart.Items.FirstOrDefault(i => i.MenuItemId == gl.MenuItemId);
                     if (existing == null)
                         userCart.Items.Add(new OrderItem
                         {
-                            MenuItemId = g.MenuItemId,
-                            Quantity = g.Quantity,
-                            UnitPrice = g.UnitPrice,
-                            SpecialInstructions = g.SpecialInstructions
+                            MenuItemId = gl.MenuItemId,
+                            Quantity = gl.Quantity,
+                            UnitPrice = gl.UnitPrice,
+                            SpecialInstructions = gl.SpecialInstructions
                         });
                     else
-                        existing.Quantity = Math.Min(existing.Quantity + g.Quantity, MaxPerLine);
+                        existing.Quantity = Math.Min(existing.Quantity + gl.Quantity, MaxPerLine);
                 }
                 Recalculate(userCart);
                 _db.Orders.Remove(guestCart);       // cascade deletes its lines
