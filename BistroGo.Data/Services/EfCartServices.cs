@@ -8,6 +8,7 @@ namespace BistroGo.Data.Services
     public class EfCartService : ICartService
     {
         private const int MaxPerLine = 99;
+        private const decimal TaxRate = 0.08m;
         private readonly BistroGoDBContext _db;
 
         public EfCartService(BistroGoDBContext db) { _db = db; }
@@ -29,7 +30,8 @@ namespace BistroGo.Data.Services
         private static void Recalculate(Order cart)
         {
             cart.Subtotal = Math.Round(cart.Items.Sum(i => i.Quantity * i.UnitPrice), 2);
-            cart.Total = cart.Subtotal + cart.Tax;   // Tax stays 0 until checkout calculates it
+            cart.Tax = Math.Round(cart.Subtotal * TaxRate, 2);
+            cart.Total = cart.Subtotal + cart.Tax;
         }
 
         public async Task<Order?> GetCartAsync(CartOwner owner) =>

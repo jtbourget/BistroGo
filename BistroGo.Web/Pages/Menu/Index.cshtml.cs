@@ -1,10 +1,8 @@
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
-using BistroGo.Web.Pages.Inventory;      // still needed: OnPostAddToOrder uses MenuStore for now
-using BistroGo.Web.Stores;
+using BistroGo.Web.Cart;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using BistroGo.Web.Cart;
 
 namespace BistroGo.Web.Pages.Menu;
 

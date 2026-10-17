@@ -1,7 +1,6 @@
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using BistroGo.Web.Cart;
-using BistroGo.Web.Stores;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
