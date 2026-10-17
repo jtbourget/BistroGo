@@ -71,46 +71,43 @@ public class IndexModel : PageModel
         return RedirectToPage(new { category });
     }
 
-    public IActionResult OnPostUpdateOrderLine(int menuItemId, int quantity)
+    // The cart modal's -/+ and ✕ buttons (JavaScript in _Layout) POST here and redraw from the JSON.
+    public async Task<IActionResult> OnPostUpdateQuantityJsonAsync(int menuItemId, int quantity)
     {
-        CurrentOrder.UpdateQuantity(menuItemId, quantity);
-        TempData["Message"] = "Cart updated.";
-        return RedirectToPage();
+        var owner = CartOwnerResolver.Find(HttpContext);   // Find, not FindOrCreate: nothing to update without a cart
+        if (owner != null)
+            await _cart.SetQuantityAsync(owner, menuItemId, quantity);
+
+        return await CartJsonAsync(owner);
     }
 
-    public IActionResult OnPostRemoveOrderLine(int menuItemId)
+    public async Task<IActionResult> OnPostRemoveLineJsonAsync(int menuItemId)
     {
-        CurrentOrder.RemoveItem(menuItemId);
-        TempData["Message"] = "Item removed from cart.";
-        return RedirectToPage();
+        var owner = CartOwnerResolver.Find(HttpContext);
+        if (owner != null)
+            await _cart.RemoveItemAsync(owner, menuItemId);
+
+        return await CartJsonAsync(owner);
     }
 
-    // NEW — JSON versions for the modal (no redirect, returns updated cart)
-    public IActionResult OnPostUpdateQuantityJson(int menuItemId, int quantity)
+    // Same JSON shape the script already expects (lines / itemCount / total).
+    private async Task<IActionResult> CartJsonAsync(CartOwner? owner)
     {
-        CurrentOrder.UpdateQuantity(menuItemId, quantity);
-        MenuStore.CartCount = CurrentOrder.TotalItems;   // keep sidebar and shopping cart number in sync
-        return new JsonResult(BuildCartJson());
-    }
+        var cart = owner == null ? null : await _cart.GetCartAsync(owner);
+        var lines = cart?.Items.OrderBy(i => i.MenuItem!.Name).ToList() ?? new List<OrderItem>();
 
-    public IActionResult OnPostRemoveLineJson(int menuItemId)
-    {
-        CurrentOrder.RemoveItem(menuItemId);
-        MenuStore.CartCount = CurrentOrder.TotalItems;   // keep sidebar and shopping cart number in sync
-        return new JsonResult(BuildCartJson());
-    }
-
-    private object BuildCartJson() => new
-    {
-        lines = CurrentOrder.Lines.Select(l => new
+        return new JsonResult(new
         {
-            menuItemId = l.MenuItemId,
-            itemName = l.MenuItem?.Name ?? "",
-            unitPrice = l.UnitPrice,
-            quantity = l.Quantity,
-            total = l.UnitPrice * l.Quantity
-        }),
-        itemCount = CurrentOrder.TotalItems,
-        total = CurrentOrder.TotalPrice
-    };
+            lines = lines.Select(l => new
+            {
+                menuItemId = l.MenuItemId,
+                itemName = l.MenuItem?.Name ?? "",
+                unitPrice = l.UnitPrice,
+                quantity = l.Quantity,
+                total = l.UnitPrice * l.Quantity
+            }),
+            itemCount = lines.Sum(l => l.Quantity),
+            total = cart?.Total ?? 0m
+        });
+    }
 }

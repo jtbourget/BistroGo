@@ -1,2 +1,2 @@
 ﻿@model BistroGo.Web.ViewComponents.CartViewModel
-<span class="badge bg-danger rounded-pill ms-2" id="cartTicker">@Model.Count</span>
+<span class="badge bg-danger rounded-pill ms-2 @(Model.Count > 0 ? "" : "d-none")" id="cartTicker">@Model.Count</span>
