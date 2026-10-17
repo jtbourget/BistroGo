@@ -118,6 +118,14 @@ namespace BistroGo.Data.DataAccess
                      .HasForeignKey(o => o.UserId)
                      .OnDelete(DeleteBehavior.SetNull);
 
+                // One open cart per user: UserId must be unique among rows where IsFinalized = 0.
+                // Placed orders (IsFinalized = 1) are not restricted, so a user can have many of those.
+                // Guests have a null UserId, and SQLite treats NULLs as distinct, so they are unaffected.
+                order.HasIndex(o => o.UserId)
+                     .IsUnique()
+                     .HasFilter("\"IsFinalized\" = 0")
+                     .HasDatabaseName("IX_Orders_UserId_OpenCart");
+
                 // Defaults
                 order.Property(o => o.IsFinalized).HasDefaultValue(false);
                 order.Property(o => o.IsArchived).HasDefaultValue(false);

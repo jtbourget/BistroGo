@@ -1,5 +1,8 @@
+using BistroGo.Core.Interfaces;
 using BistroGo.Data.DataAccess;
 using BistroGo.Data.Identity;
+using BistroGo.Data.Repositories;
+using BistroGo.Data.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +13,10 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddDbContext<BistroGoDBContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IMenuItemRepository, EfMenuItemRepository>();
+
+builder.Services.AddScoped<ICartService, EfCartService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {

@@ -14,7 +14,7 @@ namespace BistroGo.Core.Models
         [Required, MaxLength(50)]
         public string Name { get; set; } = "";
 
-        public int DisplayOrder { get; set; }
+        public int DisplayOrder { get; set; } // Get rid of, no need to have a display order, just sort by name
 
         // Navigation: one category has many menu items
         public ICollection<MenuItem> MenuItems { get; set; } = new List<MenuItem>();

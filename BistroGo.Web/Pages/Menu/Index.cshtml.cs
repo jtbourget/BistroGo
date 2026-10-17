@@ -1,6 +1,6 @@
+using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
-using BistroGo.Web.Pages.Inventory;
-using BistroGo.Web.Stores;
+using BistroGo.Web.Cart;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -8,92 +8,104 @@ namespace BistroGo.Web.Pages.Menu;
 
 public class IndexModel : PageModel
 {
-    public List<MenuItemDto> MenuItems { get; set; } = new();
+    private readonly IMenuItemRepository _menu;
+    private readonly ICartService _cart;
+
+    public IndexModel(IMenuItemRepository menu, ICartService cart)
+    {
+        _menu = menu;
+        _cart = cart;
+    }
+
+    public List<MenuItem> MenuItems { get; set; } = new();     // was List<MenuItemDto>
     public List<string> Categories { get; set; } = new();
     public string? SelectedCategory { get; set; }
+    public IReadOnlyList<OrderItem> OrderLines { get; private set; } = new List<OrderItem>();
+    public decimal OrderTotal { get; private set; }
 
-    // ── Cart data exposed to the view ──────────────────────────────
-    // TODO: Replace with GET /api/orders/current when the Api exists
-    public IReadOnlyList<OrderItem> OrderLines => CurrentOrder.Lines;
-    public decimal OrderTotal => CurrentOrder.TotalPrice;
-
-    public void OnGet(string? category)
+    public async Task OnGetAsync(string? category)             // was: public void OnGet
     {
         SelectedCategory = category;
 
-        // TODO: replace with Api call to GET /api/menuitems
-        var all = MenuStore.Items;
+        // Already sorted by category DisplayOrder, then name.
+        var all = (await _menu.GetAllAsync()).Where(m => m.IsAvailable).ToList(); // IsAvailable filters items markes as unavailable
 
-        Categories = all.Select(m => m.Category).Distinct().OrderBy(c => c).ToList();
+        // Distinct() keeps first-seen order, so the dropdown follows DisplayOrder
+        // (the old OrderBy(c => c) sorted alphabetically).
+        Categories = all.Select(m => m.Category!.Name).Distinct().ToList();
 
         MenuItems = string.IsNullOrEmpty(category)
-            ? all.ToList()
-            : all.Where(m => m.Category == category).ToList();
+            ? all
+            : all.Where(m => m.Category!.Name == category).ToList();
+
+        // Cart for the Menu page's own badge. Find (not FindOrCreate): looking must never create a cart.
+        var owner = CartOwnerResolver.Find(HttpContext);
+        var cart = owner == null ? null : await _cart.GetCartAsync(owner);
+        OrderLines = cart?.Items.ToList() ?? new List<OrderItem>();
+        OrderTotal = cart?.Total ?? 0m;
     }
 
-    public IActionResult OnPostAddToOrder(int menuItemId, string? category)
+    /// <summary>
+    /// Handles the POST when a user adds a menu item to their order.
+    /// The cart is saved in the database, owned by the logged-in user or a guest cookie.
+    /// </summary>
+    /// <param name="menuItemId">The database id of the menu item to add.</param>
+    /// <param name="category">The currently selected category to redirect back to.</param>
+    public async Task<IActionResult> OnPostAddToOrderAsync(int menuItemId, string? category)
     {
-        var dto = MenuStore.Items.FirstOrDefault(m => m.Id == menuItemId);
-        if (dto != null)
+        var owner = CartOwnerResolver.FindOrCreate(HttpContext);   // user from login, or guest cookie
+        var added = await _cart.AddItemAsync(owner, menuItemId);
+
+        if (added)
         {
-            // ── 1. Write to MenuStore (powers the sidebar badge + layout modal) ──
-            MenuStore.AddToCart(dto);
-
-            // ── 2. Write to CurrentOrder (powers the Menu page badge + cart modal) ──
-            CurrentOrder.AddItem(new MenuItem
-            {
-                Id = dto.Id,
-                Name = dto.Name,
-                Description = dto.Description,
-                Price = dto.Price,
-                ImageUrl = dto.ImageUrl
-            });
-
-            TempData["Message"] = $"Added \"{dto.Name}\" to your cart.";
+            var item = await _menu.GetByIdAsync(menuItemId);
+            TempData["Message"] = $"Added \"{item?.Name}\" to your order.";
         }
+        else
+        {
+            TempData["Message"] = "Sorry, that item isn't available.";
+        }
+
         return RedirectToPage(new { category });
     }
 
-    public IActionResult OnPostUpdateOrderLine(int menuItemId, int quantity)
+    // The cart modal's -/+ and ✕ buttons (JavaScript in _Layout) POST here and redraw from the JSON.
+    public async Task<IActionResult> OnPostUpdateQuantityJsonAsync(int menuItemId, int quantity)
     {
-        CurrentOrder.UpdateQuantity(menuItemId, quantity);
-        TempData["Message"] = "Cart updated.";
-        return RedirectToPage();
+        var owner = CartOwnerResolver.Find(HttpContext);   // Find, not FindOrCreate: nothing to update without a cart
+        if (owner != null)
+            await _cart.SetQuantityAsync(owner, menuItemId, quantity);
+
+        return await CartJsonAsync(owner);
     }
 
-    public IActionResult OnPostRemoveOrderLine(int menuItemId)
+    public async Task<IActionResult> OnPostRemoveLineJsonAsync(int menuItemId)
     {
-        CurrentOrder.RemoveItem(menuItemId);
-        TempData["Message"] = "Item removed from cart.";
-        return RedirectToPage();
+        var owner = CartOwnerResolver.Find(HttpContext);
+        if (owner != null)
+            await _cart.RemoveItemAsync(owner, menuItemId);
+
+        return await CartJsonAsync(owner);
     }
 
-    // NEW — JSON versions for the modal (no redirect, returns updated cart)
-    public IActionResult OnPostUpdateQuantityJson(int menuItemId, int quantity)
+    // Same JSON shape the script already expects (lines / itemCount / total).
+    private async Task<IActionResult> CartJsonAsync(CartOwner? owner)
     {
-        CurrentOrder.UpdateQuantity(menuItemId, quantity);
-        MenuStore.CartCount = CurrentOrder.TotalItems;   // keep sidebar and shopping cart number in sync
-        return new JsonResult(BuildCartJson());
-    }
+        var cart = owner == null ? null : await _cart.GetCartAsync(owner);
+        var lines = cart?.Items.OrderBy(i => i.MenuItem!.Name).ToList() ?? new List<OrderItem>();
 
-    public IActionResult OnPostRemoveLineJson(int menuItemId)
-    {
-        CurrentOrder.RemoveItem(menuItemId);
-        MenuStore.CartCount = CurrentOrder.TotalItems;   // keep sidebar and shopping cart number in sync
-        return new JsonResult(BuildCartJson());
-    }
-
-    private object BuildCartJson() => new
-    {
-        lines = CurrentOrder.Lines.Select(l => new
+        return new JsonResult(new
         {
-            menuItemId = l.MenuItemId,
-            itemName = l.MenuItem?.Name ?? "",
-            unitPrice = l.UnitPrice,
-            quantity = l.Quantity,
-            total = l.UnitPrice * l.Quantity
-        }),
-        itemCount = CurrentOrder.TotalItems,
-        total = CurrentOrder.TotalPrice
-    };
+            lines = lines.Select(l => new
+            {
+                menuItemId = l.MenuItemId,
+                itemName = l.MenuItem?.Name ?? "",
+                unitPrice = l.UnitPrice,
+                quantity = l.Quantity,
+                total = l.UnitPrice * l.Quantity
+            }),
+            itemCount = lines.Sum(l => l.Quantity),
+            total = cart?.Total ?? 0m
+        });
+    }
 }

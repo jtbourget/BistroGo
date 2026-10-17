@@ -317,6 +317,11 @@ namespace BistroGo.Data.Migrations
 
                     b.HasIndex("StatusId");
 
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Orders_UserId_OpenCart")
+                        .HasFilter("\"IsFinalized\" = 0");
+
                     b.HasIndex("UserId", "IsFinalized");
 
                     b.ToTable("Orders", t =>

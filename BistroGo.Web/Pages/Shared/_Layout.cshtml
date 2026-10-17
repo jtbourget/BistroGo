@@ -1,4 +1,3 @@
-@using BistroGo.Web.Stores
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,8 +44,7 @@
                     <li>
                         <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#currentOrderModal">
                             <span class="nav-icon">🛒</span> Cart
-                            <span class="badge bg-danger rounded-pill ms-2 @(CurrentOrder.TotalItems > 0 ? "" : "d-none")"
-                                  id="cartTicker">@CurrentOrder.TotalItems</span>
+                            @await Component.InvokeAsync("Cart", new { part = "Badge" }) <!--Cart ticker badge-->
                         </a>
                     </li>
                     @* Hide Orders from customers/logged-out users. Only Manager and KitchenStaff can see orders. *@
@@ -94,70 +92,12 @@
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         GLOBAL CART MODAL — same modal on every page
-         ═══════════════════════════════════════════════════════════════ -->
-    <div class="modal fade" id="currentOrderModal"
-         tabindex="-1"
-         aria-labelledby="currentOrderModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content menu-modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="currentOrderModalLabel">🛒 Shopping Cart</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="cartEmptyState" class="alert alert-info mb-0 @(CurrentOrder.Lines.Any() ? "d-none" : "")">
-                        Your cart is empty. Add items from the menu to get started.
-                    </div>
-
-                    <table class="table align-middle mb-0 @(CurrentOrder.Lines.Any() ? "" : "d-none")" id="cartTable">
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th class="text-end">Price</th>
-                                <th class="text-center" style="width: 160px;">Quantity</th>
-                                <th class="text-end">Subtotal</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="cartTableBody">
-                            @foreach (var line in CurrentOrder.Lines)
-                            {
-                                <tr data-menu-item-id="@line.MenuItemId">
-                                    <td>@line.MenuItem?.Name</td>
-                                    <td class="text-end">$@line.UnitPrice.ToString("0.00")</td>
-                                    <td class="text-center">
-                                        <div class="d-flex justify-content-center gap-1">
-                                            <button type="button" class="btn btn-sm btn-outline-primary js-qty-decrease">−</button>
-                                            <span class="px-2 align-self-center js-qty">@line.Quantity</span>
-                                            <button type="button" class="btn btn-sm btn-outline-primary js-qty-increase">+</button>
-                                        </div>
-                                    </td>
-                                    <td class="text-end js-line-total">$@((line.UnitPrice * line.Quantity).ToString("0.00"))</td>
-                                    <td class="text-end">
-                                        <button type="button" class="btn btn-sm btn-link text-danger p-0 js-remove-line" title="Remove">✕</button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="3" class="text-end fw-bold">Total:</td>
-                                <td class="text-end card-price" id="cartTotal">$@CurrentOrder.TotalPrice.ToString("0.00")</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
-                    <a asp-page="/Orders/Checkout" class="btn btn-primary">Continue to Checkout</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- 
+        Global Current Order Modal 
+        Contains the shopping cart functionality and details.
+        Moved to the shared layout so it can be invoked from any page via the Cart sidebar item.
+    -->
+    @await Component.InvokeAsync("Cart", new { part = "Modal" })
 
     <!-- CSRF token for the cart AJAX POSTs -->
     <form id="csrfForm" method="post" style="display:none;">
