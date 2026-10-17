@@ -3,6 +3,8 @@ using BistroGo.Data.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using BistroGo.Core.Interfaces;
+using BistroGo.Web.Cart;
 
 namespace BistroGo.Web.Pages.Account
 {
@@ -10,12 +12,13 @@ namespace BistroGo.Web.Pages.Account
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ICartService _cart;
 
-        public RegisterModel(UserManager<ApplicationUser> userManager,
-                             SignInManager<ApplicationUser> signInManager)
+        public RegisterModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ICartService cart)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _cart = cart;
         }
 
         [BindProperty]
@@ -79,6 +82,14 @@ namespace BistroGo.Web.Pages.Account
             await _userManager.AddToRoleAsync(user, Roles.Customer);
 
             await _signInManager.SignInAsync(user, isPersistent: false);
+
+            // Merge guest cart with the new user cart if a guest token exists
+            var guestToken = CartOwnerResolver.ReadGuestToken(HttpContext);
+            if (guestToken != null)
+            {
+                await _cart.MergeGuestCartAsync(guestToken.Value, user.Id);
+                CartOwnerResolver.ClearGuestToken(HttpContext);
+            }
 
             if (returnUrl != null && Url.IsLocalUrl(returnUrl))
             {

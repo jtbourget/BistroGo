@@ -17,6 +17,7 @@ namespace BistroGo.Data.DataAccess
         {
             SeedOrderStatuses(builder);
             SeedMenuCategories(builder);
+            SeedMenuItems(builder);
         }
 
         // Ids come from OrderStatusIds so code and data can never drift apart.
@@ -41,6 +42,29 @@ namespace BistroGo.Data.DataAccess
                 new MenuCategory { Id = 2, Name = "Entree",    DisplayOrder = 2 },
                 new MenuCategory { Id = 3, Name = "Dessert",   DisplayOrder = 3 },
                 new MenuCategory { Id = 4, Name = "Drink",     DisplayOrder = 4 }
+            );
+        }
+
+        // Starter menu. Same ids/names/prices as MenuStore.Items so carts line up.
+        // Needed because OrderItems.MenuItemId is a FK to this table.
+        private static void SeedMenuItems(ModelBuilder builder)
+        {
+            builder.Entity<MenuItem>().HasData(
+                new MenuItem { Id = 1, CategoryId = 1, Name = "Bruschetta", Description = "Grilled bread, tomatoes, basil", Price = 8.50m, IsAvailable = true },
+                new MenuItem { Id = 2, CategoryId = 1, Name = "Caesar Salad", Description = "Romaine, parmesan, croutons", Price = 10.00m, IsAvailable = true },
+                new MenuItem { Id = 3, CategoryId = 2, Name = "Margherita Pizza", Description = "Tomato, mozzarella, basil", Price = 14.00m, IsAvailable = true },
+                new MenuItem { Id = 4, CategoryId = 2, Name = "Grilled Salmon", Description = "Lemon butter, seasonal veg", Price = 22.00m, IsAvailable = true },
+                new MenuItem { Id = 5, CategoryId = 2, Name = "Ribeye Steak", Description = "12oz, garlic butter", Price = 28.00m, IsAvailable = true },
+                new MenuItem { Id = 6, CategoryId = 3, Name = "Tiramisu", Description = "Classic Italian dessert", Price = 9.00m, IsAvailable = true },
+                new MenuItem { Id = 7, CategoryId = 4, Name = "Espresso", Description = "Double shot", Price = 4.00m, IsAvailable = true },
+                new MenuItem { Id = 8, CategoryId = 4, Name = "House Red", Description = "Glass of Cabernet", Price = 11.00m, IsAvailable = true }
+            );
+        }
+
+        private static void SeedOrders(ModelBuilder builder) // Finish Later
+        {
+            builder.Entity<Order>().HasData(
+                new Order { Id = 1, }
             );
         }
     }

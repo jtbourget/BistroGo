@@ -3,16 +3,20 @@ using BistroGo.Data.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using BistroGo.Core.Interfaces;
+using BistroGo.Web.Cart;
 
 namespace BistroGo.Web.Pages.Account
 {
     public class LoginModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ICartService _cart;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ICartService cart)
         {
             _signInManager = signInManager;
+            _cart = cart;
         }
 
         [BindProperty]
@@ -51,6 +55,17 @@ namespace BistroGo.Web.Pages.Account
 
             if (result.Succeeded)
             {
+                // If the user had a guest cart, merge it into their account cart
+                var guestToken = CartOwnerResolver.ReadGuestToken(HttpContext);
+                if (guestToken != null)
+                {
+                    var user = await _signInManager.UserManager.FindByNameAsync(Input.Email);
+                    if (user != null)
+                        await _cart.MergeGuestCartAsync(guestToken.Value, user.Id);
+
+                    CartOwnerResolver.ClearGuestToken(HttpContext);
+                }
+
                 if (returnUrl != null && Url.IsLocalUrl(returnUrl))
                 {
                     return LocalRedirect(returnUrl);
