@@ -1,0 +1,175 @@
+@page
+@model BistroGo.Web.Pages.Reviews.IndexModel
+@{
+    ViewData["Title"] = "Customer Reviews";
+}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE HEADER & NAVIGATION
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="row justify-content-center mb-4">
+    <div class="col-lg-8 col-md-10">
+        <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h1 class="mb-1">⭐ Restaurant Reviews</h1>
+                <span class="text-muted">Leave ratings and suggestions for BistroGo</span>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-page="/Index" class="btn btn-outline-primary">← Back to Home</a>
+                <a asp-page="/Menu/Index" class="btn btn-outline-secondary">🍴 Menu</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     REVIEW FORM PANEL
+     Framework for rating and written feedback. Submission logic 
+     and database storage will be implemented in a future ticket.
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="dashboard-panel">
+            <div class="dashboard-panel-header">
+                <h3>Leave a Review</h3>
+                <span class="text-muted small">We appreciate your feedback!</span>
+            </div>
+
+            <form id="reviewForm" onsubmit="return false;">
+                <!-- 1. Star Rating Component -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold d-block">
+                        Rating <span class="text-danger">*</span>
+                    </label>
+                    <div class="rating-input-wrapper d-flex align-items-center gap-2">
+                        <div class="star-rating" id="starRating" role="radiogroup" aria-label="Rating from 1 to 5 stars">
+                            <button type="button" class="star-btn" data-rating="1" aria-label="1 star">★</button>
+                            <button type="button" class="star-btn" data-rating="2" aria-label="2 stars">★</button>
+                            <button type="button" class="star-btn" data-rating="3" aria-label="3 stars">★</button>
+                            <button type="button" class="star-btn" data-rating="4" aria-label="4 stars">★</button>
+                            <button type="button" class="star-btn" data-rating="5" aria-label="5 stars">★</button>
+                        </div>
+                        <span class="rating-text text-muted ms-2" id="ratingText">5 Stars - Excellent</span>
+                        <!-- Hidden input to hold chosen rating for future form submission -->
+                        <input type="hidden" id="ratingValue" name="Rating" value="5" />
+                    </div>
+                </div>
+
+                <!-- 2. Customer Name (Optional / Auto-filled if logged in) -->
+                <div class="mb-3">
+                    <label for="reviewerName" class="form-label fw-bold">Your Name</label>
+                    <input type="text"
+                           class="form-control"
+                           id="reviewerName"
+                           name="ReviewerName"
+                           value="@Model.CurrentUserName"
+                           placeholder="Enter your name (or leave blank to post as Guest)" />
+                    <small class="text-muted">
+                        @(User.Identity?.IsAuthenticated == true ? "Prefilled with your account username." : "Optional. You may leave this blank to remain anonymous.")
+                    </small>
+                </div>
+
+                <!-- 3. Written Review Textarea -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="reviewComment" class="form-label fw-bold mb-0">
+                            Written Feedback & Suggestions <span class="text-danger">*</span>
+                        </label>
+                        <small class="text-muted" id="charCounter">0 / 1000</small>
+                    </div>
+                    <textarea class="form-control"
+                              id="reviewComment"
+                              name="ReviewComment"
+                              rows="5"
+                              maxlength="1000"
+                              placeholder="Tell us about your experience! How was the food, service, and atmosphere? Any dishes you'd recommend or suggestions for improvement?"></textarea>
+                    <small class="text-muted">Maximum 1,000 characters.</small>
+                </div>
+
+                <!-- 4. Form Actions -->
+                <div class="d-flex align-items-center gap-2 pt-2">
+                    <!-- Note: Intentionally type='button' so it does not submit data per ticket acceptance criteria -->
+                    <button type="button" id="submitReviewBtn" class="btn btn-primary">
+                        Submit Review
+                    </button>
+                    <a asp-page="/Index" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ── Star rating interaction & character count ────────────────
+        document.addEventListener('DOMContentLoaded', function () {
+            const stars = document.querySelectorAll('#starRating .star-btn');
+            const ratingText = document.getElementById('ratingText');
+            const ratingInput = document.getElementById('ratingValue');
+            const reviewComment = document.getElementById('reviewComment');
+            const charCounter = document.getElementById('charCounter');
+            const submitBtn = document.getElementById('submitReviewBtn');
+
+            // Text labels for each rating score
+            const labels = {
+                1: '1 Star - Needs Improvement',
+                2: '2 Stars - Fair',
+                3: '3 Stars - Good',
+                4: '4 Stars - Very Good',
+                5: '5 Stars - Excellent'
+            };
+
+            let selectedRating = 5;
+
+            // Update star highlights and descriptive text
+            function setStars(rating) {
+                stars.forEach(star => {
+                    const starVal = parseInt(star.getAttribute('data-rating'), 10);
+                    star.classList.toggle('active', starVal <= rating);
+                });
+                if (ratingText) {
+                    ratingText.textContent = labels[rating] || (rating + ' Stars');
+                }
+            }
+
+            // Set default initial state (5 stars)
+            setStars(selectedRating);
+
+            // Add hover and click listeners to each star button
+            stars.forEach(star => {
+                const starVal = parseInt(star.getAttribute('data-rating'), 10);
+
+                star.addEventListener('mouseenter', function () {
+                    setStars(starVal);
+                });
+
+                star.addEventListener('click', function () {
+                    selectedRating = starVal;
+                    if (ratingInput) {
+                        ratingInput.value = selectedRating;
+                    }
+                    setStars(selectedRating);
+                });
+            });
+
+            // Reset star highlights back to selected value on mouse leave
+            document.getElementById('starRating')?.addEventListener('mouseleave', function () {
+                setStars(selectedRating);
+            });
+
+            // Live character counter for review textarea
+            reviewComment?.addEventListener('input', function () {
+                if (charCounter) {
+                    charCounter.textContent = `${this.value.length} / 1000`;
+                }
+            });
+
+            // Submit button placeholder: prevents submission per story requirements
+            submitBtn?.addEventListener('click', function (e) {
+                e.preventDefault();
+            });
+        });
+    </script>
+}
