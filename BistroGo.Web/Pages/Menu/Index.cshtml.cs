@@ -22,6 +22,8 @@ public class IndexModel : PageModel
     public List<MenuItem> MenuItems { get; set; } = new();     // was List<MenuItemDto>
     public List<string> Categories { get; set; } = new();
     public string? SelectedCategory { get; set; }
+    public IReadOnlyList<OrderItem> OrderLines { get; private set; } = new List<OrderItem>();
+    public decimal OrderTotal { get; private set; }
 
     public async Task OnGetAsync(string? category)             // was: public void OnGet
     {
@@ -37,6 +39,12 @@ public class IndexModel : PageModel
         MenuItems = string.IsNullOrEmpty(category)
             ? all
             : all.Where(m => m.Category!.Name == category).ToList();
+
+        // Cart for the Menu page's own badge. Find (not FindOrCreate): looking must never create a cart.
+        var owner = CartOwnerResolver.Find(HttpContext);
+        var cart = owner == null ? null : await _cart.GetCartAsync(owner);
+        OrderLines = cart?.Items.ToList() ?? new List<OrderItem>();
+        OrderTotal = cart?.Total ?? 0m;
     }
 
     /// <summary>
