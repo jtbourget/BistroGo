@@ -90,6 +90,21 @@
         </div>
     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">Notes for kitchen <span class="text-muted small">(optional)</span></label>
+                        <textarea name="specialInstructions" id="specialInstructions" class="form-control" rows="2" placeholder="e.g. No onions"></textarea>
+                    </div>
+
+                    <!-- Button triggers the modal, doesn't submit directly -->
+                    <button type="button" id="openConfirmModalBtn" class="btn btn-primary w-100 mb-2" disabled="@(!Model.Lines.Any())">
+                        ✓ Place Order
+                    </button>
+                    <a asp-page="/Menu/Index" class="btn btn-outline-primary w-100">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @section Scripts {
     <script>
         // ── Inline cart editing on the checkout page ─────────────────
