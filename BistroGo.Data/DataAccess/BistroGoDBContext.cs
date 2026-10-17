@@ -30,7 +30,7 @@ namespace BistroGo.Data.DataAccess
         public DbSet<OrderStatus> OrderStatuses => Set<OrderStatus>();
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
-        public DbSet<Rating> Ratings => Set<Rating>();
+        public DbSet<Review> Reviews => Set<Review>();
         public DbSet<Expense> Expenses => Set<Expense>();
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -42,7 +42,7 @@ namespace BistroGo.Data.DataAccess
             ConfigurePickupTimeSlots(builder);
             ConfigureOrders(builder);
             ConfigureOrderItems(builder);
-            ConfigureRatings(builder);
+            ConfigureReviews(builder);
             ConfigureExpenses(builder);
 
             // Reference data (OrderStatuses, MenuCategories) - see SeedData.cs
@@ -182,18 +182,24 @@ namespace BistroGo.Data.DataAccess
         }
 
         // ------------------------------------------------------------------
-        // Ratings
+        // Reviews
         // ------------------------------------------------------------------
-        private static void ConfigureRatings(ModelBuilder builder)
+        private static void ConfigureReviews(ModelBuilder builder)
         {
-            builder.Entity<Rating>(rating =>
+            builder.Entity<Review>(review =>
             {
-                rating.Property(r => r.SubmittedAt)
+                // FK -> AspNetUsers. Deleting a user keeps their review, just clears who wrote it.
+                review.HasOne<ApplicationUser>()
+                      .WithMany()
+                      .HasForeignKey(r => r.CustomerId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                review.Property(r => r.CreatedAt)
                       .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                rating.ToTable(t => t.HasCheckConstraint(
-                    "CK_Ratings_Stars_Range",
-                    "\"Stars\" BETWEEN 1 AND 5"));
+                review.ToTable(t => t.HasCheckConstraint(
+                    "CK_Reviews_Rating_Range",
+                    "\"Rating\" BETWEEN 1 AND 5"));
             });
         }
 

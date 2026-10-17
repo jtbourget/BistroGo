@@ -451,34 +451,35 @@ namespace BistroGo.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("BistroGo.Core.Models.Rating", b =>
+            modelBuilder.Entity("BistroGo.Core.Models.Review", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Comment")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Stars")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("SubmittedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("CustomerId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ReviewText")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderId");
+                    b.HasIndex("CustomerId");
 
-                    b.ToTable("Ratings", t =>
+                    b.ToTable("Reviews", t =>
                         {
-                            t.HasCheckConstraint("CK_Ratings_Stars_Range", "\"Stars\" BETWEEN 1 AND 5");
+                            t.HasCheckConstraint("CK_Reviews_Rating_Range", "\"Rating\" BETWEEN 1 AND 5");
                         });
                 });
 
@@ -760,15 +761,12 @@ namespace BistroGo.Data.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("BistroGo.Core.Models.Rating", b =>
+            modelBuilder.Entity("BistroGo.Core.Models.Review", b =>
                 {
-                    b.HasOne("BistroGo.Core.Models.Order", "Order")
-                        .WithMany("Ratings")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
+                    b.HasOne("BistroGo.Data.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -835,8 +833,6 @@ namespace BistroGo.Data.Migrations
             modelBuilder.Entity("BistroGo.Core.Models.Order", b =>
                 {
                     b.Navigation("Items");
-
-                    b.Navigation("Ratings");
                 });
 
             modelBuilder.Entity("BistroGo.Core.Models.OrderStatus", b =>

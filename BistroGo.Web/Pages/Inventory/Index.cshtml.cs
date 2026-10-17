@@ -39,7 +39,7 @@ public static class MenuStore
                 Quantity = 1
             });
         }
-        CartCount++;
+        CartCount = CartItems.Sum(c => c.Quantity);   // recompute instead of ++
     }
 
     public static List<MenuItemDto> Items { get; } = new()

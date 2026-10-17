@@ -31,11 +31,15 @@
             <button type="submit" class="btn btn-outline-primary">Apply</button>
         </noscript>
     </form>
-            <button type="button"
-                class="btn btn-outline-primary mb-0"
-                data-bs-toggle="modal"
-                data-bs-target="#currentOrderModal">🛒 Shopping Cart
-            </button>
+
+    <button type="button"
+            class="btn btn-outline-primary mb-0"
+            data-bs-toggle="modal"
+            data-bs-target="#currentOrderModal">
+        🛒 Shopping Cart
+        <span class="badge bg-secondary ms-2 @(Model.OrderLines.Any() ? "" : "d-none")"
+              id="menuCartBadge">@Model.OrderLines.Sum(l => l.Quantity)</span>
+    </button>
 </div>
 
 @if (!Model.MenuItems.Any())
@@ -75,7 +79,7 @@ else
 
                         <div class="menu-card-actions">
                             <span class="card-price">$@item.Price.ToString("0.00")</span>
-                            <form method="post" asp-page-handler="AddToOrder"
+                            <form method="post" asp-page-handler="AddToOrder" class="text-end"
                                   onclick="event.stopPropagation();">
                                 <input type="hidden" name="menuItemId" value="@item.Id" />
                                 <input type="hidden" name="category" value="@Model.SelectedCategory" />
@@ -91,7 +95,10 @@ else
     </div>
 }
 
-<!-- Shared modal for showing menu item details -->
+<!-- ═══════════════════════════════════════════════════════════════
+     MENU ITEM DETAILS MODAL
+     (The cart modal now lives in _Layout.cshtml so it works on every page.)
+     ═══════════════════════════════════════════════════════════════ -->
 <div class="modal fade" id="menuItemModal" tabindex="-1" aria-labelledby="menuItemModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content menu-modal-content">
@@ -108,7 +115,7 @@ else
                 <p class="card-price mb-0" id="menuItemModalPrice">$0.00</p>
             </div>
             <div class="modal-footer">
-                 <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -116,7 +123,7 @@ else
 
 @section Scripts {
     <script>
-        // Fill the shared modal with the clicked card's data
+        // Fill the menu item modal with the clicked card's data
         document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById('menuItemModal');
             if (!modal) return;

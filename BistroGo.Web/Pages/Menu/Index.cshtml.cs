@@ -1,6 +1,7 @@
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using BistroGo.Web.Pages.Inventory;      // still needed: OnPostAddToOrder uses MenuStore for now
+using BistroGo.Web.Stores;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BistroGo.Web.Cart;
@@ -61,4 +62,47 @@ public class IndexModel : PageModel
 
         return RedirectToPage(new { category });
     }
+
+    public IActionResult OnPostUpdateOrderLine(int menuItemId, int quantity)
+    {
+        CurrentOrder.UpdateQuantity(menuItemId, quantity);
+        TempData["Message"] = "Cart updated.";
+        return RedirectToPage();
+    }
+
+    public IActionResult OnPostRemoveOrderLine(int menuItemId)
+    {
+        CurrentOrder.RemoveItem(menuItemId);
+        TempData["Message"] = "Item removed from cart.";
+        return RedirectToPage();
+    }
+
+    // NEW — JSON versions for the modal (no redirect, returns updated cart)
+    public IActionResult OnPostUpdateQuantityJson(int menuItemId, int quantity)
+    {
+        CurrentOrder.UpdateQuantity(menuItemId, quantity);
+        MenuStore.CartCount = CurrentOrder.TotalItems;   // keep sidebar and shopping cart number in sync
+        return new JsonResult(BuildCartJson());
+    }
+
+    public IActionResult OnPostRemoveLineJson(int menuItemId)
+    {
+        CurrentOrder.RemoveItem(menuItemId);
+        MenuStore.CartCount = CurrentOrder.TotalItems;   // keep sidebar and shopping cart number in sync
+        return new JsonResult(BuildCartJson());
+    }
+
+    private object BuildCartJson() => new
+    {
+        lines = CurrentOrder.Lines.Select(l => new
+        {
+            menuItemId = l.MenuItemId,
+            itemName = l.MenuItem?.Name ?? "",
+            unitPrice = l.UnitPrice,
+            quantity = l.Quantity,
+            total = l.UnitPrice * l.Quantity
+        }),
+        itemCount = CurrentOrder.TotalItems,
+        total = CurrentOrder.TotalPrice
+    };
 }
