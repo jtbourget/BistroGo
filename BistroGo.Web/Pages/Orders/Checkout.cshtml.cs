@@ -1,4 +1,6 @@
+using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using BistroGo.Web.Cart;
 using BistroGo.Web.Stores;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,6 +12,13 @@ public class CheckoutModel : PageModel
     // ═══════════════════════════════════════════════════════════════════
     // DATA TO POPULATE FROM THE API / DATABASE
     // ═══════════════════════════════════════════════════════════════════
+
+    private readonly ICartService _cart;
+
+    public CheckoutModel(ICartService cart)
+    {
+        _cart = cart;
+    }
 
     /// <summary>
     /// Cart line items (each is an OrderItem).
@@ -63,9 +72,9 @@ public class CheckoutModel : PageModel
     // HANDLERS
     // ═══════════════════════════════════════════════════════════════════
 
-    public IActionResult OnGet()
+    public async Task<IActionResult> OnGetAsync()
     {
-        LoadCart();
+        await LoadCartAsync();
 
         if (!Lines.Any())
         {
@@ -76,9 +85,9 @@ public class CheckoutModel : PageModel
         return Page();
     }
 
-    public IActionResult OnPost()
+    public async Task<IActionResult> OnPostAsync()
     {
-        LoadCart();
+        await LoadCartAsync();
 
         if (!Lines.Any())
         {
@@ -109,42 +118,55 @@ public class CheckoutModel : PageModel
     }
 
     // ── AJAX handlers (mirror Menu/Index for the inline cart editor) ──
-    public IActionResult OnPostUpdateQuantityJson(int menuItemId, int quantity)
+    // ── AJAX handlers for the inline cart editor on this page ──
+    public async Task<IActionResult> OnPostUpdateQuantityJsonAsync(int menuItemId, int quantity)
     {
-        CurrentOrder.UpdateQuantity(menuItemId, quantity);
-        return new JsonResult(BuildCartJson());
+        var owner = CartOwnerResolver.Find(HttpContext);
+        if (owner != null)
+            await _cart.SetQuantityAsync(owner, menuItemId, quantity);
+
+        return new JsonResult(await BuildCartJsonAsync(owner));
     }
 
-    public IActionResult OnPostRemoveLineJson(int menuItemId)
+    public async Task<IActionResult> OnPostRemoveLineJsonAsync(int menuItemId)
     {
-        CurrentOrder.RemoveItem(menuItemId);
-        return new JsonResult(BuildCartJson());
+        var owner = CartOwnerResolver.Find(HttpContext);
+        if (owner != null)
+            await _cart.RemoveItemAsync(owner, menuItemId);
+
+        return new JsonResult(await BuildCartJsonAsync(owner));
     }
 
-    private object BuildCartJson() => new
+    private async Task<object> BuildCartJsonAsync(CartOwner? owner)
     {
-        lines = CurrentOrder.Lines.Select(l => new
+        var cart = owner == null ? null : await _cart.GetCartAsync(owner);
+        var lines = cart?.Items.OrderBy(i => i.MenuItem!.Name).ToList() ?? new List<OrderItem>();
+
+        return new
         {
-            menuItemId = l.MenuItemId,
-            itemName = l.MenuItem?.Name ?? "",
-            unitPrice = l.UnitPrice,
-            quantity = l.Quantity,
-            total = l.UnitPrice * l.Quantity
-        }),
-        itemCount = CurrentOrder.TotalItems,
-        subtotal = CurrentOrder.Cart.Subtotal,
-        tax = CurrentOrder.Cart.Tax,
-        total = CurrentOrder.TotalPrice
-    };
+            lines = lines.Select(l => new
+            {
+                menuItemId = l.MenuItemId,
+                itemName = l.MenuItem?.Name ?? "",
+                unitPrice = l.UnitPrice,
+                quantity = l.Quantity,
+                total = l.UnitPrice * l.Quantity
+            }),
+            itemCount = lines.Sum(l => l.Quantity),
+            subtotal = cart?.Subtotal ?? 0m,
+            tax = cart?.Tax ?? 0m,
+            total = cart?.Total ?? 0m
+        };
+    }
 
-    private void LoadCart()
+    private async Task LoadCartAsync()
     {
-        // TODO: Replace with Api call:
-        //   var client = _httpClientFactory.CreateClient("Api");
-        //   var cart = await client.GetFromJsonAsync<Order>("api/orders/current");
-        Lines = CurrentOrder.Lines;
-        Subtotal = CurrentOrder.Cart.Subtotal;
-        Tax = CurrentOrder.Cart.Tax;
-        Total = CurrentOrder.Cart.Total;
+        var owner = CartOwnerResolver.Find(HttpContext);
+        var cart = owner == null ? null : await _cart.GetCartAsync(owner);
+
+        Lines = cart?.Items.OrderBy(i => i.MenuItem!.Name).ToList() ?? new List<OrderItem>();
+        Subtotal = cart?.Subtotal ?? 0m;
+        Tax = cart?.Tax ?? 0m;
+        Total = cart?.Total ?? 0m;
     }
 }
