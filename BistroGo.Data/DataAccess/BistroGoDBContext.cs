@@ -116,7 +116,7 @@ namespace BistroGo.Data.DataAccess
                 order.HasOne<ApplicationUser>()
                      .WithMany()
                      .HasForeignKey(o => o.UserId)
-                     .OnDelete(DeleteBehavior.SetNull);
+                     .OnDelete(DeleteBehavior.SetNull); 
 
                 // One open cart per user: UserId must be unique among rows where IsFinalized = 0.
                 // Placed orders (IsFinalized = 1) are not restricted, so a user can have many of those.
