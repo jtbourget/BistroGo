@@ -3,6 +3,7 @@ using BistroGo.Data.DataAccess;
 using BistroGo.Data.Identity;
 using BistroGo.Data.Repositories;
 using BistroGo.Data.Services;
+using BistroGo.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,21 @@ builder.Services.AddDbContext<BistroGoDBContext>(options =>
 builder.Services.AddScoped<IMenuItemRepository, EfMenuItemRepository>();
 
 builder.Services.AddScoped<ICartService, EfCartService>();
+builder.Services.AddScoped<IMenuCategoryRepository, EfCategoryRepository>();
+builder.Services.AddScoped<IOrderRepository, EfOrderRepository>();
+builder.Services.AddScoped<IOrderItemRepository, EfOrderItemRepository>();
+builder.Services.AddScoped<IPickupTimeSlotRepository, EfPickupTimeSlotRepository>();
+builder.Services.AddScoped<IReviewRepository, EfReviewRepository>();
+builder.Services.AddScoped<IExpenseRepository, EfExpenseRepository>();
+
+// API Clients
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7242/";
+builder.Services.AddHttpClient<CategoryApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
+builder.Services.AddHttpClient<MenuItemApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
+builder.Services.AddHttpClient<OrderApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
+builder.Services.AddHttpClient<PickupSlotApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
+builder.Services.AddHttpClient<ReviewApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
+builder.Services.AddHttpClient<ExpenseApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {

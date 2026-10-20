@@ -35,5 +35,6 @@ namespace BistroGo.Core.Models
 
         [MaxLength(250)]
         public string? SpecialInstructions { get; set; }
+        public bool IsArchived { get; set; } = false;
     }
 }

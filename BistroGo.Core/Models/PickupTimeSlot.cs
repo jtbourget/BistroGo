@@ -17,6 +17,7 @@ namespace BistroGo.Core.Models
 
         [Range(1, int.MaxValue)]
         public int MaxOrders { get; set; } = 10;
+        public bool IsArchived { get; set; } = false;
 
         public ICollection<Order> Orders { get; set; } = new List<Order>();
     }

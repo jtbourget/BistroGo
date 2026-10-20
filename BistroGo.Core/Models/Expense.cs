@@ -33,5 +33,6 @@ namespace BistroGo.Core.Models
         public string Category { get; set; } = "";
 
         public DateOnly ExpenseDate { get; set; }
+        public bool IsArchived { get; set; } = false;
     }
 }

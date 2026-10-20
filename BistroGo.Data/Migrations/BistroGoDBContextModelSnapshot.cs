@@ -40,6 +40,11 @@ namespace BistroGo.Data.Migrations
                     b.Property<DateOnly>("ExpenseDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<int?>("MenuItemId")
                         .HasColumnType("INTEGER");
 
@@ -71,6 +76,11 @@ namespace BistroGo.Data.Migrations
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(0);
 
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -88,24 +98,28 @@ namespace BistroGo.Data.Migrations
                         {
                             Id = 1,
                             DisplayOrder = 1,
+                            IsArchived = false,
                             Name = "Appetizer"
                         },
                         new
                         {
                             Id = 2,
                             DisplayOrder = 2,
+                            IsArchived = false,
                             Name = "Entree"
                         },
                         new
                         {
                             Id = 3,
                             DisplayOrder = 3,
+                            IsArchived = false,
                             Name = "Dessert"
                         },
                         new
                         {
                             Id = 4,
                             DisplayOrder = 4,
+                            IsArchived = false,
                             Name = "Drink"
                         });
                 });
@@ -130,6 +144,11 @@ namespace BistroGo.Data.Migrations
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsAvailable")
                         .ValueGeneratedOnAdd()
@@ -162,6 +181,7 @@ namespace BistroGo.Data.Migrations
                             Id = 1,
                             CategoryId = 1,
                             Description = "Grilled bread, tomatoes, basil",
+                            IsArchived = false,
                             IsAvailable = true,
                             Name = "Bruschetta",
                             Price = 8.50m
@@ -171,6 +191,7 @@ namespace BistroGo.Data.Migrations
                             Id = 2,
                             CategoryId = 1,
                             Description = "Romaine, parmesan, croutons",
+                            IsArchived = false,
                             IsAvailable = true,
                             Name = "Caesar Salad",
                             Price = 10.00m
@@ -180,6 +201,7 @@ namespace BistroGo.Data.Migrations
                             Id = 3,
                             CategoryId = 2,
                             Description = "Tomato, mozzarella, basil",
+                            IsArchived = false,
                             IsAvailable = true,
                             Name = "Margherita Pizza",
                             Price = 14.00m
@@ -189,6 +211,7 @@ namespace BistroGo.Data.Migrations
                             Id = 4,
                             CategoryId = 2,
                             Description = "Lemon butter, seasonal veg",
+                            IsArchived = false,
                             IsAvailable = true,
                             Name = "Grilled Salmon",
                             Price = 22.00m
@@ -198,6 +221,7 @@ namespace BistroGo.Data.Migrations
                             Id = 5,
                             CategoryId = 2,
                             Description = "12oz, garlic butter",
+                            IsArchived = false,
                             IsAvailable = true,
                             Name = "Ribeye Steak",
                             Price = 28.00m
@@ -207,6 +231,7 @@ namespace BistroGo.Data.Migrations
                             Id = 6,
                             CategoryId = 3,
                             Description = "Classic Italian dessert",
+                            IsArchived = false,
                             IsAvailable = true,
                             Name = "Tiramisu",
                             Price = 9.00m
@@ -216,6 +241,7 @@ namespace BistroGo.Data.Migrations
                             Id = 7,
                             CategoryId = 4,
                             Description = "Double shot",
+                            IsArchived = false,
                             IsAvailable = true,
                             Name = "Espresso",
                             Price = 4.00m
@@ -225,6 +251,7 @@ namespace BistroGo.Data.Migrations
                             Id = 8,
                             CategoryId = 4,
                             Description = "Glass of Cabernet",
+                            IsArchived = false,
                             IsAvailable = true,
                             Name = "House Red",
                             Price = 11.00m
@@ -340,6 +367,11 @@ namespace BistroGo.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("MenuItemId")
                         .HasColumnType("INTEGER");
 
@@ -427,6 +459,11 @@ namespace BistroGo.Data.Migrations
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("MaxOrders")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
@@ -465,6 +502,11 @@ namespace BistroGo.Data.Migrations
                     b.Property<string>("CustomerId")
                         .HasMaxLength(450)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
 
                     b.Property<int>("Rating")
                         .HasColumnType("INTEGER");

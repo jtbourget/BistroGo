@@ -18,16 +18,17 @@ namespace BistroGo.Web.Pages.Reviews
 
         public IActionResult OnGet()
         {
-            // Only customers and logged-out users should access the customer review page
-            if (User.Identity?.IsAuthenticated == true && !User.IsInRole(Roles.Customer))
-            {
-                return RedirectToPage("/Index");
-            }
-
-            // Pre-fill reviewer name if customer is currently signed in
+            // Only customers and logged-out users should access the customer review page,
+            // assign the current user's name if authenticated, otherwise redirect managers
+            // to the main page.
             if (User.Identity?.IsAuthenticated == true)
             {
                 CurrentUserName = User.Identity.Name;
+
+                if (!User.IsInRole(Roles.Customer))
+                {
+                    return RedirectToPage("/Index");
+                }
             }
 
             return Page();

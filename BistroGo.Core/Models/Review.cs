@@ -24,6 +24,7 @@ namespace BistroGo.Core.Models
         public string? ReviewText { get; set; }
 
         public DateTime CreatedAt { get; set; }
+        public bool IsArchived { get; set; } = false;
 
         // Convenience / compatibility aliases
         [NotMapped]

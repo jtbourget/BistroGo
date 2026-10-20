@@ -56,12 +56,17 @@ namespace BistroGo.Data.DataAccess
         {
             builder.Entity<MenuCategory>(category =>
             {
+                category.Property(c => c.IsArchived).HasDefaultValue(false);
+                category.HasQueryFilter(c => !c.IsArchived);
                 category.Property(c => c.DisplayOrder)
                         .HasDefaultValue(0);
             });
 
             builder.Entity<MenuItem>(item =>
             {
+                item.Property(i => i.IsArchived).HasDefaultValue(false);
+                item.HasQueryFilter(i => !i.IsArchived);
+
                 // FK -> AspNetUsers. Deleting a user keeps the menu item, just clears who made it.
                 item.HasOne<ApplicationUser>()
                     .WithMany()
@@ -88,6 +93,8 @@ namespace BistroGo.Data.DataAccess
         {
             builder.Entity<PickupTimeSlot>(slot =>
             {
+                slot.Property(s => s.IsArchived).HasDefaultValue(false);
+                slot.HasQueryFilter(s => !s.IsArchived);
                 slot.Property(s => s.MaxOrders)
                     .HasDefaultValue(10);
 
@@ -129,6 +136,7 @@ namespace BistroGo.Data.DataAccess
                 // Defaults
                 order.Property(o => o.IsFinalized).HasDefaultValue(false);
                 order.Property(o => o.IsArchived).HasDefaultValue(false);
+                order.HasQueryFilter(o => !o.IsArchived);
                 order.Property(o => o.Subtotal).HasDefaultValue(0m);
                 order.Property(o => o.Tax).HasDefaultValue(0m);
                 order.Property(o => o.Total).HasDefaultValue(0m);
@@ -165,6 +173,8 @@ namespace BistroGo.Data.DataAccess
         {
             builder.Entity<OrderItem>(line =>
             {
+                line.Property(l => l.IsArchived).HasDefaultValue(false);
+                line.HasQueryFilter(l => !l.IsArchived);
                 line.Property(l => l.Quantity)
                     .HasDefaultValue(1);
 
@@ -194,6 +204,8 @@ namespace BistroGo.Data.DataAccess
                       .HasForeignKey(r => r.CustomerId)
                       .OnDelete(DeleteBehavior.SetNull);
 
+                review.Property(r => r.IsArchived).HasDefaultValue(false);
+                review.HasQueryFilter(r => !r.IsArchived);
                 review.Property(r => r.CreatedAt)
                       .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
@@ -216,6 +228,9 @@ namespace BistroGo.Data.DataAccess
                        .WithMany()
                        .HasForeignKey(e => e.RecordedByUserId)
                        .OnDelete(DeleteBehavior.Restrict);
+
+                expense.Property(e => e.IsArchived).HasDefaultValue(false);
+                expense.HasQueryFilter(e => !e.IsArchived);
 
                 expense.ToTable(t => t.HasCheckConstraint(
                     "CK_Expenses_Amount_NonNegative",
