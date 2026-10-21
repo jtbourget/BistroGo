@@ -116,6 +116,24 @@ public class CheckoutModel : PageModel
         return RedirectToPage("/Orders/Index");
     }
 
+    // ── AJAX handler for the modal submission ──
+    public IActionResult OnPostPlaceOrderJson(string guestName, string guestPhone, string guestEmail, string specialInstructions)
+    {
+        LoadCart();
+        if (!Lines.Any()) return new JsonResult(new { success = false, message = "Cart is empty." });
+        if (string.IsNullOrWhiteSpace(guestName)) return new JsonResult(new { success = false, message = "Name is required." });
+
+        // ═══════════════════════════════════════════════════════════════
+        // TODO: POST to /api/orders here. 
+        // Set Cart.GuestName = guestName, etc., finalize the order, and save.
+        // ═══════════════════════════════════════════════════════════════
+
+        // Clear the cart so it's ready for the next order
+        CurrentOrder.Clear();
+
+        return new JsonResult(new { success = true, message = "Order placed successfully!", orderId = 1234 });
+    }
+
     // ── AJAX handlers (mirror Menu/Index for the inline cart editor) ──
     // ── AJAX handlers for the inline cart editor on this page ──
     public async Task<IActionResult> OnPostUpdateQuantityJsonAsync(int menuItemId, int quantity)
