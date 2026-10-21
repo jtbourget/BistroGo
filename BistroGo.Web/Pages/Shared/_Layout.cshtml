@@ -150,6 +150,47 @@
         </div>
     </div>
 
+    <!-- Walkthrough Initial Prompt Modal -->
+    <div class="modal fade" id="walkthroughPromptModal" tabindex="-1" aria-labelledby="walkthroughPromptModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walkthroughPromptModalLabel">🧭 Walkthrough</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">
+                        Welcome to BistroGo! Would you like to view a guided walkthrough to learn how to use the app?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">✕ Maybe Later</button>
+                    <button type="button" class="btn btn-primary" id="confirmWalkthroughBtn">👣 Start Walkthrough</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Walkthrough Complete - Button Highlight Modal -->
+    <div class="modal fade" id="walkthroughCompleteModal" tabindex="-1" aria-labelledby="walkthroughCompleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="walkthroughCompleteModalLabel">✨ Walkthrough Complete!</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">
+                        Great job! You can access the walkthrough anytime by clicking the <strong>Walkthrough</strong> button in the sidebar.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- CSRF token for the cart AJAX POSTs -->
     <form id="csrfForm" method="post" style="display:none;">
         @Html.AntiForgeryToken()
@@ -158,6 +199,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/introjs/intro.min.js"></script>
+    <script src="~/js/walkthrough.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
@@ -282,6 +324,7 @@
             });
 
             function startWalkthrough() {
+                markSeen();
                 var steps = [];
 
                 var categoryEl = document.querySelector('#category');
@@ -316,6 +359,12 @@
                         steps: steps,
                         showProgress: true,
                         showBullets: false
+                    }).oncomplete(function() {
+                        // Show the completion modal with button highlight when walkthrough ends
+                        showWalkthroughCompleteWithHighlight();
+                    }).onexit(function() {
+                        // Show the completion modal with button highlight when user exits
+                        showWalkthroughCompleteWithHighlight();
                     }).start();
                 } else {
                     alert("Walkthrough steps are not available on this page.");
