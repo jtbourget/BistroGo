@@ -1,23 +1,37 @@
 using BistroGo.Core.Interfaces;
+using BistroGo.Data.DataAccess;
 using BistroGo.Data.Repositories;
+using BistroGo.Data.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Services 
+// Add services to the container (repository-per-entity pattern)
+builder.Services.AddScoped<IMenuCategoryRepository, EfCategoryRepository>();
+builder.Services.AddScoped<IMenuItemRepository, EfMenuItemRepository>();
+builder.Services.AddScoped<IOrderRepository, EfOrderRepository>();
+builder.Services.AddScoped<IOrderItemRepository, EfOrderItemRepository>();
+builder.Services.AddScoped<IPickupTimeSlotRepository, EfPickupTimeSlotRepository>();
+builder.Services.AddScoped<IReviewRepository, EfReviewRepository>();
+builder.Services.AddScoped<IExpenseRepository, EfExpenseRepository>();
+builder.Services.AddScoped<ICartService, EfCartService>();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
+
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddControllers();
 
-// Register repositories (in-memory for now)
-builder.Services.AddSingleton<IMenuItemRepository, InMemoryMenuItemRepository>();
-builder.Services.AddSingleton<IMenuCategoryRepository, InMemoryMenuCategoryRepository>();
+builder.Services.AddDbContext<BistroGoDBContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") 
+        ?? "Data Source=../BistroGo.Web/bistrogo.db"));
 
-// Controllers (you'll need these for the Api to expose endpoints)
-builder.Services.AddControllers();
-
-// App 
 var app = builder.Build();
 
-// HTTP pipeline
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

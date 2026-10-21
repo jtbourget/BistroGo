@@ -15,6 +15,7 @@ namespace BistroGo.Core.Models
         public string Name { get; set; } = "";
 
         public int DisplayOrder { get; set; } // Get rid of, no need to have a display order, just sort by name
+        public bool IsArchived { get; set; } = false;
 
         // Navigation: one category has many menu items
         public ICollection<MenuItem> MenuItems { get; set; } = new List<MenuItem>();

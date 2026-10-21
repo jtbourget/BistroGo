@@ -29,6 +29,7 @@ namespace BistroGo.Core.Models
         public decimal Price { get; set; }
 
         public bool IsAvailable { get; set; } = true;
+        public bool IsArchived { get; set; } = false;
 
         [MaxLength(500)]
         public string? ImageUrl { get; set; }

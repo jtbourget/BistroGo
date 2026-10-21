@@ -2,63 +2,78 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Authorization;
 using BistroGo.Data.Identity;
+using BistroGo.Core.Interfaces;
+using BistroGo.Core.Models;
 
 namespace BistroGo.Web.Pages.Orders;
 
 [Authorize(Roles = Roles.Manager + "," + Roles.KitchenStaff)]
 public class IndexModel : PageModel
 {
+    private readonly IOrderRepository _orderRepo;
+
+    public IndexModel(IOrderRepository orderRepo)
+    {
+        _orderRepo = orderRepo;
+    }
+
     public List<OrderSummaryDto> CurrentOrders { get; set; } = new();
     public List<TableDto> Tables { get; set; } = new();
     public List<CustomerDto> Customers { get; set; } = new();
 
-    public void OnGet()
+    public async Task OnGetAsync()
     {
-        LoadData();
+        await LoadDataAsync();
     }
 
-    // Completes an order — sets status to Served
-    public IActionResult OnPostComplete(int id)
+    // Completes an order — sets status to PickedUp/Served
+    public async Task<IActionResult> OnPostCompleteAsync(int id)
     {
-        var order = CurrentOrders.FirstOrDefault(o => o.Id == id);
+        var order = await _orderRepo.GetByIdAsync(id);
         if (order != null)
         {
-            // TODO: Replace with Api call:
-            //   PUT /api/orders/{id} with { status: "Served" }
-            order.Status = "Served";
-            TempData["Message"] = $"Order #{order.Id} marked as Served.";
+            order.StatusId = OrderStatusIds.PickedUp;
+            await _orderRepo.UpdateAsync(order);
+            TempData["Message"] = $"Order #{order.Id} marked as Picked Up / Completed.";
         }
         return RedirectToPage();
     }
 
-    // Changes status to a specific value (Waiting, Preparing)
-    public IActionResult OnPostSetStatus(int id, string status)
+    // Changes status to a specific value (Preparing, Ready, etc.)
+    public async Task<IActionResult> OnPostSetStatusAsync(int id, string status)
     {
-        var order = CurrentOrders.FirstOrDefault(o => o.Id == id);
+        var order = await _orderRepo.GetByIdAsync(id);
         if (order != null && !string.IsNullOrWhiteSpace(status))
         {
-            // TODO: Replace with Api call:
-            //   PUT /api/orders/{id} with { status }
-            order.Status = status;
+            if (status.Equals("Preparing", StringComparison.OrdinalIgnoreCase))
+                order.StatusId = OrderStatusIds.Preparing;
+            else if (status.Equals("Ready", StringComparison.OrdinalIgnoreCase))
+                order.StatusId = OrderStatusIds.Ready;
+            else if (status.Equals("Waiting", StringComparison.OrdinalIgnoreCase) || status.Equals("Received", StringComparison.OrdinalIgnoreCase))
+                order.StatusId = OrderStatusIds.Received;
+
+            await _orderRepo.UpdateAsync(order);
             TempData["Message"] = $"Order #{order.Id} set to {status}.";
         }
         return RedirectToPage();
     }
 
-    private void LoadData()
+    private async Task LoadDataAsync()
     {
-        // TODO: Replace each of these with Api calls:
-        //   CurrentOrders ← GET /api/orders?status=open
-        //   Tables        ← GET /api/tables
-        //   Customers     ← GET /api/customers
+        var allOrders = await _orderRepo.GetAllAsync();
 
-        CurrentOrders = new List<OrderSummaryDto>
-        {
-            new() { Id = 101, CustomerName = "Alice Johnson", TableNumber = 3,  PlacedAt = DateTime.Now.AddMinutes(-12), Status = "Preparing", Total = 42.50m },
-            new() { Id = 102, CustomerName = "Bob Smith",     TableNumber = 7,  PlacedAt = DateTime.Now.AddMinutes(-25), Status = "Served",    Total = 28.00m },
-            new() { Id = 103, CustomerName = "Carol White",   TableNumber = 1,  PlacedAt = DateTime.Now.AddMinutes(-4),  Status = "Waiting",   Total = 15.50m },
-            new() { Id = 104, CustomerName = "Dan Brown",     TableNumber = 12, PlacedAt = DateTime.Now.AddMinutes(-40), Status = "Preparing", Total = 67.25m },
-        };
+        CurrentOrders = allOrders
+            .Where(o => o.IsFinalized)
+            .Select(o => new OrderSummaryDto
+            {
+                Id = o.Id,
+                CustomerName = !string.IsNullOrWhiteSpace(o.GuestName) ? o.GuestName : (!string.IsNullOrWhiteSpace(o.UserId) ? o.UserId : "Customer"),
+                TableNumber = o.PickupSlotId ?? 1,
+                PlacedAt = o.FinalizedAt ?? o.CreatedAt,
+                Status = o.Status?.Name ?? "Received",
+                Total = o.Total
+            })
+            .ToList();
 
         Tables = new List<TableDto>
         {
@@ -76,12 +91,16 @@ public class IndexModel : PageModel
             new() { Number = 12, Status = "Occupied"  },
         };
 
-        Customers = new List<CustomerDto>
-        {
-            new() { Name = "Alice Johnson", Phone = "555-0101", VisitCount = 12 },
-            new() { Name = "Bob Smith",     Phone = "555-0102", VisitCount = 5  },
-            new() { Name = "Carol White",   Phone = "555-0103", VisitCount = 22 },
-        };
+        Customers = allOrders
+            .Where(o => !string.IsNullOrWhiteSpace(o.GuestName))
+            .GroupBy(o => o.GuestName!)
+            .Select(g => new CustomerDto
+            {
+                Name = g.Key,
+                Phone = g.FirstOrDefault()?.GuestPhone ?? "N/A",
+                VisitCount = g.Count()
+            })
+            .ToList();
     }
 
     public class OrderSummaryDto

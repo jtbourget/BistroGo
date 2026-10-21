@@ -1,4 +1,4 @@
-﻿using BistroGo.Core.Interfaces;
+using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using BistroGo.Data.DataAccess;
 using Microsoft.EntityFrameworkCore;
@@ -64,18 +64,11 @@ namespace BistroGo.Data.Repositories
             var existing = await _db.MenuItems.FindAsync(id);
             if (existing == null) return false;
 
-            _db.MenuItems.Remove(existing);
-            try
-            {
-                await _db.SaveChangesAsync();
-                return true;
-            }
-            catch (DbUpdateException)
-            {
-                // FK Restrict: the item appears on an order. Retire it instead
-                // (IsAvailable = false) so order history stays intact.
-                return false;
-            }
+            // Soft-delete via archive flag
+            existing.IsArchived = true;
+            existing.IsAvailable = false;
+            await _db.SaveChangesAsync();
+            return true;
         }
     }
 }
