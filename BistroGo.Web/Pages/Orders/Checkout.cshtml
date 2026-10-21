@@ -26,10 +26,7 @@
     }
 
     <div class="row g-4">
-
-    <!-- ═══════════════════════════════════════════════════════════════
-         LEFT: Order review with inline cart editing
-         ═══════════════════════════════════════════════════════════════ -->
+        <!-- LEFT: Order review -->
         <div class="col-lg-7">
             <div class="dashboard-panel">
                 <div class="dashboard-panel-header">
@@ -99,6 +96,7 @@
                     <h3>Your Details</h3>
                 </div>
 
+                <!-- Form doesn't submit normally; JS intercepts it -->
                 <form id="checkoutForm">
                     <div class="mb-3">
                         <label class="form-label">Name</label>
@@ -120,7 +118,7 @@
                         <textarea name="specialInstructions" id="specialInstructions" class="form-control" rows="2" placeholder="e.g. No onions"></textarea>
                     </div>
 
-                    <!-- Button triggers the confirmation modal -->
+                    <!-- Button triggers the modal, doesn't submit directly -->
                     <button type="button" id="openConfirmModalBtn" class="btn btn-primary w-100 mb-2" disabled="@(!Model.Lines.Any())">
                         ✓ Place Order
                     </button>
@@ -166,6 +164,107 @@
         document.addEventListener('DOMContentLoaded', function () {
             const csrfToken = document.querySelector('#csrfForm input[name="__RequestVerificationToken"]')?.value || '';
             const confirmModal = new bootstrap.Modal(document.getElementById('confirmOrderModal'));
+
+            // Cart Editing (- / + / ✕)
+            const tableBody = document.getElementById('checkoutTableBody');
+            const table = document.getElementById('checkoutTable');
+            const emptyState = document.getElementById('checkoutEmptyState');
+            const subtotalEl = document.getElementById('checkoutSubtotal');
+            const taxEl = document.getElementById('checkoutTax');
+            const totalEl = document.getElementById('checkoutTotal');
+            const itemCountEl = document.getElementById('checkoutItemCount');
+
+            if (tableBody) {
+                tableBody.addEventListener('click', async function (e) {
+                    const row = e.target.closest('tr');
+                    if (!row) return;
+
+                    const menuItemId = parseInt(row.getAttribute('data-menu-item-id'), 10);
+                    const qtySpan = row.querySelector('.js-qty');
+                    const currentQty = parseInt(qtySpan.textContent, 10);
+
+                    let endpoint = null;
+                    let body = null;
+
+                    if (e.target.classList.contains('js-qty-increase')) {
+                        endpoint = '?handler=UpdateQuantityJson';
+                        body = new URLSearchParams({ menuItemId, quantity: currentQty + 1 });
+                    } else if (e.target.classList.contains('js-qty-decrease')) {
+                        endpoint = '?handler=UpdateQuantityJson';
+                        body = new URLSearchParams({ menuItemId, quantity: currentQty - 1 });
+                    } else if (e.target.classList.contains('js-remove-line')) {
+                        endpoint = '?handler=RemoveLineJson';
+                        body = new URLSearchParams({ menuItemId });
+                    }
+
+                    if (!endpoint) return;
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': csrfToken
+                        },
+                        body: body.toString()
+                    });
+
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+
+                    const hasLines = data.lines.length > 0;
+                    table.classList.toggle('d-none', !hasLines);
+                    emptyState.classList.toggle('d-none', hasLines);
+
+                    tableBody.innerHTML = '';
+                    for (const line of data.lines) {
+                        const tr = document.createElement('tr');
+                        tr.setAttribute('data-menu-item-id', line.menuItemId);
+                        tr.innerHTML = `
+                                    <td>${escapeHtml(line.itemName)}</td>
+                                    <td class="text-end">$${line.unitPrice.toFixed(2)}</td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <button type="button" class="btn btn-sm btn-outline-primary js-qty-decrease">−</button>
+                                            <span class="px-2 align-self-center js-qty">${line.quantity}</span>
+                                            <button type="button" class="btn btn-sm btn-outline-primary js-qty-increase">+</button>
+                                        </div>
+                                    </td>
+                                    <td class="text-end js-line-total">$${line.total.toFixed(2)}</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-sm btn-link text-danger p-0 js-remove-line" title="Remove">✕</button>
+                                    </td>`;
+                        tableBody.appendChild(tr);
+                    }
+
+                    subtotalEl.textContent = '$' + data.subtotal.toFixed(2);
+                    taxEl.textContent = '$' + data.tax.toFixed(2);
+                    totalEl.textContent = '$' + data.total.toFixed(2);
+                    itemCountEl.textContent = data.itemCount + ' items';
+
+                    // Sync the sidebar and menu badges to reflect the change
+                    const ticker = document.getElementById('cartTicker');
+                    if (ticker) {
+                        ticker.textContent = data.itemCount;
+                        ticker.classList.toggle('d-none', data.itemCount === 0);
+                    }
+                    const menuBadge = document.getElementById('menuCartBadge');
+                    if (menuBadge) {
+                        menuBadge.textContent = data.itemCount;
+                        menuBadge.classList.toggle('d-none', data.itemCount === 0);
+                    }
+
+                    // Disable Place Order if cart becomes empty
+                    const openBtn = document.getElementById('openConfirmModalBtn');
+                    if (openBtn) openBtn.disabled = !hasLines;
+                });
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
 
             const openModalBtn = document.getElementById('openConfirmModalBtn');
             const submitBtn = document.getElementById('confirmPlaceOrderBtn');
