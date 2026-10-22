@@ -71,6 +71,8 @@ public class CheckoutModel : PageModel
     // HANDLERS
     // ═══════════════════════════════════════════════════════════════════
 
+
+    // ── GET ──────────────────────────────────────────────────────────
     public async Task<IActionResult> OnGetAsync()
     {
         await LoadCartAsync();
@@ -84,6 +86,8 @@ public class CheckoutModel : PageModel
         return Page();
     }
 
+
+    // ── POST (Standard Form) ─────────────────────────────────────────
     public async Task<IActionResult> OnPostAsync()
     {
         await LoadCartAsync();
@@ -117,19 +121,31 @@ public class CheckoutModel : PageModel
     }
 
     // ── AJAX handler for the modal submission ──
-    public IActionResult OnPostPlaceOrderJson(string guestName, string guestPhone, string guestEmail, string specialInstructions)
+    public async Task<IActionResult> OnPostPlaceOrderJsonAsync(string guestName, string guestPhone, string guestEmail, string specialInstructions)
     {
-        LoadCart();
-        if (!Lines.Any()) return new JsonResult(new { success = false, message = "Cart is empty." });
-        if (string.IsNullOrWhiteSpace(guestName)) return new JsonResult(new { success = false, message = "Name is required." });
+        var owner = CartOwnerResolver.Find(HttpContext);
+        var cart = owner == null ? null : await _cart.GetCartAsync(owner);
+
+        if (cart == null || !cart.Items.Any())
+            return new JsonResult(new { success = false, message = "Cart is empty." });
+
+        if (string.IsNullOrWhiteSpace(guestName))
+            return new JsonResult(new { success = false, message = "Name is required." });
 
         // ═══════════════════════════════════════════════════════════════
         // TODO: POST to /api/orders here. 
         // Set Cart.GuestName = guestName, etc., finalize the order, and save.
         // ═══════════════════════════════════════════════════════════════
 
-        // Clear the cart so it's ready for the next order
-        CurrentOrder.Clear();
+        // Clear the cart by removing each item using the existing service method
+        if (owner != null)
+        {
+            var itemsToRemove = cart.Items.Select(i => i.MenuItemId).ToList();
+            foreach (var itemId in itemsToRemove)
+            {
+                await _cart.RemoveItemAsync(owner, itemId);
+            }
+        }
 
         return new JsonResult(new { success = true, message = "Order placed successfully!", orderId = 1234 });
     }
