@@ -96,14 +96,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
-                new bootstrap.Tooltip(el, {
-                    html: true,
-                    delay: { show: 0, hide: 0 }
-                });
-            });
-        });
-    </script>
+    <script src="~/js/tooltips.js" asp-append-version="true"></script>
 }
