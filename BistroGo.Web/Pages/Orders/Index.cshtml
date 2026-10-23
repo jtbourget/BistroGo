@@ -9,14 +9,6 @@
     <span class="text-muted">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
 </div>
 
-@if (TempData["Message"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Message"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
 <div class="row g-4">
 
     <!-- ═══════════════════════════════════════════════════════════
@@ -39,38 +31,68 @@
                 <div class="dashboard-list">
                     @foreach (var order in Model.CurrentOrders)
                     {
+                        // 1. Determine the badge color based on the current status from the database
                         var badgeClass = order.Status switch
                         {
                             "Received" => "badge-reserved",
                             "Preparing" => "badge-occupied",
                             "Ready" => "badge-available",
-                            "PickedUp" => "bg-secondary",
                             _ => "bg-secondary"
+                        };
+
+                        // 2. Determine the glow/shadow effect based on the status
+                        var shadowClass = order.Status switch
+                        {
+                            "Received" => "status-received",
+                            "Preparing" => "status-preparing",
+                            "Ready" => "status-ready",
+                            _ => ""
                         };
 
                         <div class="thin-card">
                             <span class="thin-card-icon">🧾</span>
                             <span class="thin-card-body">
+                                <!--
+                                    The Order Data (ID, Customer Name, Table, Time, Total)
+                                    is populated directly from the SQLite database via
+                                    Entity Framework in Index.cshtml.cs -> LoadDataAsync().
+                                -->
                                 <span class="thin-card-title">#@order.Id — @order.CustomerName</span>
                                 <span class="thin-card-sub">Table @order.TableNumber · @order.PlacedAt.ToString("h:mm tt")</span>
                             </span>
                             <span class="thin-card-meta">
 
                                 <!--
-                                    This form posts directly to OnPostSetStatusAsync in the C# code.
-                                    It will update the SQLite database and reload the page.
+                                    API INTEGRATION NOTE:
+                                    When you move to the API, this form will be intercepted by JavaScript.
+                                    Instead of a page reload, the JS will send a PUT request to something like:
+                                    /api/orders/{id}/status
+                                    with the new status string in the body.
                                 -->
-                                <form method="post" asp-page-handler="SetStatus" class="d-flex align-items-center gap-1 mb-0">
+                                <form method="post" asp-page-handler="SetStatus" class="d-flex align-items-center mb-0">
+                                    <!-- The ID of the order we are updating is sent securely in the form payload -->
                                     <input type="hidden" name="id" value="@order.Id" />
 
-                                    <!-- The options match the if/else checks in OnPostSetStatusAsync -->
-                                    <select name="status" class="form-select form-select-sm badge @badgeClass border-0"
-                                            onchange="this.form.submit()"
-                                            style="cursor: pointer; width: auto; font-weight: 600;">
-                                        <option value="Received" selected="@(order.Status == "Received")">Received</option>
-                                        <option value="Preparing" selected="@(order.Status == "Preparing")">Preparing</option>
-                                        <option value="Ready" selected="@(order.Status == "Ready")">Ready</option>
-                                    </select>
+                                    <!-- The Wrapper with the dynamic shadow class -->
+                                    <div class="status-dropdown-wrapper @shadowClass">
+
+                                        <!-- The colored badge (user sees this) -->
+                                        <span class="badge @badgeClass">@order.Status</span>
+
+                                        <!--
+                                            THE INVISIBLE DROPDOWN
+                                            When the user changes this select, 'onchange' fires.
+                                            'this.form.submit()' sends a POST request to the server.
+                                            In Index.cshtml.cs, the 'OnPostSetStatusAsync' handler catches it,
+                                            updates the StatusId in the SQLite database, and reloads the page.
+                                        -->
+                                        <select name="status" class="status-dropdown" onchange="this.form.submit()">
+                                            <option value="Received" selected="@(order.Status == "Received")">Received</option>
+                                            <option value="Preparing" selected="@(order.Status == "Preparing")">Preparing</option>
+                                            <option value="Ready" selected="@(order.Status == "Ready")">Ready</option>
+                                        </select>
+
+                                    </div>
                                 </form>
 
                                 <span class="card-price ms-2">$@order.Total.ToString("0.00")</span>
