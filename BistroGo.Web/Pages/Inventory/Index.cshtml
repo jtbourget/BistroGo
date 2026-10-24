@@ -119,7 +119,7 @@
 <partial name="Shared/DeleteConfirmation" />
 
 <!-- NEW ITEM MODAL -->
-<div class="modal fade" id="newItemModal" tabindex="-1" aria-labelledby="newItemModalLabel" aria-hidden="true">
+<div class="modal fade" id="newItemModal" tabindex="-1" aria-labelledby="newItemModalLabel" aria-hidden="true" data-open-modal="@(ViewData["OpenModal"] as bool? == true ? "true" : "false")">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content menu-modal-content">
             <form method="post" asp-page-handler="AddItem">
@@ -167,29 +167,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const deleteItemId = document.getElementById('deleteItemId');
-            const deleteItemName = document.getElementById('deleteItemName');
-            const deleteForm = document.querySelector('#deleteConfirmationModal form');
-
-            document.querySelectorAll('[data-bs-target="#deleteConfirmationModal"]').forEach(function (button) {
-                button.addEventListener('click', function () {
-                    deleteItemId.value = this.dataset.itemId;
-                    deleteItemName.textContent = this.dataset.itemName;
-
-                    const formAction = new URL(deleteForm.action);
-                    formAction.searchParams.set('handler', this.dataset.deleteHandler || 'DeleteItem');
-                    deleteForm.action = formAction;
-                });
-            });
-
-            @if (ViewData["OpenModal"] as bool? == true)
-            {
-                <text>
-                new bootstrap.Modal(document.getElementById('newItemModal')).show();
-                </text>
-            }
-        });
-    </script>
+    <script src="~/js/inventory.js" asp-append-version="true"></script>
 }

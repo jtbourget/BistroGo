@@ -1,21 +1,19 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+// BistroGo site-wide script
 
-// Write your JavaScript code.
+document.addEventListener('DOMContentLoaded', function () {
+    // Highlight the active sidebar link based on current URL
+    const current = window.location.pathname.toLowerCase();
 
+    document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
+        const href = link.getAttribute('href')?.toLowerCase() || '';
 
-// Highlight the active sidebar link based on current URL
+        if (href && (current === href || current.startsWith(href + '/'))) {
+            link.classList.add('active');
+        }
+    });
 
-    
-        document.addEventListener('DOMContentLoaded', function () 
-        {const current = window.location.pathname.toLowerCase();
-    
-        document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => 
-            {const href = link.getAttribute('href')?.toLowerCase() || '';
-        
-                if (href && (current === href || current.startsWith(href + '/'))) 
-                    {
-                        link.classList.add('active');
-                    }
-            });
-        });
+    // Sidebar toggle (mobile)
+    document.getElementById('sidebarToggle')?.addEventListener('click', function () {
+        document.querySelector('.app-wrapper')?.classList.toggle('sidebar-collapsed');
+    });
+});

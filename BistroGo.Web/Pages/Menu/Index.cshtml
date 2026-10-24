@@ -20,7 +20,7 @@
 <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
     <form method="get" class="d-flex align-items-center gap-2 mb-0">
         <label for="category" class="form-label mb-0">Filter by category:</label>
-        <select id="category" name="category" class="form-select" style="width: 200px;" onchange="this.form.submit()">
+        <select id="category" name="category" class="form-select" style="width: 200px;">
             <option value="">All Categories</option>
             @foreach (var cat in Model.Categories)
             {
@@ -79,8 +79,7 @@ else
 
                         <div class="menu-card-actions">
                             <span class="card-price">$@item.Price.ToString("0.00")</span>
-                            <form method="post" asp-page-handler="AddToOrder" class="text-end"
-                                  onclick="event.stopPropagation();">
+                            <form method="post" asp-page-handler="AddToOrder" class="text-end">
                                 <input type="hidden" name="menuItemId" value="@item.Id" />
                                 <input type="hidden" name="category" value="@Model.SelectedCategory" />
                                 <button type="submit" class="btn btn-sm btn-add-to-order">
@@ -122,26 +121,5 @@ else
 </div>
 
 @section Scripts {
-    <script>
-        // Fill the menu item modal with the clicked card's data
-        document.addEventListener('DOMContentLoaded', function () {
-            const modal = document.getElementById('menuItemModal');
-            if (!modal) return;
-
-            modal.addEventListener('show.bs.modal', function (event) {
-                const card = event.relatedTarget;
-                if (!card) return;
-
-                const name = card.getAttribute('data-item-name') || '';
-                const category = card.getAttribute('data-item-category') || '';
-                const price = card.getAttribute('data-item-price') || '0.00';
-                const description = card.getAttribute('data-item-description') || '';
-
-                modal.querySelector('#menuItemModalLabel').textContent = name;
-                modal.querySelector('#menuItemModalCategory').textContent = category;
-                modal.querySelector('#menuItemModalPrice').textContent = '$' + price;
-                modal.querySelector('#menuItemModalDescription').textContent = description;
-            });
-        });
-    </script>
+    <script src="~/js/menu.js" asp-append-version="true"></script>
 }
