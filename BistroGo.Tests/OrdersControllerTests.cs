@@ -86,4 +86,18 @@ public class OrdersControllerTests
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(order, ok.Value);
     }
+
+    [Fact]
+    public async Task AddLine_ReturnsNotFound_WhenOrderDoesNotExist()
+    {
+        // Arrange
+        _repo.GetByIdAsync(99).Returns((Order?)null);
+
+        // Act
+        var result = await _controller.AddLine(99, new OrderItem());
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result.Result);
+        await _repo.DidNotReceive().AddLineAsync(Arg.Any<OrderItem>());
+    }
 }

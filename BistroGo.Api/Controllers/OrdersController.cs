@@ -116,9 +116,15 @@ namespace BistroGo.Api.Controllers
         [HttpPost("{orderId:int}/lines")]
         public async Task<ActionResult<OrderItem>> AddLine(int orderId, [FromBody] OrderItem line)
         {
+            var order = await _repository.GetByIdAsync(orderId);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
             line.OrderId = orderId;
             var created = await _repository.AddLineAsync(line);
-            return Ok(created);
+            return CreatedAtAction(nameof(OrderItemsController.GetById), "OrderItems", new { id = created.Id }, created);
         }
     }
 }
