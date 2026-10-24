@@ -85,9 +85,9 @@ namespace BistroGo.Api.Controllers
                 PlaceOrderResult.Placed => Ok(),
                 PlaceOrderResult.NotFound => NotFound(),
                 PlaceOrderResult.AlreadyPlaced =>
-                    Problem(title: "Order has already been placed.", statusCode: StatusCodes.Status409Conflict),
+                    Conflict(new ProblemDetails { Title = "Order has already been placed.", Status = StatusCodes.Status409Conflict }),
                 PlaceOrderResult.PickupSlotRequired =>
-                    Problem(title: "A pickup slot is required to place an order.", statusCode: StatusCodes.Status400BadRequest),
+                    BadRequest(new ProblemDetails { Title = "A pickup slot is required to place an order.", Status = StatusCodes.Status400BadRequest }),
                 _ => throw new InvalidOperationException($"Unhandled result: {result}.")
             };
         }
