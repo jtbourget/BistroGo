@@ -1025,3 +1025,70 @@ body {
     font-weight: 600;
 }
 
+/* ═══════════════════════════════════════════════════
+   ORDER STATUS DROPDOWN
+   ═══════════════════════════════════════════════════ */
+.status-dropdown-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.6rem;
+    border-radius: 8px;
+    background-color: #fdfaf6; /* Soft neutral background */
+    border: 1px solid #e8d9c5;
+    transition: all 0.2s ease;
+}
+
+/* The actual dropdown select element - invisible but clickable */
+.status-dropdown {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+/* Hover effect on the wrapper */
+.status-dropdown-wrapper:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-color: #b5651d;
+}
+
+/* Status-specific shadows */
+.status-dropdown-wrapper.status-preparing {
+    box-shadow: 0 2px 8px rgba(198, 40, 40, 0.4); /* Red shadow */
+    border-color: rgba(198, 40, 40, 0.3);
+}
+
+.status-dropdown-wrapper.status-received {
+    box-shadow: 0 2px 8px rgba(245, 185, 66, 0.5); /* Yellow shadow */
+    border-color: rgba(245, 185, 66, 0.4);
+}
+
+.status-dropdown-wrapper.status-ready {
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.4); /* Green shadow */
+    border-color: rgba(46, 125, 50, 0.3);
+}
+
+/* The text inside the dropdown */
+.status-dropdown-wrapper .badge {
+    font-size: 0.8rem;
+    padding: 0;
+    background-color: transparent !important; 
+    color: #4a2c17 !important; 
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+    box-shadow: none !important; /* Removes any bootstrap inner shadows */
+}
+
+    /* Tiny arrow icon inside the badge */
+    .status-dropdown-wrapper .badge::after {
+        content: "▼";
+        font-size: 0.55rem;
+        opacity: 0.6;
+        color: #4a2c17;
+    }
