@@ -4,6 +4,7 @@ using BistroGo.Data.Repositories;
 using BistroGo.Data.Services;
 using Microsoft.EntityFrameworkCore;
 using BistroGo.Api.Security;
+using BistroGo.Api.Errors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,8 @@ builder.Services.AddScoped<IPickupTimeSlotRepository, EfPickupTimeSlotRepository
 builder.Services.AddScoped<IReviewRepository, EfReviewRepository>();
 builder.Services.AddScoped<IExpenseRepository, EfExpenseRepository>();
 builder.Services.AddScoped<ICartService, EfCartService>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -31,12 +34,15 @@ builder.Services.AddDbContext<BistroGoDBContext>(options =>
         ?? "Data Source=../BistroGo.Web/bistrogo.db"));
 
 var app = builder.Build();
+app.UseExceptionHandler();   // must be first, so it wraps everything below it
+app.UseStatusCodePages();    // turns empty 404/401/etc. responses into ProblemDetails too
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
 
 app.UseHttpsRedirection();
 app.UseMiddleware<ApiKeyMiddleware>();   // reject /api calls that don't carry the shared key
