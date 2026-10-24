@@ -3,6 +3,7 @@ using BistroGo.Data.DataAccess;
 using BistroGo.Data.Repositories;
 using BistroGo.Data.Services;
 using Microsoft.EntityFrameworkCore;
+using BistroGo.Api.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<ApiKeyMiddleware>();   // reject /api calls that don't carry the shared key
 app.UseAuthorization();
 app.MapControllers();
 
