@@ -26,9 +26,6 @@ namespace BistroGo.Core.Interfaces
         /// <summary>Soft-deletes an order by marking IsArchived = true and setting ArchivedAt timestamp.</summary>
         Task<bool> DeleteAsync(int id);
 
-        /// <summary>Finalizes a pending cart into a placed order with an assigned status and confirmation code.</summary>
-        Task<bool> PlaceOrderAsync(int id);
-
         /// <summary>Retrieves all active line items for an order.</summary>
         Task<List<OrderItem>> GetLinesByOrderIdAsync(int orderId);
 

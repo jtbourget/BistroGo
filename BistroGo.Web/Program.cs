@@ -27,12 +27,25 @@ builder.Services.AddScoped<IExpenseRepository, EfExpenseRepository>();
 
 // API Clients
 var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7242/";
-builder.Services.AddHttpClient<CategoryApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
-builder.Services.AddHttpClient<MenuItemApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
-builder.Services.AddHttpClient<OrderApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
-builder.Services.AddHttpClient<PickupSlotApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
-builder.Services.AddHttpClient<ReviewApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
-builder.Services.AddHttpClient<ExpenseApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
+
+const string ApiKeyHeader = "X-Api-Key";   // must match ApiKeyMiddleware.HeaderName in the API
+var apiKey = builder.Configuration["ApiSettings:Key"]
+    ?? throw new InvalidOperationException("ApiSettings:Key is not configured.");
+
+// Registers a typed HTTP client that always sends the shared key to the API.
+void AddApiClient<T>() where T : class =>
+    builder.Services.AddHttpClient<T>(c =>
+    {
+        c.BaseAddress = new Uri(apiBaseUrl);
+        c.DefaultRequestHeaders.Add(ApiKeyHeader, apiKey);
+    });
+
+AddApiClient<CategoryApiClient>();
+AddApiClient<MenuItemApiClient>();
+AddApiClient<OrderApiClient>();
+AddApiClient<PickupSlotApiClient>();
+AddApiClient<ReviewApiClient>();
+AddApiClient<ExpenseApiClient>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
