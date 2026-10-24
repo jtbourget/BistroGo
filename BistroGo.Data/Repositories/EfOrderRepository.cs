@@ -93,24 +93,6 @@ namespace BistroGo.Data.Repositories
             return true;
         }
 
-        public async Task<bool> PlaceOrderAsync(int id)
-        {
-            var order = await _db.Orders
-                .Include(o => o.Items)
-                .FirstOrDefaultAsync(o => o.Id == id);
-
-            if (order == null || order.IsFinalized) return false;
-
-            order.IsFinalized = true;
-            order.FinalizedAt = DateTime.UtcNow;
-            order.StatusId = OrderStatusIds.Received;
-            order.ConfirmationCode ??= GenerateConfirmationCode();
-            OrderPricing.Recalculate(order);
-
-            await _db.SaveChangesAsync();
-            return true;
-        }
-
         public async Task<List<OrderItem>> GetLinesByOrderIdAsync(int orderId)
         {
             return await _db.OrderItems
@@ -180,11 +162,6 @@ namespace BistroGo.Data.Repositories
             }
 
             return true;
-        }
-
-        private static string GenerateConfirmationCode()
-        {
-            return "BG-" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
         }
     }
 }

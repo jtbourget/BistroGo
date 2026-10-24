@@ -19,6 +19,7 @@ builder.Services.AddScoped<IExpenseRepository, EfExpenseRepository>();
 builder.Services.AddScoped<ICartService, EfCartService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

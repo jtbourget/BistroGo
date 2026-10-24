@@ -12,10 +12,12 @@ namespace BistroGo.Api.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IOrderRepository _repository;
+        private readonly IOrderService _orderService;
 
-        public OrdersController(IOrderRepository repository)
+        public OrdersController(IOrderRepository repository, IOrderService orderService)
         {
             _repository = repository;
+            _orderService = orderService;
         }
 
         /// <summary>Retrieves all orders, optionally filtered by user ID.</summary>
@@ -76,12 +78,18 @@ namespace BistroGo.Api.Controllers
         [HttpPost("{id:int}/place")]
         public async Task<ActionResult> PlaceOrder(int id)
         {
-            var placed = await _repository.PlaceOrderAsync(id);
-            if (!placed)
+            var result = await _orderService.PlaceOrderAsync(id);
+
+            return result switch
             {
-                return BadRequest("Order could not be placed.");
-            }
-            return Ok();
+                PlaceOrderResult.Placed => Ok(),
+                PlaceOrderResult.NotFound => NotFound(),
+                PlaceOrderResult.AlreadyPlaced =>
+                    Problem(title: "Order has already been placed.", statusCode: StatusCodes.Status409Conflict),
+                PlaceOrderResult.PickupSlotRequired =>
+                    Problem(title: "A pickup slot is required to place an order.", statusCode: StatusCodes.Status400BadRequest),
+                _ => throw new InvalidOperationException($"Unhandled result: {result}.")
+            };
         }
 
         /// <summary>Soft-deletes an order by identifier.</summary>
