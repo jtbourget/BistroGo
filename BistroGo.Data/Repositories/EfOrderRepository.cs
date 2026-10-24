@@ -2,13 +2,13 @@ using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using BistroGo.Data.DataAccess;
 using Microsoft.EntityFrameworkCore;
+using BistroGo.Core.Pricing;
 
 namespace BistroGo.Data.Repositories
 {
     public class EfOrderRepository : IOrderRepository
     {
         private readonly BistroGoDBContext _db;
-        private const decimal TaxRate = 0.08m;
 
         public EfOrderRepository(BistroGoDBContext db)
         {
@@ -53,7 +53,7 @@ namespace BistroGo.Data.Repositories
 
         public async Task<Order> AddAsync(Order order)
         {
-            RecalculateTotals(order);
+            OrderPricing.Recalculate(order);
             _db.Orders.Add(order);
             await _db.SaveChangesAsync();
             return order;
@@ -76,7 +76,7 @@ namespace BistroGo.Data.Repositories
             existing.FinalizedAt = order.FinalizedAt;
             existing.ConfirmationCode = order.ConfirmationCode;
 
-            RecalculateTotals(existing);
+            OrderPricing.Recalculate(existing);
             await _db.SaveChangesAsync();
             return true;
         }
@@ -105,7 +105,7 @@ namespace BistroGo.Data.Repositories
             order.FinalizedAt = DateTime.UtcNow;
             order.StatusId = OrderStatusIds.Received;
             order.ConfirmationCode ??= GenerateConfirmationCode();
-            RecalculateTotals(order);
+            OrderPricing.Recalculate(order);
 
             await _db.SaveChangesAsync();
             return true;
@@ -136,7 +136,7 @@ namespace BistroGo.Data.Repositories
             var order = await _db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == line.OrderId);
             if (order != null)
             {
-                RecalculateTotals(order);
+                OrderPricing.Recalculate(order);
                 await _db.SaveChangesAsync();
             }
 
@@ -157,7 +157,7 @@ namespace BistroGo.Data.Repositories
             var order = await _db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == existing.OrderId);
             if (order != null)
             {
-                RecalculateTotals(order);
+                OrderPricing.Recalculate(order);
                 await _db.SaveChangesAsync();
             }
 
@@ -175,21 +175,11 @@ namespace BistroGo.Data.Repositories
             var order = await _db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == line.OrderId);
             if (order != null)
             {
-                RecalculateTotals(order);
+                OrderPricing.Recalculate(order);
                 await _db.SaveChangesAsync();
             }
 
             return true;
-        }
-
-        private static void RecalculateTotals(Order order)
-        {
-            if (order.Items != null && order.Items.Any())
-            {
-                order.Subtotal = Math.Round(order.Items.Where(i => !i.IsArchived).Sum(i => i.Quantity * i.UnitPrice), 2);
-                order.Tax = Math.Round(order.Subtotal * TaxRate, 2);
-                order.Total = order.Subtotal + order.Tax;
-            }
         }
 
         private static string GenerateConfirmationCode()

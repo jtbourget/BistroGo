@@ -1,5 +1,6 @@
 ﻿using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using BistroGo.Core.Pricing;
 using BistroGo.Data.DataAccess;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,7 +9,6 @@ namespace BistroGo.Data.Services
     public class EfCartService : ICartService
     {
         private const int MaxPerLine = 99;
-        private const decimal TaxRate = 0.08m;
         private readonly BistroGoDBContext _db;
 
         public EfCartService(BistroGoDBContext db) { _db = db; }
@@ -25,13 +25,6 @@ namespace BistroGo.Data.Services
 
             // An owner with neither would otherwise match "GuestToken IS NULL" = every user's cart.
             throw new ArgumentException("Cart owner needs a UserId or a GuestToken.", nameof(owner));
-        }
-
-        private static void Recalculate(Order cart)
-        {
-            cart.Subtotal = Math.Round(cart.Items.Sum(i => i.Quantity * i.UnitPrice), 2);
-            cart.Tax = Math.Round(cart.Subtotal * TaxRate, 2);
-            cart.Total = cart.Subtotal + cart.Tax;
         }
 
         public async Task<Order?> GetCartAsync(CartOwner owner) =>
@@ -65,7 +58,7 @@ namespace BistroGo.Data.Services
             else
                 line.Quantity = Math.Min(line.Quantity + quantity, MaxPerLine);
 
-            Recalculate(cart);
+            OrderPricing.Recalculate(cart);
             await _db.SaveChangesAsync();
             return true;
         }
@@ -86,7 +79,7 @@ namespace BistroGo.Data.Services
                 line.Quantity = Math.Min(quantity, MaxPerLine);
             }
 
-            Recalculate(cart);
+            OrderPricing.Recalculate(cart);
             await _db.SaveChangesAsync();
             return true;
         }
@@ -125,7 +118,7 @@ namespace BistroGo.Data.Services
                     else
                         existing.Quantity = Math.Min(existing.Quantity + gl.Quantity, MaxPerLine);
                 }
-                Recalculate(userCart);
+                OrderPricing.Recalculate(userCart);
                 _db.Orders.Remove(guestCart);       // cascade deletes its lines
             }
 
