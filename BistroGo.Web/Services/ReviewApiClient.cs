@@ -72,5 +72,24 @@ namespace BistroGo.Web.Services
             var response = await _client.DeleteAsync($"api/reviews/{id}");
             return response.IsSuccessStatusCode;
         }
+
+        /// <summary>Calls POST api/reviews/{id}/comments to add a comment to a review.</summary>
+        public async Task<ReviewComment?> AddCommentAsync(int reviewId, ReviewComment comment)
+        {
+            var response = await _client.PostAsJsonAsync($"api/reviews/{reviewId}/comments", comment);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<ReviewComment>();
+            }
+
+            return null;
+        }
+
+        /// <summary>Calls GET api/reviews/{id}/comments to retrieve comments for a review.</summary>
+        public async Task<IEnumerable<ReviewComment>> GetCommentsAsync(int reviewId)
+        {
+            var comments = await _client.GetFromJsonAsync<IEnumerable<ReviewComment>>($"api/reviews/{reviewId}/comments");
+            return comments ?? Enumerable.Empty<ReviewComment>();
+        }
     }
 }

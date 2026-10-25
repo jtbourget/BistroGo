@@ -30,28 +30,28 @@
 <div>
     <h3>Quick Actions</h3>
     <div class="row g-3 mt-1">
-        <div class="@(User.Identity?.IsAuthenticated != true || User.IsInRole(Roles.Customer) ? "col-md-4" : "col-md-6")">
+        <div class="@(User.Identity?.IsAuthenticated != true || !User.IsInRole(Roles.KitchenStaff) ? "col-md-4" : "col-md-6")">
             <a asp-page="/Menu/Index" class="quick-action-card">
                 <span class="quick-action-icon">🍴</span>
                 <span class="quick-action-label">Browse Menu</span>
                 <span class="quick-action-desc">See everything we're serving today</span>
             </a>
         </div>
-        <div class="@(User.Identity?.IsAuthenticated != true || User.IsInRole(Roles.Customer) ? "col-md-4" : "col-md-6")">
+        <div class="@(User.Identity?.IsAuthenticated != true || !User.IsInRole(Roles.KitchenStaff) ? "col-md-4" : "col-md-6")">
             <button type="button" class="quick-action-card" data-bs-toggle="modal" data-bs-target="#currentOrderModal">
                 <span class="quick-action-icon">🛒</span>
                 <span class="quick-action-label">Current Order</span>
                 <span class="quick-action-desc">Review what's in your cart</span>
             </button>
         </div>
-        @* Reviews action is only visible to customers and logged-out users *@
-        @if (User.Identity?.IsAuthenticated != true || User.IsInRole(Roles.Customer))
+        @* Reviews action is visible to everyone except KitchenStaff *@
+        @if (User.Identity?.IsAuthenticated != true || !User.IsInRole(Roles.KitchenStaff))
         {
             <div class="col-md-4">
                 <a asp-page="/Reviews/Index" class="quick-action-card">
                     <span class="quick-action-icon">⭐</span>
                     <span class="quick-action-label">Reviews</span>
-                    <span class="quick-action-desc">Leave ratings and feedback</span>
+                    <span class="quick-action-desc">@(User.IsInRole(Roles.Manager) ? "View feedback and responses" : "Leave ratings and feedback")</span>
                 </a>
             </div>
         }

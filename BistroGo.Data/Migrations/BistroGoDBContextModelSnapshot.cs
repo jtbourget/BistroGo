@@ -503,6 +503,10 @@ namespace BistroGo.Data.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsArchived")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
@@ -523,6 +527,47 @@ namespace BistroGo.Data.Migrations
                         {
                             t.HasCheckConstraint("CK_Reviews_Rating_Range", "\"Rating\" BETWEEN 1 AND 5");
                         });
+                });
+
+            modelBuilder.Entity("BistroGo.Core.Models.ReviewComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CommentText")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("ManagerId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ManagerName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ManagerId");
+
+                    b.HasIndex("ReviewId");
+
+                    b.ToTable("ReviewComments");
                 });
 
             modelBuilder.Entity("BistroGo.Data.Identity.ApplicationUser", b =>
@@ -811,6 +856,22 @@ namespace BistroGo.Data.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 
+            modelBuilder.Entity("BistroGo.Core.Models.ReviewComment", b =>
+                {
+                    b.HasOne("BistroGo.Data.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("ManagerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("BistroGo.Core.Models.Review", "Review")
+                        .WithMany("Comments")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Review");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -885,6 +946,11 @@ namespace BistroGo.Data.Migrations
             modelBuilder.Entity("BistroGo.Core.Models.PickupTimeSlot", b =>
                 {
                     b.Navigation("Orders");
+                });
+
+            modelBuilder.Entity("BistroGo.Core.Models.Review", b =>
+                {
+                    b.Navigation("Comments");
                 });
 #pragma warning restore 612, 618
         }

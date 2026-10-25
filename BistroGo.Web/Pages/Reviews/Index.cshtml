@@ -12,7 +12,7 @@
         <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
                 <h1 class="mb-1">⭐ Restaurant Reviews</h1>
-                <span class="text-muted">Leave ratings and suggestions for BistroGo</span>
+                <span class="text-muted">Customer feedback, ratings, and manager responses for BistroGo</span>
             </div>
             <div class="d-flex gap-2">
                 <a asp-page="/Index" class="btn btn-outline-primary">← Back to Home</a>
@@ -23,81 +23,243 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     REVIEW FORM PANEL
-     Framework for rating and written feedback. Submission logic 
-     and database storage will be implemented in a future ticket.
+     ALERTS (SUCCESS / ERROR)
      ═══════════════════════════════════════════════════════════════ -->
-<div class="row justify-content-center">
-    <div class="col-lg-8 col-md-10">
-        <div class="dashboard-panel">
-            <div class="dashboard-panel-header">
-                <h3>Leave a Review</h3>
-                <span class="text-muted small">We appreciate your feedback!</span>
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="row justify-content-center mb-3">
+        <div class="col-lg-8 col-md-10">
+            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+                <span>✅</span>
+                <div>@Model.SuccessMessage</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-
-            <form id="reviewForm">
-                <!-- 1. Star Rating Component -->
-                <div class="mb-4">
-                    <label class="form-label fw-bold d-block">
-                        Rating <span class="text-danger">*</span>
-                    </label>
-                    <div class="rating-input-wrapper d-flex align-items-center gap-2">
-                        <div class="star-rating" id="starRating" role="radiogroup" aria-label="Rating from 1 to 5 stars">
-                            <button type="button" class="star-btn" data-rating="1" aria-label="1 star">★</button>
-                            <button type="button" class="star-btn" data-rating="2" aria-label="2 stars">★</button>
-                            <button type="button" class="star-btn" data-rating="3" aria-label="3 stars">★</button>
-                            <button type="button" class="star-btn" data-rating="4" aria-label="4 stars">★</button>
-                            <button type="button" class="star-btn" data-rating="5" aria-label="5 stars">★</button>
-                        </div>
-                        <span class="rating-text text-muted ms-2" id="ratingText">5 Stars - Excellent</span>
-                        <!-- Hidden input to hold chosen rating for future form submission -->
-                        <input type="hidden" id="ratingValue" name="Rating" value="5" />
-                    </div>
-                </div>
-
-                <!-- 2. Customer Name (Optional / Auto-filled if logged in) -->
-                <div class="mb-3">
-                    <label for="reviewerName" class="form-label fw-bold">Your Name</label>
-                    <input type="text"
-                           class="form-control"
-                           id="reviewerName"
-                           name="ReviewerName"
-                           value="@Model.CurrentUserName"
-                           placeholder="Enter your name (or leave blank to post as Guest)" />
-                    <small class="text-muted">
-                        @(User.Identity?.IsAuthenticated == true ? "Prefilled with your account username." : "Optional. You may leave this blank to remain anonymous.")
-                    </small>
-                </div>
-
-                <!-- 3. Written Review Textarea -->
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label for="reviewComment" class="form-label fw-bold mb-0">
-                            Written Feedback & Suggestions <span class="text-danger">*</span>
-                        </label>
-                        <small class="text-muted" id="charCounter">0 / 1000</small>
-                    </div>
-                    <textarea class="form-control"
-                              id="reviewComment"
-                              name="ReviewComment"
-                              rows="5"
-                              maxlength="1000"
-                              placeholder="Tell us about your experience! How was the food, service, and atmosphere? Any dishes you'd recommend or suggestions for improvement?"></textarea>
-                    <small class="text-muted">Maximum 1,000 characters.</small>
-                </div>
-
-                <!-- 4. Form Actions -->
-                <div class="d-flex align-items-center gap-2 pt-2">
-                    <!-- Note: Intentionally type='button' so it does not submit data per ticket acceptance criteria -->
-                    <button type="button" id="submitReviewBtn" class="btn btn-primary">
-                        Submit Review
-                    </button>
-                    <a asp-page="/Index" class="btn btn-outline-secondary">
-                        Cancel
-                    </a>
-                </div>
-            </form>
         </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="row justify-content-center mb-3">
+        <div class="col-lg-8 col-md-10">
+            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+                <span>⚠️</span>
+                <div>@Model.ErrorMessage</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     REVIEW FORM OR MANAGER PORTAL
+     Customers and guests can submit reviews. Managers cannot submit reviews.
+     ═══════════════════════════════════════════════════════════════ -->
+@if (Model.IsManager)
+{
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8 col-md-10">
+            <div class="dashboard-panel border-start border-4 border-primary">
+                <div class="d-flex align-items-center gap-3">
+                    <span style="font-size: 2.2rem;">👔</span>
+                    <div>
+                        <h4 class="mb-1 text-primary">Store Manager Feedback Portal</h4>
+                        <p class="text-muted mb-0 small">
+                            As a store manager, you cannot submit customer reviews. You can view all customer feedback below and leave official manager comments on reviews.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="dashboard-panel">
+                <div class="dashboard-panel-header">
+                    <h3>Leave a Review</h3>
+                    <span class="text-muted small">We appreciate your feedback!</span>
+                </div>
+
+                <form id="reviewForm" method="post" asp-page-handler="SubmitReview">
+                    <!-- 1. Star Rating Component -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold d-block">
+                            Rating <span class="text-danger">*</span>
+                        </label>
+                        <div class="rating-input-wrapper d-flex align-items-center gap-2">
+                            <div class="star-rating" id="starRating" role="radiogroup" aria-label="Rating from 1 to 5 stars">
+                                <button type="button" class="star-btn" data-rating="1" aria-label="1 star">★</button>
+                                <button type="button" class="star-btn" data-rating="2" aria-label="2 stars">★</button>
+                                <button type="button" class="star-btn" data-rating="3" aria-label="3 stars">★</button>
+                                <button type="button" class="star-btn" data-rating="4" aria-label="4 stars">★</button>
+                                <button type="button" class="star-btn" data-rating="5" aria-label="5 stars">★</button>
+                            </div>
+                            <span class="rating-text text-muted ms-2" id="ratingText">5 Stars - Excellent</span>
+                            <!-- Hidden input to hold chosen rating -->
+                            <input type="hidden" id="ratingValue" name="ReviewInput.Rating" value="5" />
+                        </div>
+                    </div>
+
+                    <!-- 2. Customer Name (Optional / Auto-filled if logged in) -->
+                    <div class="mb-3">
+                        <label for="reviewerName" class="form-label fw-bold">Your Name</label>
+                        <input type="text"
+                               class="form-control"
+                               id="reviewerName"
+                               name="ReviewInput.ReviewerName"
+                               value="@Model.CurrentUserName"
+                               placeholder="Enter your name (or leave blank to post as Guest)" />
+                        <small class="text-muted">
+                            @(User.Identity?.IsAuthenticated == true ? "Prefilled with your account name." : "Optional. You may leave this blank to post as Guest.")
+                        </small>
+                    </div>
+
+                    <!-- 3. Written Review Textarea -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="reviewComment" class="form-label fw-bold mb-0">
+                                Written Feedback & Suggestions <span class="text-danger">*</span>
+                            </label>
+                            <small class="text-muted" id="charCounter">0 / 1000</small>
+                        </div>
+                        <textarea class="form-control"
+                                  id="reviewComment"
+                                  name="ReviewInput.ReviewComment"
+                                  rows="4"
+                                  maxlength="1000"
+                                  placeholder="Tell us about your experience! How was the food, service, and atmosphere? Any dishes you'd recommend or suggestions for improvement?"
+                                  required></textarea>
+                        <small class="text-muted">Maximum 1,000 characters.</small>
+                    </div>
+
+                    <!-- 4. Form Actions -->
+                    <div class="d-flex align-items-center gap-2 pt-2">
+                        <button type="submit" id="submitReviewBtn" class="btn btn-primary">
+                            Submit Review
+                        </button>
+                        <a asp-page="/Index" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CUSTOMER REVIEWS LIST (Displayed below the review form)
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-8 col-md-10">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+                <h3 class="mb-0">Customer Feedback & Reviews</h3>
+                <span class="text-muted small">Showing @Model.Reviews.Count @(Model.Reviews.Count == 1 ? "review" : "reviews")</span>
+            </div>
+            @if (Model.Reviews.Any())
+            {
+                <div class="badge bg-light text-dark border p-2 fs-6">
+                    <span class="text-warning">★</span> @Model.AverageRating.ToString("0.0") / 5.0
+                </div>
+            }
+        </div>
+
+        @if (!Model.Reviews.Any())
+        {
+            <div class="dashboard-panel text-center py-5">
+                <div style="font-size: 3rem;">💬</div>
+                <h5 class="mt-3">No reviews yet</h5>
+                <p class="text-muted mb-0">Be the first to share your experience with BistroGo!</p>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex flex-column gap-3" id="reviewsContainer">
+                @foreach (var review in Model.Reviews)
+                {
+                    <div class="dashboard-panel review-card" id="review-@review.Id">
+                        <!-- Review Header -->
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <div class="fw-bold fs-5 text-dark">
+                                    @(string.IsNullOrWhiteSpace(review.CustomerName) ? "Customer" : review.CustomerName)
+                                </div>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <div class="text-warning fs-6" aria-label="@review.Rating out of 5 stars">
+                                        @for (int s = 1; s <= 5; s++)
+                                        {
+                                            @(s <= review.Rating ? "★" : "☆")
+                                        }
+                                    </div>
+                                    <span class="badge bg-light text-secondary border">@review.Rating / 5</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">@review.CreatedAt.ToString("MMM d, yyyy h:mm tt")</small>
+                        </div>
+
+                        <!-- Review Text -->
+                        <p class="review-text mt-2 mb-3 text-secondary" style="white-space: pre-wrap; font-size: 1rem;">@review.ReviewText</p>
+
+                        <!-- Manager Comments Display -->
+                        @if (review.Comments != null && review.Comments.Any())
+                        {
+                            <div class="manager-comments-section mt-3">
+                                @foreach (var comment in review.Comments)
+                                {
+                                    <div class="manager-comment-bubble p-3 rounded mb-2 border-start border-4 border-primary" style="background-color: #f0f7ff;">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="badge bg-primary text-white text-uppercase px-2 py-1" style="letter-spacing: 0.5px;">
+                                                👔 Store Manager Response
+                                            </span>
+                                            <small class="text-muted">@comment.CreatedAt.ToString("MMM d, yyyy h:mm tt")</small>
+                                        </div>
+                                        <div class="small fw-semibold text-dark mt-1">
+                                            @(string.IsNullOrWhiteSpace(comment.ManagerName) ? "Store Manager" : $"{comment.ManagerName} (Store Manager)")
+                                        </div>
+                                        <p class="manager-comment-text mb-0 mt-1 text-dark" style="white-space: pre-wrap;">@comment.CommentText</p>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <!-- Manager Reply Form (Only accessible to managers) -->
+                        @if (Model.IsManager)
+                        {
+                            <div class="manager-reply-box mt-3 pt-3 border-top">
+                                <details>
+                                    <summary class="btn btn-sm btn-outline-primary mb-2" style="cursor: pointer;">
+                                        💬 Reply as Store Manager
+                                    </summary>
+                                    <form method="post" asp-page-handler="AddComment" class="mt-2 p-3 bg-light rounded border">
+                                        <input type="hidden" name="CommentInput.ReviewId" value="@review.Id" />
+                                        <div class="mb-2">
+                                            <label class="form-label small fw-bold text-primary mb-1">
+                                                👔 Official Store Manager Comment:
+                                            </label>
+                                            <textarea name="CommentInput.CommentText"
+                                                      class="form-control form-control-sm"
+                                                      rows="2"
+                                                      maxlength="1000"
+                                                      placeholder="Write an official response to this review as Store Manager..."
+                                                      required></textarea>
+                                        </div>
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                Post Manager Response
+                                            </button>
+                                        </div>
+                                    </form>
+                                </details>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>
 
