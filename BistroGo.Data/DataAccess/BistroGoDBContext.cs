@@ -1,5 +1,4 @@
-
-﻿using BistroGo.Core.Models;
+using BistroGo.Core.Models;
 using BistroGo.Data.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +30,7 @@ namespace BistroGo.Data.DataAccess
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<Review> Reviews => Set<Review>();
+        public DbSet<ReviewComment> ReviewComments => Set<ReviewComment>();
         public DbSet<Expense> Expenses => Set<Expense>();
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -212,6 +212,24 @@ namespace BistroGo.Data.DataAccess
                 review.ToTable(t => t.HasCheckConstraint(
                     "CK_Reviews_Rating_Range",
                     "\"Rating\" BETWEEN 1 AND 5"));
+
+                review.HasMany(r => r.Comments)
+                      .WithOne(c => c.Review)
+                      .HasForeignKey(c => c.ReviewId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<ReviewComment>(comment =>
+            {
+                comment.HasOne<ApplicationUser>()
+                       .WithMany()
+                       .HasForeignKey(c => c.ManagerId)
+                       .OnDelete(DeleteBehavior.SetNull);
+
+                comment.Property(c => c.IsArchived).HasDefaultValue(false);
+                comment.HasQueryFilter(c => !c.IsArchived);
+                comment.Property(c => c.CreatedAt)
+                       .HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
         }
 

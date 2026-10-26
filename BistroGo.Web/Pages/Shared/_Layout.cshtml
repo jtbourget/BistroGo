@@ -32,8 +32,8 @@
                             <span class="nav-icon">🍴</span> Menu
                         </a>
                     </li>
-                    @* Reviews submission is only shown for customers and logged-out users *@
-                    @if (User.Identity?.IsAuthenticated != true || User.IsInRole(Roles.Customer))
+                    @* Reviews are visible to everyone except kitchen staff *@
+                    @if (User.Identity?.IsAuthenticated != true || !User.IsInRole(Roles.KitchenStaff))
                     {
                         <li>
                             <a asp-page="/Reviews/Index" class="nav-link">

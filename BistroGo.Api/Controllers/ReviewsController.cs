@@ -78,5 +78,34 @@ namespace BistroGo.Api.Controllers
             }
             return NoContent();
         }
+
+        /// <summary>Adds a comment to an existing review.</summary>
+        [HttpPost("{id:int}/comments")]
+        public async Task<ActionResult<ReviewComment>> PostComment(int id, [FromBody] ReviewComment comment)
+        {
+            var review = await _repository.GetByIdAsync(id);
+            if (review == null)
+            {
+                return NotFound();
+            }
+
+            comment.ReviewId = id;
+            var created = await _repository.AddCommentAsync(comment);
+            return Ok(created);
+        }
+
+        /// <summary>Retrieves all comments for a specific review.</summary>
+        [HttpGet("{id:int}/comments")]
+        public async Task<ActionResult<IEnumerable<ReviewComment>>> GetComments(int id)
+        {
+            var review = await _repository.GetByIdAsync(id);
+            if (review == null)
+            {
+                return NotFound();
+            }
+
+            var comments = await _repository.GetCommentsByReviewIdAsync(id);
+            return Ok(comments);
+        }
     }
 }

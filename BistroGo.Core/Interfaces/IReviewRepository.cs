@@ -24,5 +24,11 @@ namespace BistroGo.Core.Interfaces
 
         /// <summary>Soft-deletes a review by setting IsArchived = true.</summary>
         Task<bool> DeleteAsync(int id);
+
+        /// <summary>Adds a comment to an existing review.</summary>
+        Task<ReviewComment> AddCommentAsync(ReviewComment comment);
+
+        /// <summary>Retrieves all comments for a specific review.</summary>
+        Task<List<ReviewComment>> GetCommentsByReviewIdAsync(int reviewId);
     }
 }

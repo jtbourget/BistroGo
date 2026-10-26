@@ -17,6 +17,9 @@ namespace BistroGo.Core.Models
         [MaxLength(450)]
         public string? CustomerId { get; set; }
 
+        [MaxLength(100)]
+        public string? CustomerName { get; set; }
+
         [Range(1, 5)]
         public int Rating { get; set; }
 
@@ -26,7 +29,25 @@ namespace BistroGo.Core.Models
         public DateTime CreatedAt { get; set; }
         public bool IsArchived { get; set; } = false;
 
+        public List<ReviewComment> Comments { get; set; } = new();
+
+        /// <summary>
+        /// Converts the UTC-stored CreatedAt timestamp to local time for user-facing display.
+        /// Handles DateTimeKind.Utc, DateTimeKind.Local, and DateTimeKind.Unspecified (from SQLite).
+        /// </summary>
+        [NotMapped]
+        public DateTime LocalCreatedAt => CreatedAt.Kind == DateTimeKind.Local
+            ? CreatedAt
+            : DateTime.SpecifyKind(CreatedAt, DateTimeKind.Utc).ToLocalTime();
+
         // Convenience / compatibility aliases
+        [NotMapped]
+        public string? ReviewerName
+        {
+            get => CustomerName;
+            set => CustomerName = value;
+        }
+
         [NotMapped]
         public string? UserId
         {
