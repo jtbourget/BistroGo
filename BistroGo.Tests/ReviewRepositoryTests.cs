@@ -87,6 +87,40 @@ public class ReviewRepositoryTests : IDisposable
         Assert.DoesNotContain(all, x => x.Id == r.Id);
     }
 
+    [Fact]
+    public void Review_LocalCreatedAt_ConvertsUtcAndUnspecifiedToLocalTime()
+    {
+        var utcNow = DateTime.UtcNow;
+        var reviewUtc = new Review { CreatedAt = utcNow };
+        Assert.Equal(utcNow.ToLocalTime(), reviewUtc.LocalCreatedAt);
+
+        // SQLite returns DateTimeKind.Unspecified
+        var unspecified = DateTime.SpecifyKind(utcNow, DateTimeKind.Unspecified);
+        var reviewUnspecified = new Review { CreatedAt = unspecified };
+        Assert.Equal(utcNow.ToLocalTime(), reviewUnspecified.LocalCreatedAt);
+
+        // If already local
+        var localNow = DateTime.Now;
+        var reviewLocal = new Review { CreatedAt = localNow };
+        Assert.Equal(localNow, reviewLocal.LocalCreatedAt);
+    }
+
+    [Fact]
+    public void ReviewComment_LocalCreatedAt_ConvertsUtcAndUnspecifiedToLocalTime()
+    {
+        var utcNow = DateTime.UtcNow;
+        var commentUtc = new ReviewComment { CreatedAt = utcNow };
+        Assert.Equal(utcNow.ToLocalTime(), commentUtc.LocalCreatedAt);
+
+        var unspecified = DateTime.SpecifyKind(utcNow, DateTimeKind.Unspecified);
+        var commentUnspecified = new ReviewComment { CreatedAt = unspecified };
+        Assert.Equal(utcNow.ToLocalTime(), commentUnspecified.LocalCreatedAt);
+
+        var localNow = DateTime.Now;
+        var commentLocal = new ReviewComment { CreatedAt = localNow };
+        Assert.Equal(localNow, commentLocal.LocalCreatedAt);
+    }
+
     public void Dispose()
     {
         _db.Dispose();

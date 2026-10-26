@@ -31,6 +31,15 @@ namespace BistroGo.Core.Models
 
         public List<ReviewComment> Comments { get; set; } = new();
 
+        /// <summary>
+        /// Converts the UTC-stored CreatedAt timestamp to local time for user-facing display.
+        /// Handles DateTimeKind.Utc, DateTimeKind.Local, and DateTimeKind.Unspecified (from SQLite).
+        /// </summary>
+        [NotMapped]
+        public DateTime LocalCreatedAt => CreatedAt.Kind == DateTimeKind.Local
+            ? CreatedAt
+            : DateTime.SpecifyKind(CreatedAt, DateTimeKind.Utc).ToLocalTime();
+
         // Convenience / compatibility aliases
         [NotMapped]
         public string? ReviewerName

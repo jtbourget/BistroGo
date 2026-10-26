@@ -8,6 +8,23 @@ document.addEventListener('DOMContentLoaded', function () {
     const reviewComment = document.getElementById('reviewComment');
     const charCounter = document.getElementById('charCounter');
 
+    // Format all review and comment timestamps into the user's browser local time
+    document.querySelectorAll('time.review-timestamp[datetime]').forEach(el => {
+        const iso = el.getAttribute('datetime');
+        if (!iso) return;
+        const date = new Date(iso);
+        if (!isNaN(date.getTime())) {
+            el.textContent = date.toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            }) + ' ' + date.toLocaleTimeString(undefined, {
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+        }
+    });
+
     // Text labels for each rating score
     const labels = {
         1: '1 Star - Needs Improvement',

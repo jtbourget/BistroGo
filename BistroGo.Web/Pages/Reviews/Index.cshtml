@@ -198,7 +198,9 @@ else
                                     <span class="badge bg-light text-secondary border">@review.Rating / 5</span>
                                 </div>
                             </div>
-                            <small class="text-muted">@review.CreatedAt.ToString("MMM d, yyyy h:mm tt")</small>
+                            <time class="review-timestamp text-muted small" datetime="@(DateTime.SpecifyKind(review.CreatedAt, DateTimeKind.Utc).ToString("yyyy-MM-ddTHH:mm:ssZ"))">
+                                @review.LocalCreatedAt.ToString("MMM d, yyyy h:mm tt")
+                            </time>
                         </div>
 
                         <!-- Review Text -->
@@ -215,7 +217,9 @@ else
                                             <span class="badge bg-primary text-white text-uppercase px-2 py-1" style="letter-spacing: 0.5px;">
                                                 👔 Store Manager Response
                                             </span>
-                                            <small class="text-muted">@comment.CreatedAt.ToString("MMM d, yyyy h:mm tt")</small>
+                                            <time class="review-timestamp text-muted small" datetime="@(DateTime.SpecifyKind(comment.CreatedAt, DateTimeKind.Utc).ToString("yyyy-MM-ddTHH:mm:ssZ"))">
+                                                @comment.LocalCreatedAt.ToString("MMM d, yyyy h:mm tt")
+                                            </time>
                                         </div>
                                         <div class="small fw-semibold text-dark mt-1">
                                             @(string.IsNullOrWhiteSpace(comment.ManagerName) ? "Store Manager" : $"{comment.ManagerName} (Store Manager)")
