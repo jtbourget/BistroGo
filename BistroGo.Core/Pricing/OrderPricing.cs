@@ -23,6 +23,7 @@ namespace BistroGo.Core.Pricing
                 .Sum(i => i.Quantity * i.UnitPrice);
 
             order.Subtotal = Math.Round(subtotal, 2);
+            //order.EmployeeDiscount = Math.Round(order.EmployeeDiscount, 2);
             order.Tax = Math.Round(order.Subtotal * TaxRate, 2);
             order.Total = order.Subtotal + order.Tax;
         }

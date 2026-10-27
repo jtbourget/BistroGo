@@ -54,6 +54,9 @@ namespace BistroGo.Core.Models
 
         [Precision(10, 2)]
         public decimal Subtotal { get; set; }
+/*
+        [Precision(10, 2)]
+        public decimal EmployeeDiscount { get; set; }*/
 
         [Precision(10, 2)]
         public decimal Tax { get; set; }

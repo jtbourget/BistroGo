@@ -33,6 +33,12 @@ public class CheckoutModel : PageModel
     /// <remarks>TODO: comes back from GET /api/orders/current (.tax)</remarks>
     public decimal Tax { get; set; }
 
+    /// <summary>
+    /// Percent of price to multiply to subtotal.
+    /// </summary>
+    /// <remarks>Should be 1 - effective employee discount.</remarks>
+    public decimal EmployeeDiscount { get; set; }
+
     /// <summary>Final total (subtotal + tax).</summary>
     /// <remarks>TODO: comes back from GET /api/orders/current (.total)</remarks>
     public decimal Total { get; set; }
@@ -199,6 +205,7 @@ public class CheckoutModel : PageModel
 
         Lines = cart?.Items.OrderBy(i => i.MenuItem!.Name).ToList() ?? new List<OrderItem>();
         Subtotal = cart?.Subtotal ?? 0m;
+        EmployeeDiscount = cart?.EmployeeDiscount ?? 0m;
         Tax = cart?.Tax ?? 0m;
         Total = cart?.Total ?? 0m;
     }
