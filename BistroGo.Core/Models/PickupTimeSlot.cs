@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 namespace BistroGo.Core.Models
 {
     [Table("PickupTimeSlots")]
-    [Index(nameof(SlotDate), nameof(StartTime), IsUnique = true)]   // one slot per date + start time
     public class PickupTimeSlot
     {
         [Key]

@@ -97,6 +97,12 @@ namespace BistroGo.Data.DataAccess
                 slot.HasQueryFilter(s => !s.IsArchived);
                 slot.Property(s => s.MaxOrders)
                     .HasDefaultValue(10);
+                // One slot per date + start time, but only among slots that aren't archived.
+                // Without the filter, a soft-deleted slot would block recreating that time forever.
+                slot.HasIndex(s => new { s.SlotDate, s.StartTime })
+                    .IsUnique()
+                    .HasFilter("\"IsArchived\" = 0")
+                    .HasDatabaseName("IX_PickupTimeSlots_SlotDate_StartTime_Active");
 
                 slot.ToTable(t =>
                 {
