@@ -24,5 +24,11 @@ namespace BistroGo.Core.Interfaces
 
         /// <summary>Soft-deletes a pickup slot by setting IsArchived = true.</summary>
         Task<bool> DeleteAsync(int id);
+
+        /// <summary>
+        /// Counts the orders that are using up capacity in a slot: placed orders that
+        /// are not cancelled, including ones already archived after being picked up.
+        /// </summary>
+        Task<int> CountBookedOrdersAsync(int slotId);
     }
 }
