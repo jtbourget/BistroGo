@@ -20,7 +20,7 @@
 <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
     <form method="get" class="d-flex align-items-center gap-2 mb-0">
         <label for="category" class="form-label mb-0">Filter by category:</label>
-        <select id="category" name="category" class="form-select" style="width: 200px;">
+        <select id="category" name="category" class="form-select" style="width: 200px;" onchange="this.form.submit()">
             <option value="">All Categories</option>
             @foreach (var cat in Model.Categories)
             {
@@ -52,14 +52,20 @@ else
         @foreach (var item in Model.MenuItems)
         {
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 menu-card"
+                <div class="card h-100 menu-card">
+
+                    <!-- ONLY THE IMAGE IS CLICKABLE FOR THE MODAL -->
+                    <div class="menu-card-image-wrapper"
                      data-bs-toggle="modal"
                      data-bs-target="#menuItemModal"
                      data-item-id="@item.Id"
                      data-item-name="@item.Name"
                      data-item-category="@item.Category!.Name"
                      data-item-price="@item.Price.ToString("0.00")"
-                     data-item-description="@item.Description">
+                         data-item-description="@item.Description"
+                         data-item-image="@item.ImageUrl"
+                         style="cursor: pointer;">
+
                     <div class="menu-card-image">
                         @if (!string.IsNullOrEmpty(item.ImageUrl))
                         {
@@ -121,7 +127,7 @@ else
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="menu-modal-image">
+                <div class="menu-modal-image" id="modalImageContainer">
                     <span class="menu-modal-image img">[img]</span>
                 </div>
                 <span class="badge bg-secondary menu-category-badge mb-3" id="menuItemModalCategory">Category</span>
