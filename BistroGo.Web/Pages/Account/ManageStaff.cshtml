@@ -41,8 +41,16 @@
 
     <div class="mb-3">
         <label asp-for="Input.Password" class="form-label"></label>
-        <input asp-for="Input.Password" class="form-control" autocomplete="new-password" />
+        <span class="password-tooltip"
+              data-bs-toggle="tooltip"
+              data-bs-placement="right"
+              data-bs-html="true"
+              title="<strong>Password must have:</strong><br />• 8+ characters<br />• A–Z (uppercase)<br />• a–z (lowercase)<br />• 0–9 (number)">
+            i
+        </span>
+        <input asp-for="Input.Password" class="form-control" autocomplete="new-password"/>
         <span asp-validation-for="Input.Password" class="text-danger"></span>
+
     </div>
 
     <div class="mb-3">
@@ -56,4 +64,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/tooltips.js" asp-append-version="true"></script>
 }
