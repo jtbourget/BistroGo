@@ -56,7 +56,7 @@
                             </a>
                         </li>
                     }
-                    @* Only Manager can manage inventory and generate staff logins. *@
+                    @* Only Manager can manage inventory and staff accounts. *@
                     @if (User.Identity?.IsAuthenticated == true && User.IsInRole(Roles.Manager))
                     {
                         <li>

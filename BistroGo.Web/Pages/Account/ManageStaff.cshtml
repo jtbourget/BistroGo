@@ -1,4 +1,5 @@
 @page
+@using BistroGo.Data.Identity
 @model BistroGo.Web.Pages.Account.ManageStaffModel
 @{
     ViewData["Title"] = "Manage Staff";
@@ -6,54 +7,276 @@
 
 <!--
   Manage Staff Page
-  Allows managers to generate new worker (KitchenStaff) logins.
+  Allows managers to view, create, edit, and delete staff accounts (KitchenStaff and Manager).
 -->
-<h1>Manage Staff</h1>
-<p>Generate a new login for a worker.</p>
+<div class="page-header">
+    <div>
+        <h1>👥 Manage Staff</h1>
+        <span class="text-muted">Create, edit, and delete staff accounts.</span>
+    </div>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createStaffModal">
+        + Add Staff Member
+    </button>
+</div>
 
 @if (!string.IsNullOrEmpty(Model.StatusMessage))
 {
-    <div class="alert alert-success">
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
         @Model.StatusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
 
-<form method="post" style="max-width: 420px;">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-    <div class="mb-3">
-        <label asp-for="Input.FirstName" class="form-label"></label>
-        <input asp-for="Input.FirstName" class="form-control" autocomplete="off" />
-        <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @Model.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+}
 
-    <div class="mb-3">
-        <label asp-for="Input.LastName" class="form-label"></label>
-        <input asp-for="Input.LastName" class="form-control" autocomplete="off" />
-        <span asp-validation-for="Input.LastName" class="text-danger"></span>
+<div class="card shadow-sm mb-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col" style="padding-left: 1.25rem;">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Role</th>
+                        <th scope="col">Date Added</th>
+                        <th scope="col" class="text-end" style="padding-right: 1.25rem;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.StaffMembers.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                No staff accounts found. Click "+ Add Staff Member" to create one.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var staff in Model.StaffMembers)
+                        {
+                            <tr>
+                                <td style="padding-left: 1.25rem;">
+                                    <span class="fw-bold">@staff.FirstName @staff.LastName</span>
+                                    @if (staff.IsCurrentUser)
+                                    {
+                                        <span class="badge bg-secondary ms-1">You</span>
+                                    }
+                                </td>
+                                <td>@staff.Email</td>
+                                <td>
+                                    @if (staff.Role == Roles.Manager)
+                                    {
+                                        <span class="badge bg-primary">Manager</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info text-dark">Kitchen Staff</span>
+                                    }
+                                </td>
+                                <td>@staff.CreatedAt.ToString("MMM d, yyyy")</td>
+                                <td class="text-end" style="padding-right: 1.25rem;">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary me-1 edit-staff-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editStaffModal"
+                                            data-id="@staff.Id"
+                                            data-firstname="@staff.FirstName"
+                                            data-lastname="@staff.LastName"
+                                            data-email="@staff.Email"
+                                            data-role="@staff.Role">
+                                        ✏️ Edit
+                                    </button>
+                                    @if (staff.IsCurrentUser)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="You cannot delete your own account">
+                                            🗑️ Delete
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger delete-staff-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteStaffModal"
+                                                data-id="@staff.Id"
+                                                data-name="@staff.FirstName @staff.LastName"
+                                                data-email="@staff.Email">
+                                            🗑️ Delete
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Input.Email" class="form-label"></label>
-        <input asp-for="Input.Email" class="form-control" autocomplete="off" />
-        <span asp-validation-for="Input.Email" class="text-danger"></span>
+<!-- CREATE STAFF MODAL -->
+<div class="modal fade" id="createStaffModal" tabindex="-1" aria-labelledby="createStaffModalLabel" aria-hidden="true" data-open-modal="@(ViewData["OpenCreateModal"] as bool? == true ? "true" : "false")">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Create">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createStaffModalLabel">➕ Add Staff Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CreateInput.FirstName" class="form-label"></label>
+                            <input asp-for="CreateInput.FirstName" class="form-control" autocomplete="off" />
+                            <span asp-validation-for="CreateInput.FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CreateInput.LastName" class="form-label"></label>
+                            <input asp-for="CreateInput.LastName" class="form-control" autocomplete="off" />
+                            <span asp-validation-for="CreateInput.LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CreateInput.Email" class="form-label"></label>
+                        <input asp-for="CreateInput.Email" class="form-control" autocomplete="off" />
+                        <span asp-validation-for="CreateInput.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CreateInput.Role" class="form-label"></label>
+                        <select asp-for="CreateInput.Role" class="form-select">
+                            <option value="@Roles.KitchenStaff">Kitchen Staff</option>
+                            <option value="@Roles.Manager">Manager</option>
+                        </select>
+                        <span asp-validation-for="CreateInput.Role" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CreateInput.Password" class="form-label"></label>
+                        <input asp-for="CreateInput.Password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="CreateInput.Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CreateInput.ConfirmPassword" class="form-label"></label>
+                        <input asp-for="CreateInput.ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="CreateInput.ConfirmPassword" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Staff Account</button>
+                </div>
+            </form>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Input.Password" class="form-label"></label>
-        <input asp-for="Input.Password" class="form-control" autocomplete="new-password" />
-        <span asp-validation-for="Input.Password" class="text-danger"></span>
+<!-- EDIT STAFF MODAL -->
+<div class="modal fade" id="editStaffModal" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="true" data-open-modal="@(ViewData["OpenEditModal"] as bool? == true ? "true" : "false")">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Edit">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editStaffModalLabel">✏️ Edit Staff Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <input type="hidden" asp-for="EditInput.Id" id="editStaffId" />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="EditInput.FirstName" class="form-label"></label>
+                            <input asp-for="EditInput.FirstName" id="editFirstName" class="form-control" autocomplete="off" />
+                            <span asp-validation-for="EditInput.FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="EditInput.LastName" class="form-label"></label>
+                            <input asp-for="EditInput.LastName" id="editLastName" class="form-control" autocomplete="off" />
+                            <span asp-validation-for="EditInput.LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="EditInput.Email" class="form-label"></label>
+                        <input asp-for="EditInput.Email" id="editEmail" class="form-control" autocomplete="off" />
+                        <span asp-validation-for="EditInput.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="EditInput.Role" class="form-label"></label>
+                        <select asp-for="EditInput.Role" id="editRole" class="form-select">
+                            <option value="@Roles.KitchenStaff">Kitchen Staff</option>
+                            <option value="@Roles.Manager">Manager</option>
+                        </select>
+                        <span asp-validation-for="EditInput.Role" class="text-danger"></span>
+                    </div>
+
+                    <hr />
+                    <h6 class="text-muted mb-1">Reset Password (Optional)</h6>
+                    <p class="small text-muted mb-3">Leave blank if you want to keep the current password.</p>
+
+                    <div class="mb-3">
+                        <label asp-for="EditInput.NewPassword" class="form-label"></label>
+                        <input asp-for="EditInput.NewPassword" id="editPassword" class="form-control" autocomplete="new-password" placeholder="Leave blank to keep existing password" />
+                        <span asp-validation-for="EditInput.NewPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="EditInput.ConfirmNewPassword" class="form-label"></label>
+                        <input asp-for="EditInput.ConfirmNewPassword" id="editConfirmPassword" class="form-control" autocomplete="new-password" placeholder="Confirm new password" />
+                        <span asp-validation-for="EditInput.ConfirmNewPassword" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Input.ConfirmPassword" class="form-label"></label>
-        <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" />
-        <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+<!-- DELETE STAFF MODAL -->
+<div class="modal fade" id="deleteStaffModal" tabindex="-1" aria-labelledby="deleteStaffModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Delete">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteStaffModalLabel">🗑️ Delete Staff Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="deleteStaffId" value="" />
+                    <p class="mb-1">Are you sure you want to delete the staff account for:</p>
+                    <p class="fw-bold fs-5 text-danger mb-2" id="deleteStaffName"></p>
+                    <p class="text-muted small mb-0">Email: <span id="deleteStaffEmail"></span></p>
+                    <div class="alert alert-warning mt-3 mb-0 py-2 small">
+                        ⚠️ This action cannot be undone.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Account</button>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <button type="submit" class="btn btn-primary">Create Worker Account</button>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/manage-staff.js" asp-append-version="true"></script>
 }
