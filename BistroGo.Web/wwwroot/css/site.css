@@ -1092,3 +1092,43 @@ body {
         opacity: 0.6;
         color: #4a2c17;
     }
+
+/* ═══════════════════════════════════════════════════
+   MENU CARD QUANTITY TICKER
+   ═══════════════════════════════════════════════════ */
+.quantity-ticker {
+    display: flex;
+    align-items: center;
+    background-color: #fdfaf6;
+    border: 1px solid #e8d9c5;
+    border-radius: 6px;
+    padding: 2px;
+}
+
+.qty-btn {
+    background: transparent;
+    border: none;
+    color: #b5651d;
+    font-size: 1.1rem;
+    font-weight: bold;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+}
+
+    .qty-btn:hover {
+        background-color: rgba(181, 101, 29, 0.1);
+    }
+
+.qty-display {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #4a2c17;
+    min-width: 20px;
+    text-align: center;
+}
