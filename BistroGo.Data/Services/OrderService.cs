@@ -36,8 +36,15 @@ namespace BistroGo.Data.Services
             order.StatusId = OrderStatusIds.Received;
             order.ConfirmationCode ??= GenerateConfirmationCode();
 
-            // UpdateAsync saves these fields and recalculates the totals.
-            return await _orders.UpdateAsync(order) ? PlaceOrderResult.Placed : PlaceOrderResult.NotFound;
+            // Saves the order and re-checks capacity inside a transaction, in case another
+            // customer took the last spot after our count above.
+            var saved = await _orders.UpdateIfSlotHasRoomAsync(order, slot.MaxOrders);
+            return saved switch
+            {
+                SlotSaveResult.Saved => PlaceOrderResult.Placed,
+                SlotSaveResult.SlotFull => PlaceOrderResult.SlotFull,
+                _ => PlaceOrderResult.NotFound
+            };
         }
 
         private static string GenerateConfirmationCode() =>

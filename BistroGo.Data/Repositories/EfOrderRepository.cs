@@ -81,6 +81,30 @@ namespace BistroGo.Data.Repositories
             return true;
         }
 
+        public async Task<SlotSaveResult> UpdateIfSlotHasRoomAsync(Order order, int maxOrders)
+        {
+            // Starting the transaction takes SQLite's write lock, so a second customer
+            // placing an order waits here until this one commits or rolls back.
+            await using var tx = await _db.Database.BeginTransactionAsync();
+
+            if (!await UpdateAsync(order))
+            {
+                return SlotSaveResult.OrderNotFound;   // leaving the method rolls back
+            }
+
+            // This count already includes the order we just saved.
+            var booked = await _db.BookedOrders(order.PickupSlotId!.Value).CountAsync();
+            if (booked > maxOrders)
+            {
+                await tx.RollbackAsync();
+                _db.ChangeTracker.Clear();   // forget the in-memory "finalized" copy
+                return SlotSaveResult.SlotFull;
+            }
+
+            await tx.CommitAsync();
+            return SlotSaveResult.Saved;
+        }
+
         public async Task<bool> DeleteAsync(int id)
         {
             var existing = await _db.Orders.FindAsync(id);

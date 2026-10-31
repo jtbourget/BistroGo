@@ -72,11 +72,7 @@ namespace BistroGo.Data.Repositories
 
         public async Task<int> CountBookedOrdersAsync(int slotId)
         {
-            return await _db.Orders
-                .IgnoreQueryFilters()
-                .CountAsync(o => o.PickupSlotId == slotId
-                              && o.IsFinalized
-                              && o.StatusId != OrderStatusIds.Cancelled);
+            return await _db.BookedOrders(slotId).CountAsync();
         }
     }
 }

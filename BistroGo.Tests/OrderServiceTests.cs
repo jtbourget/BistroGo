@@ -33,7 +33,7 @@ public class OrderServiceTests
         var result = await _service.PlaceOrderAsync(1);
 
         Assert.Equal(PlaceOrderResult.SlotUnavailable, result);
-        await _repo.DidNotReceive().UpdateAsync(Arg.Any<Order>());
+        await _repo.DidNotReceive().UpdateIfSlotHasRoomAsync(Arg.Any<Order>(), Arg.Any<int>());
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class OrderServiceTests
 
         Assert.Equal(PlaceOrderResult.SlotFull, result);
         Assert.False(order.IsFinalized);
-        await _repo.DidNotReceive().UpdateAsync(Arg.Any<Order>());
+        await _repo.DidNotReceive().UpdateIfSlotHasRoomAsync(Arg.Any<Order>(), Arg.Any<int>());
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class OrderServiceTests
     {
         var order = new Order { Id = 1, PickupSlotId = 3 };
         _repo.GetByIdAsync(1).Returns(order);
-        _repo.UpdateAsync(order).Returns(true);
+        _repo.UpdateIfSlotHasRoomAsync(order, Arg.Any<int>()).Returns(SlotSaveResult.Saved);
         GivenSlot(3, maxOrders: 2, booked: 1);
 
         var result = await _service.PlaceOrderAsync(1);
@@ -71,7 +71,7 @@ public class OrderServiceTests
         var result = await _service.PlaceOrderAsync(99);
 
         Assert.Equal(PlaceOrderResult.NotFound, result);
-        await _repo.DidNotReceive().UpdateAsync(Arg.Any<Order>());
+        await _repo.DidNotReceive().UpdateIfSlotHasRoomAsync(Arg.Any<Order>(), Arg.Any<int>());
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class OrderServiceTests
         var result = await _service.PlaceOrderAsync(1);
 
         Assert.Equal(PlaceOrderResult.AlreadyPlaced, result);
-        await _repo.DidNotReceive().UpdateAsync(Arg.Any<Order>());
+        await _repo.DidNotReceive().UpdateIfSlotHasRoomAsync(Arg.Any<Order>(), Arg.Any<int>());
     }
 
     [Fact]
@@ -93,15 +93,17 @@ public class OrderServiceTests
         var result = await _service.PlaceOrderAsync(1);
 
         Assert.Equal(PlaceOrderResult.PickupSlotRequired, result);
-        await _repo.DidNotReceive().UpdateAsync(Arg.Any<Order>());
+        await _repo.DidNotReceive().UpdateIfSlotHasRoomAsync(Arg.Any<Order>(), Arg.Any<int>());
     }
 
     [Fact]
     public async Task PlaceOrder_WhenValid_FinalizesTheOrderAndSavesIt()
     {
+        GivenSlot(3, maxOrders: 10, booked: 0);
+
         var order = new Order { Id = 1, PickupSlotId = 3 };
         _repo.GetByIdAsync(1).Returns(order);
-        _repo.UpdateAsync(order).Returns(true);
+        _repo.UpdateIfSlotHasRoomAsync(order, Arg.Any<int>()).Returns(SlotSaveResult.Saved);
 
         var result = await _service.PlaceOrderAsync(1);
 
@@ -110,15 +112,29 @@ public class OrderServiceTests
         Assert.NotNull(order.FinalizedAt);
         Assert.Equal(OrderStatusIds.Received, order.StatusId);
         Assert.StartsWith("BG-", order.ConfirmationCode);
-        await _repo.Received(1).UpdateAsync(order);
+        await _repo.Received(1).UpdateIfSlotHasRoomAsync(order, 10);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_WhenTheSlotFillsUpDuringTheSave_ReturnsSlotFull()
+    {
+        var order = new Order { Id = 1, PickupSlotId = 3 };
+        _repo.GetByIdAsync(1).Returns(order);
+        GivenSlot(3, maxOrders: 2, booked: 1);   // looks fine at first...
+        _repo.UpdateIfSlotHasRoomAsync(order, 2).Returns(SlotSaveResult.SlotFull);   // ...but someone got there first
+
+        var result = await _service.PlaceOrderAsync(1);
+
+        Assert.Equal(PlaceOrderResult.SlotFull, result);
     }
 
     [Fact]
     public async Task PlaceOrder_KeepsAnExistingConfirmationCode()
     {
+        GivenSlot(3, maxOrders: 10, booked: 0);
         var order = new Order { Id = 1, PickupSlotId = 3, ConfirmationCode = "BG-ABC123" };
         _repo.GetByIdAsync(1).Returns(order);
-        _repo.UpdateAsync(order).Returns(true);
+        _repo.UpdateIfSlotHasRoomAsync(order, Arg.Any<int>()).Returns(SlotSaveResult.Saved);
 
         await _service.PlaceOrderAsync(1);
 
@@ -128,9 +144,10 @@ public class OrderServiceTests
     [Fact]
     public async Task PlaceOrder_WhenTheSaveFindsNoOrder_ReturnsNotFound()
     {
+        GivenSlot(3, maxOrders: 10, booked: 0);
         var order = new Order { Id = 1, PickupSlotId = 3 };
         _repo.GetByIdAsync(1).Returns(order);
-        _repo.UpdateAsync(order).Returns(false);   // e.g. deleted between the load and the save
+        _repo.UpdateIfSlotHasRoomAsync(order, Arg.Any<int>()).Returns(SlotSaveResult.OrderNotFound);
 
         var result = await _service.PlaceOrderAsync(1);
 
