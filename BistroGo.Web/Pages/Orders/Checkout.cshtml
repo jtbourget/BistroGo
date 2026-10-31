@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model BistroGo.Web.Pages.Orders.CheckoutModel
 @{
     ViewData["Title"] = "Checkout";
@@ -96,31 +96,33 @@
                     <h3>Your Details</h3>
                 </div>
 
-                <!-- Form doesn't submit normally; JS intercepts it -->
-                <form id="checkoutForm">
+                <form method="post" id="checkoutForm">
                     <div class="mb-3">
-                        <label class="form-label">Name</label>
-                        <input name="guestName" id="guestName" class="form-control" placeholder="e.g. Alice Johnson" required />
+                        <label asp-for="GuestName" class="form-label">Name</label>
+                        <input asp-for="GuestName" id="guestName" class="form-control" placeholder="e.g. Alice Johnson" required />
+                        <span asp-validation-for="GuestName" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Phone <span class="text-muted small">(optional)</span></label>
-                        <input name="guestPhone" id="guestPhone" type="tel" class="form-control" placeholder="555-0101" />
+                        <label asp-for="GuestEmail" class="form-label">Email <span class="text-muted small">(optional)</span></label>
+                        <input asp-for="GuestEmail" id="guestEmail" type="email" class="form-control" placeholder="you@example.com" />
+                        <span asp-validation-for="GuestEmail" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Email <span class="text-muted small">(optional)</span></label>
-                        <input name="guestEmail" id="guestEmail" type="email" class="form-control" placeholder="you@example.com" />
+                        <label asp-for="GuestPhone" class="form-label">Phone <span class="text-muted small">(optional)</span></label>
+                        <input asp-for="GuestPhone" id="guestPhone" type="tel" class="form-control" placeholder="555-0101" />
+                        <span asp-validation-for="GuestPhone" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Notes for kitchen <span class="text-muted small">(optional)</span></label>
-                        <textarea name="specialInstructions" id="specialInstructions" class="form-control" rows="2" placeholder="e.g. No onions"></textarea>
+                        <label asp-for="SpecialInstructions" class="form-label">Special Instructions <span class="text-muted small">(optional)</span></label>
+                        <textarea asp-for="SpecialInstructions" id="specialInstructions" class="form-control" rows="2" placeholder="e.g. No onions"></textarea>
+                        <span asp-validation-for="SpecialInstructions" class="text-danger"></span>
                     </div>
 
-                    <!-- Button triggers the modal, doesn't submit directly -->
-                    <button type="button" id="openConfirmModalBtn" class="btn btn-primary w-100 mb-2" disabled="@(!Model.Lines.Any())">
-                        ✓ Place Order
+                    <button type="submit" id="placeOrderBtn" class="btn btn-primary w-100 mb-2" disabled="@(!Model.Lines.Any())">
+                        Place Order
                     </button>
                     <a asp-page="/Menu/Index" class="btn btn-outline-primary w-100">Cancel</a>
                 </form>
@@ -160,5 +162,6 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script src="~/js/checkout.js" asp-append-version="true"></script>
 }

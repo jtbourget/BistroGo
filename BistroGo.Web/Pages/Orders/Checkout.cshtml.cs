@@ -1,6 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using BistroGo.Data.Identity;
 using BistroGo.Web.Cart;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -13,10 +16,12 @@ public class CheckoutModel : PageModel
     // ═══════════════════════════════════════════════════════════════════
 
     private readonly ICartService _cart;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public CheckoutModel(ICartService cart)
+    public CheckoutModel(ICartService cart, UserManager<ApplicationUser> userManager)
     {
         _cart = cart;
+        _userManager = userManager;
     }
 
     /// <summary>
@@ -42,19 +47,25 @@ public class CheckoutModel : PageModel
     // ═══════════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Guest's name.
-    /// TODO: When auth is live, prefer Cart.UserId over guest fields.
+    /// Guest's name (required).
     /// </summary>
     [BindProperty]
+    [Required(ErrorMessage = "Please provide a name for the order.")]
     public string? GuestName { get; set; }
-
-    /// <summary>Guest's phone (optional).</summary>
-    [BindProperty]
-    public string? GuestPhone { get; set; }
 
     /// <summary>Guest's email (optional).</summary>
     [BindProperty]
+    [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
     public string? GuestEmail { get; set; }
+
+    /// <summary>Guest's phone (optional).</summary>
+    [BindProperty]
+    [Phone(ErrorMessage = "Please enter a valid phone number.")]
+    public string? GuestPhone { get; set; }
+
+    /// <summary>Special instructions for the kitchen (optional).</summary>
+    [BindProperty]
+    public string? SpecialInstructions { get; set; }
 
     /// <summary>
     /// Selected pickup time slot.
@@ -62,10 +73,6 @@ public class CheckoutModel : PageModel
     /// </summary>
     [BindProperty]
     public int? PickupSlotId { get; set; }
-
-    /// <summary>Special instructions for the kitchen (optional).</summary>
-    [BindProperty]
-    public string? SpecialInstructions { get; set; }
 
     // ═══════════════════════════════════════════════════════════════════
     // HANDLERS
@@ -83,6 +90,18 @@ public class CheckoutModel : PageModel
             return RedirectToPage("/Menu/Index");
         }
 
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var fullName = $"{user.FirstName} {user.LastName}".Trim();
+                GuestName = string.IsNullOrWhiteSpace(fullName) ? user.UserName : fullName;
+                GuestEmail = user.Email;
+                GuestPhone = user.PhoneNumber;
+            }
+        }
+
         return Page();
     }
 
@@ -98,9 +117,13 @@ public class CheckoutModel : PageModel
             return RedirectToPage("/Menu/Index");
         }
 
-        if (string.IsNullOrWhiteSpace(GuestName))
+        if (string.IsNullOrWhiteSpace(GuestName) && (!ModelState.ContainsKey(nameof(GuestName)) || ModelState[nameof(GuestName)]?.Errors.Count == 0))
         {
-            ModelState.AddModelError("", "Please provide a name for the order.");
+            ModelState.AddModelError(nameof(GuestName), "Please provide a name for the order.");
+        }
+
+        if (!ModelState.IsValid)
+        {
             return Page();
         }
 

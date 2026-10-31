@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 // Disable Place Order if cart becomes empty
-                const openBtn = document.getElementById('openConfirmModalBtn');
+                const openBtn = document.getElementById('placeOrderBtn') || document.getElementById('openConfirmModalBtn');
                 if (openBtn) openBtn.disabled = !hasLines;
             } catch (err) {
                 console.error('[Checkout] Cart update error:', err);
