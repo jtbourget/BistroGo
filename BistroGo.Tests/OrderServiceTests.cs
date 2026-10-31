@@ -9,11 +9,58 @@ public class OrderServiceTests
 {
     // A fake repository: it implements IOrderRepository but only does what each test tells it to.
     private readonly IOrderRepository _repo = Substitute.For<IOrderRepository>();
+
+    private readonly IPickupTimeSlotRepository _slots = Substitute.For<IPickupTimeSlotRepository>();
     private readonly OrderService _service;
 
     public OrderServiceTests()
     {
-        _service = new OrderService(_repo);
+        _service = new OrderService(_repo, _slots);
+    }
+
+    private void GivenSlot(int slotId, int maxOrders, int booked)
+    {
+        _slots.GetByIdAsync(slotId).Returns(new PickupTimeSlot { Id = slotId, MaxOrders = maxOrders });
+        _slots.CountBookedOrdersAsync(slotId).Returns(booked);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_WhenSlotDoesNotExist_ReturnsSlotUnavailable()
+    {
+        _repo.GetByIdAsync(1).Returns(new Order { Id = 1, PickupSlotId = 3 });
+        _slots.GetByIdAsync(3).Returns((PickupTimeSlot?)null);
+
+        var result = await _service.PlaceOrderAsync(1);
+
+        Assert.Equal(PlaceOrderResult.SlotUnavailable, result);
+        await _repo.DidNotReceive().UpdateAsync(Arg.Any<Order>());
+    }
+
+    [Fact]
+    public async Task PlaceOrder_WhenSlotIsFull_ReturnsSlotFullAndLeavesTheOrderAlone()
+    {
+        var order = new Order { Id = 1, PickupSlotId = 3 };
+        _repo.GetByIdAsync(1).Returns(order);
+        GivenSlot(3, maxOrders: 2, booked: 2);
+
+        var result = await _service.PlaceOrderAsync(1);
+
+        Assert.Equal(PlaceOrderResult.SlotFull, result);
+        Assert.False(order.IsFinalized);
+        await _repo.DidNotReceive().UpdateAsync(Arg.Any<Order>());
+    }
+
+    [Fact]
+    public async Task PlaceOrder_WhenOneSpotIsLeft_Places()
+    {
+        var order = new Order { Id = 1, PickupSlotId = 3 };
+        _repo.GetByIdAsync(1).Returns(order);
+        _repo.UpdateAsync(order).Returns(true);
+        GivenSlot(3, maxOrders: 2, booked: 1);
+
+        var result = await _service.PlaceOrderAsync(1);
+
+        Assert.Equal(PlaceOrderResult.Placed, result);
     }
 
     [Fact]

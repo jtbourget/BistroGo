@@ -6,10 +6,12 @@ namespace BistroGo.Data.Services
     public class OrderService : IOrderService
     {
         private readonly IOrderRepository _orders;
+        private readonly IPickupTimeSlotRepository _slots;
 
-        public OrderService(IOrderRepository orders)
+        public OrderService(IOrderRepository orders, IPickupTimeSlotRepository slots)
         {
             _orders = orders;
+            _slots = slots;
         }
 
         public async Task<PlaceOrderResult> PlaceOrderAsync(int id)
@@ -20,6 +22,14 @@ namespace BistroGo.Data.Services
 
             // The database requires a pickup slot on every placed order (CK_Orders_FinalizedConsistent).
             if (order.PickupSlotId == null) return PlaceOrderResult.PickupSlotRequired;
+
+            // The slot must still exist (archived slots are hidden by the repository)...
+            var slot = await _slots.GetByIdAsync(order.PickupSlotId.Value);
+            if (slot == null) return PlaceOrderResult.SlotUnavailable;
+
+            // ...and have room. Booked orders count against MaxOrders.
+            var booked = await _slots.CountBookedOrdersAsync(slot.Id);
+            if (booked >= slot.MaxOrders) return PlaceOrderResult.SlotFull;
 
             order.IsFinalized = true;
             order.FinalizedAt = DateTime.UtcNow;

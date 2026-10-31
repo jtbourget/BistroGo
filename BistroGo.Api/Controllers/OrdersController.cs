@@ -84,6 +84,10 @@ namespace BistroGo.Api.Controllers
             {
                 PlaceOrderResult.Placed => Ok(),
                 PlaceOrderResult.NotFound => NotFound(),
+                PlaceOrderResult.SlotUnavailable =>
+                BadRequest(new ProblemDetails { Title = "The selected pickup slot is no longer available.", Status = StatusCodes.Status400BadRequest }),
+                PlaceOrderResult.SlotFull =>
+                    Conflict(new ProblemDetails { Title = "The selected pickup slot is full. Please choose another time.", Status = StatusCodes.Status409Conflict }),
                 PlaceOrderResult.AlreadyPlaced =>
                     Conflict(new ProblemDetails { Title = "Order has already been placed.", Status = StatusCodes.Status409Conflict }),
                 PlaceOrderResult.PickupSlotRequired =>

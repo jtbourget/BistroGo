@@ -6,7 +6,9 @@
         Placed,
         NotFound,
         AlreadyPlaced,
-        PickupSlotRequired
+        PickupSlotRequired,
+        SlotUnavailable,
+        SlotFull
     }
 
     /// <summary>

@@ -63,6 +63,30 @@ public class OrdersControllerTests
         Assert.Equal(400, problem.Status);
     }
 
+    [Fact]
+    public async Task PlaceOrder_WhenSlotFull_Returns409()
+    {
+        _service.PlaceOrderAsync(1).Returns(PlaceOrderResult.SlotFull);
+
+        var result = await _controller.PlaceOrder(1);
+
+        var conflict = Assert.IsType<ConflictObjectResult>(result);
+        var problem = Assert.IsType<ProblemDetails>(conflict.Value);
+        Assert.Equal(409, problem.Status);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_WhenSlotUnavailable_Returns400()
+    {
+        _service.PlaceOrderAsync(1).Returns(PlaceOrderResult.SlotUnavailable);
+
+        var result = await _controller.PlaceOrder(1);
+
+        var bad = Assert.IsType<BadRequestObjectResult>(result);
+        var problem = Assert.IsType<ProblemDetails>(bad.Value);
+        Assert.Equal(400, problem.Status);
+    }
+
     // ── GetById: a missing order is a 404, a found one is returned ──
 
     [Fact]
