@@ -149,8 +149,8 @@ namespace BistroGo.Web.Pages.Account
         /// </summary>
         public async Task<IActionResult> OnPostCreateAsync()
         {
-            // Remove validation errors belonging to the edit form
-            foreach (var key in ModelState.Keys.Where(k => k.StartsWith(nameof(EditInput)) || k.StartsWith("EditInput.")).ToList())
+            // Remove validation errors not belonging to the create form
+            foreach (var key in ModelState.Keys.Where(k => !k.StartsWith(nameof(CreateInput)) && !k.StartsWith("Input.")).ToList())
             {
                 ModelState.Remove(key);
             }
@@ -208,8 +208,8 @@ namespace BistroGo.Web.Pages.Account
         /// </summary>
         public async Task<IActionResult> OnPostEditAsync()
         {
-            // Remove validation errors belonging to the create form
-            foreach (var key in ModelState.Keys.Where(k => k.StartsWith(nameof(CreateInput)) || k.StartsWith("CreateInput.") || k.StartsWith("Input.")).ToList())
+            // Remove validation errors not belonging to the edit form
+            foreach (var key in ModelState.Keys.Where(k => !k.StartsWith(nameof(EditInput))).ToList())
             {
                 ModelState.Remove(key);
             }

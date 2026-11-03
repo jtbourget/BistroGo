@@ -193,6 +193,7 @@ public class ManageStaffPageModelTests
         // Simulate model binding adding error for EditInput fields
         model.ModelState.AddModelError("EditInput.FirstName", "The First name field is required.");
         model.ModelState.AddModelError("EditInput.Id", "The Id field is required.");
+        model.ModelState.AddModelError("Id", "The Id field is required.");
 
         _userManager.FindByEmailAsync("eve@bistro.com").Returns((ApplicationUser?)null);
         _userManager.CreateAsync(Arg.Any<ApplicationUser>(), "Password123!").Returns(IdentityResult.Success);

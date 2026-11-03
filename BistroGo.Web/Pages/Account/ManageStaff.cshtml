@@ -163,6 +163,13 @@
 
                     <div class="mb-3">
                         <label asp-for="CreateInput.Password" class="form-label"></label>
+                        <span class="password-tooltip"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="right"
+                              data-bs-html="true"
+                              title="<strong>Password must have:</strong><br />• 8+ characters<br />• A–Z (uppercase)<br />• a–z (lowercase)<br />• 0–9 (number)">
+                            i
+                        </span>
                         <input asp-for="CreateInput.Password" class="form-control" autocomplete="new-password" />
                         <span asp-validation-for="CreateInput.Password" class="text-danger"></span>
                     </div>
@@ -230,6 +237,13 @@
 
                     <div class="mb-3">
                         <label asp-for="EditInput.NewPassword" class="form-label"></label>
+                        <span class="password-tooltip"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="right"
+                              data-bs-html="true"
+                              title="<strong>Password must have:</strong><br />• 8+ characters<br />• A–Z (uppercase)<br />• a–z (lowercase)<br />• 0–9 (number)">
+                            i
+                        </span>
                         <input asp-for="EditInput.NewPassword" id="editPassword" class="form-control" autocomplete="new-password" placeholder="Leave blank to keep existing password" />
                         <span asp-validation-for="EditInput.NewPassword" class="text-danger"></span>
                     </div>
@@ -279,4 +293,5 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/manage-staff.js" asp-append-version="true"></script>
+    <script src="~/js/tooltips.js" asp-append-version="true"></script>
 }
