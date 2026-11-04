@@ -108,11 +108,23 @@
                 @foreach (var cat in Model.Categories)
                 {
                     var count = Model.Items.Count(i => i.CategoryId == cat.Id);
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center category-item" id="category-li-@cat.Id">
+
+                        <!-- DISPLAY VIEW (Default) -->
+                        <div class="d-flex justify-content-between align-items-center w-100" id="display-view-@cat.Id">
                         <span>
                             <strong>@cat.Name</strong>
                             <span class="text-muted small ms-2">(@count)</span>
                         </span>
+                            <div class="d-flex align-items-center gap-2">
+                                <!-- Pencil Edit Button -->
+                                <button type="button" class="btn btn-sm btn-link text-primary p-0 edit-inline-btn"
+                                        data-id="@cat.Id" title="Edit">
+                                    ✏️
+                                </button>
+
+                                <!-- Delete Button -->
                             <button type="button"
                                             class="btn btn-sm btn-link text-danger p-0"
                                             title="Delete"
