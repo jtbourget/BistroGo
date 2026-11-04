@@ -51,15 +51,32 @@ public class IndexModel : PageModel
     /// </summary>
     /// <param name="menuItemId">The database id of the menu item to add.</param>
     /// <param name="category">The currently selected category to redirect back to.</param>
-    public async Task<IActionResult> OnPostAddToOrderAsync(int menuItemId, string? category)
+    public async Task<IActionResult> OnPostAddToOrderAsync(int menuItemId, int quantity, string? category)
     {
-        var owner = CartOwnerResolver.FindOrCreate(HttpContext);   // user from login, or guest cookie
-        var added = await _cart.AddItemAsync(owner, menuItemId);
+        var owner = CartOwnerResolver.FindOrCreate(HttpContext);
+
+        // Ensure quantity is at least 1 (in case the hidden input fails)
+        if (quantity < 1) quantity = 1;
+
+        bool added = false;
+
+        // Loop and call the service for the requested quantity
+        for (int i = 0; i < quantity; i++)
+        {
+            added = await _cart.AddItemAsync(owner, menuItemId);
+
+            // If the item becomes unavailable or fails to add, stop the loop
+            if (!added) break;
+        }
 
         if (added)
         {
             var item = await _menu.GetByIdAsync(menuItemId);
-            TempData["Message"] = $"Added \"{item?.Name}\" to your order.";
+
+            if (quantity > 1)
+                TempData["Message"] = $"Added {quantity} x \"{item?.Name}\" to your order.";
+            else
+                TempData["Message"] = $"Added \"{item?.Name}\" to your order.";
         }
         else
         {
