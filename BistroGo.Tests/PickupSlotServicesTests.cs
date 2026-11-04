@@ -193,4 +193,58 @@ public class PickupSlotServiceTests
         Assert.Single(outcome.Created);   // 23:00-23:30; a 23:30-00:00 slot must NOT appear
         Assert.Equal(new TimeOnly(23, 30), outcome.Created[0].EndTime);
     }
+
+    // ── GetAvailableAsync ──
+
+    [Fact]
+    public async Task GetAvailable_ForAPastDay_ReturnsNothing()
+    {
+        var result = await _service.GetAvailableAsync(Today.AddDays(-1));
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetAvailable_Today_SkipsSlotsThatHaveAlreadyStarted()
+    {
+        // The clock says 12:00. 11:00 and 12:00 have started; 13:00 hasn't.
+        _slots.GetByDateAsync(Today).Returns(new List<PickupTimeSlot>
+    {
+        Slot(Today, 11, 12), Slot(Today, 12, 13), Slot(Today, 13, 14)
+    });
+
+        var result = await _service.GetAvailableAsync(Today);
+
+        var only = Assert.Single(result);
+        Assert.Equal(new TimeOnly(13, 0), only.Slot.StartTime);
+    }
+
+    [Fact]
+    public async Task GetAvailable_HidesFullSlots_AndReportsSpotsRemaining()
+    {
+        var full = Slot(Tomorrow, 11, 12, max: 5);
+        full.Id = 1;
+        var partly = Slot(Tomorrow, 12, 13, max: 5);
+        partly.Id = 2;
+        _slots.GetByDateAsync(Tomorrow).Returns(new List<PickupTimeSlot> { full, partly });
+        _slots.CountBookedOrdersAsync(1).Returns(5);
+        _slots.CountBookedOrdersAsync(2).Returns(2);
+
+        var result = await _service.GetAvailableAsync(Tomorrow);
+
+        var only = Assert.Single(result);
+        Assert.Equal(2, only.Slot.Id);
+        Assert.Equal(3, only.Remaining);
+    }
+
+    [Fact]
+    public async Task GetAvailable_WithNoDate_MeansToday()
+    {
+        _slots.GetByDateAsync(Today).Returns(new List<PickupTimeSlot> { Slot(Today, 13, 14) });
+
+        var result = await _service.GetAvailableAsync(null);
+
+        Assert.Single(result);
+        await _slots.Received(1).GetByDateAsync(Today);
+    }
 }

@@ -84,5 +84,28 @@ namespace BistroGo.Data.Services
 
         private static BulkSlotOutcome Refused(BulkSlotResult why) =>
             new(why, Array.Empty<PickupTimeSlot>(), 0);
+
+        public async Task<IReadOnlyList<SlotAvailability>> GetAvailableAsync(DateOnly? date)
+        {
+            var now = _time.GetLocalNow().DateTime;
+            var today = DateOnly.FromDateTime(now);
+            var day = date ?? today;
+
+            if (day < today) return Array.Empty<SlotAvailability>();
+
+            var timeNow = TimeOnly.FromDateTime(now);
+            var available = new List<SlotAvailability>();
+
+            // GetByDateAsync already leaves out archived slots (the DbContext's query filter).
+            foreach (var slot in await _slots.GetByDateAsync(day))
+            {
+                if (day == today && slot.StartTime <= timeNow) continue;   // already started
+
+                var remaining = slot.MaxOrders - await _slots.CountBookedOrdersAsync(slot.Id);
+                if (remaining > 0) available.Add(new SlotAvailability(slot, remaining));
+            }
+
+            return available;
+        }
     }
 }
