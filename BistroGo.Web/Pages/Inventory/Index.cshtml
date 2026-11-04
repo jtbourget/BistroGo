@@ -135,6 +135,31 @@
                                             data-delete-handler="DeleteCategory">
                                         ✕
                                     </button>
+                            </div>
+                        </div>
+
+                        <!-- INLINE EDIT VIEW (Hidden by default) -->
+                        <form method="post" asp-page-handler="EditCategory" class="w-100 d-none" id="edit-view-@cat.Id">
+                            <input type="hidden" name="EditCategory.Id" value="@cat.Id" />
+
+                            <div class="d-flex align-items-center w-100 gap-2">
+                                <!-- The input field (auto-focused via JS) -->
+                                <input type="text" name="EditCategory.Name" class="form-control form-control-sm"
+                                       value="@cat.Name" required maxlength="40" id="input-@cat.Id" />
+
+                                <!-- Save (Checkmark) Button -->
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="Save">
+                                    ✓
+                                </button>
+
+                                <!-- Cancel (X) Button -->
+                                <button type="button" class="btn btn-sm btn-outline-secondary cancel-inline-btn"
+                                        data-id="@cat.Id" title="Cancel">
+                                    ✕
+                                </button>
+                            </div>
+                        </form>
+
                     </li>
                 }
             </ul>
