@@ -74,5 +74,11 @@ namespace BistroGo.Data.Repositories
         {
             return await _db.BookedOrders(slotId).CountAsync();
         }
+
+        public async Task AddRangeAsync(IEnumerable<PickupTimeSlot> slots)
+        {
+            _db.PickupTimeSlots.AddRange(slots);
+            await _db.SaveChangesAsync();
+        }
     }
 }

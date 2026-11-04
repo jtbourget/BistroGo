@@ -30,5 +30,8 @@ namespace BistroGo.Core.Interfaces
         /// are not cancelled, including ones already archived after being picked up.
         /// </summary>
         Task<int> CountBookedOrdersAsync(int slotId);
+
+        /// <summary>Creates several slots in one save: all are stored, or none are.</summary>
+        Task AddRangeAsync(IEnumerable<PickupTimeSlot> slots);
     }
 }

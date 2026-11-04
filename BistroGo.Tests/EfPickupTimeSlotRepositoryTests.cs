@@ -103,4 +103,26 @@ public class EfPickupTimeSlotRepositoryTests : IDisposable
 
         await Assert.ThrowsAsync<DbUpdateException>(() => _repo.AddAsync(NewSlot()));
     }
+
+    [Fact]
+    public async Task AddRangeAsync_SavesEverySlot()
+    {
+        await _repo.AddRangeAsync(new[] { NewSlot(11), NewSlot(12), NewSlot(13) });
+
+        var saved = await _repo.GetByDateAsync(new DateOnly(2026, 11, 5));
+
+        Assert.Equal(3, saved.Count);
+    }
+
+    [Fact]
+    public async Task AddRangeAsync_WhenOneIsADuplicate_SavesNone()
+    {
+        await _repo.AddAsync(NewSlot(12));
+
+        await Assert.ThrowsAsync<DbUpdateException>(
+            () => _repo.AddRangeAsync(new[] { NewSlot(11), NewSlot(12) }));
+
+        var saved = await _repo.GetByDateAsync(new DateOnly(2026, 11, 5));
+        Assert.Single(saved);   // the 11:00 slot was rolled back too
+    }
 }
