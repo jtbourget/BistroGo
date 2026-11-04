@@ -195,4 +195,20 @@ public class IndexModel : PageModel
         public string Category { get; set; } = "";
         public string? ImageUrl { get; set; }
     }
+
+    public class EditItemInput
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public decimal Price { get; set; }
+        public string Category { get; set; } = "";
+        public string? ImageUrl { get; set; }
+    }
+
+    public class EditCategoryInput
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+    }
 }
