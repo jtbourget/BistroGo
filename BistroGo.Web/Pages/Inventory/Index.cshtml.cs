@@ -28,6 +28,12 @@ public class IndexModel : PageModel
     [BindProperty]
     public string? NewCategoryName { get; set; }
 
+    [BindProperty]
+    public EditItemInput EditItem { get; set; } = new();
+
+    [BindProperty]
+    public EditCategoryInput EditCategory { get; set; } = new();
+
     public async Task OnGetAsync()
     {
         await LoadDataAsync();
