@@ -68,6 +68,75 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
+    public async Task<IActionResult> OnPostEditItemAsync()
+    {
+        if (!ModelState.IsValid)
+        {
+            await LoadDataAsync();
+            ViewData["OpenEditModal"] = true;
+            return Page();
+        }
+
+        var existingItem = await _menuItemRepo.GetByIdAsync(EditItem.Id);
+        if (existingItem == null)
+        {
+            TempData["Error"] = "Item not found.";
+            return RedirectToPage();
+        }
+
+        // Handle category (get or create)
+        var cat = await _categoryRepo.GetByNameAsync(EditItem.Category.Trim());
+        if (cat == null)
+        {
+            cat = await _categoryRepo.AddAsync(new MenuCategory { Name = EditItem.Category.Trim() });
+        }
+
+        // Update fields
+        existingItem.Name = EditItem.Name.Trim();
+        existingItem.Description = EditItem.Description.Trim();
+        existingItem.Price = EditItem.Price;
+        existingItem.CategoryId = cat.Id;
+        existingItem.ImageUrl = string.IsNullOrWhiteSpace(EditItem.ImageUrl) ? null : EditItem.ImageUrl.Trim();
+
+        await _menuItemRepo.UpdateAsync(existingItem);
+
+        TempData["Message"] = $"Updated \"{existingItem.Name}\".";
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostEditCategoryAsync()
+    {
+        if (!ModelState.IsValid)
+        {
+            await LoadDataAsync();
+            ViewData["OpenEditCategoryModal"] = true;
+            return Page();
+        }
+
+        var existingCategory = await _categoryRepo.GetByIdAsync(EditCategory.Id);
+        if (existingCategory == null)
+        {
+            TempData["Error"] = "Category not found.";
+            return RedirectToPage();
+        }
+
+        // Check if the new name is already taken by a DIFFERENT category
+        var duplicate = await _categoryRepo.GetByNameAsync(EditCategory.Name.Trim());
+        if (duplicate != null && duplicate.Id != existingCategory.Id)
+        {
+            TempData["Error"] = $"A category named \"{EditCategory.Name}\" already exists.";
+            await LoadDataAsync();
+            ViewData["OpenEditCategoryModal"] = true;
+            return Page();
+        }
+
+        existingCategory.Name = EditCategory.Name.Trim();
+        await _categoryRepo.UpdateAsync(existingCategory);
+
+        TempData["Message"] = $"Renamed category to \"{existingCategory.Name}\".";
+        return RedirectToPage();
+    }
+
     public async Task<IActionResult> OnPostAddCategoryAsync()
     {
         if (!string.IsNullOrWhiteSpace(NewCategoryName))
