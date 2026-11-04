@@ -1,15 +1,8 @@
+using BistroGo.Core.Enumerations;
 using BistroGo.Core.Models;
 
 namespace BistroGo.Core.Interfaces
 {
-    /// <summary>Outcome of saving a placed order into a slot with limited room.</summary>
-    public enum SlotSaveResult
-    {
-        Saved,
-        OrderNotFound,
-        SlotFull
-    }
-
     /// <summary>
     /// Contract for order data access and lifecycle operations.
     /// Supports order placement and line item management.

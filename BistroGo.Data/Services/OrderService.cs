@@ -1,4 +1,5 @@
-﻿using BistroGo.Core.Interfaces;
+﻿using BistroGo.Core.Enumerations;
+using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 
 namespace BistroGo.Data.Services

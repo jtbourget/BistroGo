@@ -1,16 +1,7 @@
-﻿namespace BistroGo.Core.Interfaces
-{
-    /// <summary>Why a place-order request succeeded or was refused.</summary>
-    public enum PlaceOrderResult
-    {
-        Placed,
-        NotFound,
-        AlreadyPlaced,
-        PickupSlotRequired,
-        SlotUnavailable,
-        SlotFull
-    }
+﻿using BistroGo.Core.Enumerations;
 
+namespace BistroGo.Core.Interfaces
+{
     /// <summary>
     /// Business workflows for orders. Repositories only load and save data;
     /// the rules about what an order needs before it can be placed live here.

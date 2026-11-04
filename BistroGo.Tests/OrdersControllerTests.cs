@@ -1,4 +1,5 @@
 ﻿using BistroGo.Api.Controllers;
+using BistroGo.Core.Enumerations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using Microsoft.AspNetCore.Mvc;
