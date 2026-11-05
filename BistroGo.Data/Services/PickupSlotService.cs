@@ -39,6 +39,8 @@ namespace BistroGo.Data.Services
             return new(CreateSlotResult.Created, created);
         }
 
+        // Create day is not easily readable
+        // Creates time slots for one day, back to back, refuses time slots that don't fit definition.
         public async Task<BulkSlotOutcome> CreateDayAsync(BulkSlotRequest request)
         {
             if (request.Date < Today) return Refused(BulkSlotResult.DateInPast);
@@ -93,6 +95,7 @@ namespace BistroGo.Data.Services
 
             if (day < today) return Array.Empty<SlotAvailability>();
 
+            // Move _time.GetLocalNow().DateTime as parameter in FromDateTime method?
             var timeNow = TimeOnly.FromDateTime(now);
             var available = new List<SlotAvailability>();
 
