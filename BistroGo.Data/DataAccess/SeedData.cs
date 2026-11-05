@@ -23,6 +23,7 @@ namespace BistroGo.Data.DataAccess
         // Ids come from OrderStatusIds so code and data can never drift apart.
         private static void SeedOrderStatuses(ModelBuilder builder)
         {
+            
             builder.Entity<OrderStatus>().HasData(
                 new OrderStatus { Id = OrderStatusIds.Received,  Name = "Received"  },
                 new OrderStatus { Id = OrderStatusIds.Preparing, Name = "Preparing" },
