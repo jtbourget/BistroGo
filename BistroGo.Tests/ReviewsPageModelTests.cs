@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BistroGo.Core.Identity;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using BistroGo.Data.Identity;
@@ -51,7 +52,7 @@ public class ReviewsPageModelTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
             new Claim(ClaimTypes.Name, "CookBob"),
-            new Claim(ClaimTypes.Role, Roles.KitchenStaff)
+            new Claim(ClaimTypes.Role, RoleNames.KitchenStaff)
         }, "TestAuth"));
 
         var model = CreateModel(user);
@@ -68,7 +69,7 @@ public class ReviewsPageModelTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
             new Claim(ClaimTypes.Name, "Alice"),
-            new Claim(ClaimTypes.Role, Roles.Customer)
+            new Claim(ClaimTypes.Role, RoleNames.Customer)
         }, "TestAuth"));
 
         _repo.GetAllAsync().Returns(new List<Review>
@@ -92,7 +93,7 @@ public class ReviewsPageModelTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
             new Claim(ClaimTypes.Name, "Boss"),
-            new Claim(ClaimTypes.Role, Roles.Manager)
+            new Claim(ClaimTypes.Role, RoleNames.Manager)
         }, "TestAuth"));
 
         _repo.GetAllAsync().Returns(new List<Review>());
@@ -128,7 +129,7 @@ public class ReviewsPageModelTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
             new Claim(ClaimTypes.Name, "CookBob"),
-            new Claim(ClaimTypes.Role, Roles.KitchenStaff)
+            new Claim(ClaimTypes.Role, RoleNames.KitchenStaff)
         }, "TestAuth"));
 
         var model = CreateModel(user);
@@ -151,7 +152,7 @@ public class ReviewsPageModelTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
             new Claim(ClaimTypes.Name, "StoreManager"),
-            new Claim(ClaimTypes.Role, Roles.Manager)
+            new Claim(ClaimTypes.Role, RoleNames.Manager)
         }, "TestAuth"));
 
         var model = CreateModel(user);
@@ -177,7 +178,7 @@ public class ReviewsPageModelTests
         {
             new Claim(ClaimTypes.NameIdentifier, "user-123"),
             new Claim(ClaimTypes.Name, "alice@test.com"),
-            new Claim(ClaimTypes.Role, Roles.Customer)
+            new Claim(ClaimTypes.Role, RoleNames.Customer)
         }, "TestAuth"));
 
         _userManager.GetUserAsync(user).Returns(appUser);

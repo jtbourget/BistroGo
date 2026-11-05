@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BistroGo.Core.Identity;
 using BistroGo.Data.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -79,7 +80,7 @@ namespace BistroGo.Web.Pages.Account
                 return Page();
             }
 
-            await _userManager.AddToRoleAsync(user, Roles.Customer);
+            await _userManager.AddToRoleAsync(user, RoleNames.Customer);
 
             await _signInManager.SignInAsync(user, isPersistent: false);
 

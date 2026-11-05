@@ -74,6 +74,14 @@
                             <td class="text-end" id="checkoutSubtotal">$@Model.Subtotal.ToString("0.00")</td>
                             <td></td>
                         </tr>
+                        @if (Model.DiscountAmount > 0)
+                        {
+                            <tr class="table-success">
+                                <td colspan="3" class="text-end text-success">Employee Discount (20%):</td>
+                                <td class="text-end text-success" id="checkoutDiscount">-$@Model.DiscountAmount.ToString("0.00")</td>
+                                <td></td>
+                            </tr>
+                        }
                         <tr>
                             <td colspan="3" class="text-end text-muted">Tax:</td>
                             <td class="text-end" id="checkoutTax">$@Model.Tax.ToString("0.00")</td>

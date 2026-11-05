@@ -80,10 +80,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
 
-                if (subtotalEl) subtotalEl.textContent = '$' + data.subtotal.toFixed(2);
-                if (taxEl) taxEl.textContent = '$' + data.tax.toFixed(2);
-                if (totalEl) totalEl.textContent = '$' + data.total.toFixed(2);
-                if (itemCountEl) itemCountEl.textContent = data.itemCount + ' items';
+                if (subtotalEl)
+                    subtotalEl.textContent = '$' + data.subtotal.toFixed(2);
+                if (taxEl)
+                    taxEl.textContent = '$' + data.tax.toFixed(2);
+                if (totalEl)
+                    totalEl.textContent = '$' + data.total.toFixed(2);
+                if (itemCountEl)
+                    itemCountEl.textContent = data.itemCount + ' items';
 
                 // Sync the sidebar and menu badges to reflect the change
                 const ticker = document.getElementById('cartTicker');
