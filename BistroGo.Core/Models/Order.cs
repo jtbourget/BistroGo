@@ -54,9 +54,14 @@ namespace BistroGo.Core.Models
 
         [Precision(10, 2)]
         public decimal Subtotal { get; set; }
-/*
-        [Precision(10, 2)]
-        public decimal EmployeeDiscount { get; set; }*/
+
+        /// <summary>
+        /// The discount amount removed from the subtotal for employee discount.
+        /// This is calculated based on the user's role and is NOT persisted to the database.
+        /// Formula: DiscountAmount = Subtotal * 0.2 (for 20% discount)
+        /// </summary>
+        [NotMapped]
+        public decimal DiscountAmount { get; set; } = 0m;
 
         [Precision(10, 2)]
         public decimal Tax { get; set; }

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BistroGo.Core.Identity;
 using BistroGo.Data.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -13,7 +14,7 @@ namespace BistroGo.Web.Pages.Account
     /// This page allows a Manager to generate new worker logins (KitchenStaff).
     /// Requires the user to have the Manager role.
     /// </summary>
-    [Authorize(Roles = Roles.Manager)]
+    [Authorize(Roles = RoleNames.Manager)]
     public class ManageStaffModel : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -91,7 +92,7 @@ namespace BistroGo.Web.Pages.Account
             }
 
             // Add the new user to the KitchenStaff role (the 'worker')
-            await _userManager.AddToRoleAsync(user, Roles.KitchenStaff);
+            await _userManager.AddToRoleAsync(user, RoleNames.KitchenStaff);
 
             StatusMessage = "Worker account successfully created.";
             

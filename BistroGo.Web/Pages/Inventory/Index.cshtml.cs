@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Authorization;
-using BistroGo.Data.Identity;
+using BistroGo.Core.Identity;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 
 namespace BistroGo.Web.Pages.Inventory;
 
-[Authorize(Roles = Roles.Manager)]
+[Authorize(Roles = RoleNames.Manager)]
 public class IndexModel : PageModel
 {
     private readonly IMenuItemRepository _menuItemRepo;

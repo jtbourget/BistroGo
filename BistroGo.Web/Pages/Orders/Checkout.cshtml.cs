@@ -1,6 +1,9 @@
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using BistroGo.Core.Pricing;
+using BistroGo.Data.Identity;
 using BistroGo.Web.Cart;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -13,10 +16,12 @@ public class CheckoutModel : PageModel
     // ═══════════════════════════════════════════════════════════════════
 
     private readonly ICartService _cart;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public CheckoutModel(ICartService cart)
+    public CheckoutModel(ICartService cart, UserManager<ApplicationUser> userManager)
     {
         _cart = cart;
+        _userManager = userManager;
     }
 
     /// <summary>
@@ -25,19 +30,16 @@ public class CheckoutModel : PageModel
     /// </summary>
     public IReadOnlyList<OrderItem> Lines { get; set; } = Array.Empty<OrderItem>();
 
-    /// <summary>Cart subtotal before tax.</summary>
+    /// <summary>Cart subtotal before discounts and tax.</summary>
     /// <remarks>TODO: comes back from GET /api/orders/current (.subtotal)</remarks>
     public decimal Subtotal { get; set; }
 
-    /// <summary>Tax amount.</summary>
+    /// <summary>The dollar amount of employee discount (if applicable).</summary>
+    public decimal DiscountAmount { get; set; }
+
+    /// <summary>Tax amount calculated on the discounted subtotal.</summary>
     /// <remarks>TODO: comes back from GET /api/orders/current (.tax)</remarks>
     public decimal Tax { get; set; }
-
-    /// <summary>
-    /// Percent of price to multiply to subtotal.
-    /// </summary>
-    /// <remarks>Should be 1 - effective employee discount.</remarks>
-    public decimal EmployeeDiscount { get; set; }
 
     /// <summary>Final total (subtotal + tax).</summary>
     /// <remarks>TODO: comes back from GET /api/orders/current (.total)</remarks>
@@ -204,9 +206,27 @@ public class CheckoutModel : PageModel
         var cart = owner == null ? null : await _cart.GetCartAsync(owner);
 
         Lines = cart?.Items.OrderBy(i => i.MenuItem!.Name).ToList() ?? new List<OrderItem>();
-        Subtotal = cart?.Subtotal ?? 0m;
-        EmployeeDiscount = cart?.EmployeeDiscount ?? 0m;
-        Tax = cart?.Tax ?? 0m;
-        Total = cart?.Total ?? 0m;
+
+        if (cart != null)
+        {
+            // Get the current user's roles to determine if they qualify for employee discount
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
+                // Recalculate the cart with discount consideration
+                OrderPricing.Recalculate(cart, userRoles);
+            }
+            else
+            {
+                // For guests, recalculate without discount
+                OrderPricing.Recalculate(cart);
+            }
+
+            Subtotal = cart.Subtotal;
+            DiscountAmount = cart.DiscountAmount;
+            Tax = cart.Tax;
+            Total = cart.Total;
+        }
     }
 }
