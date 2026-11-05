@@ -1132,3 +1132,13 @@ body {
     min-width: 20px;
     text-align: center;
 }
+
+/* ═══════════════════════════════════════════════════
+   INLINE CATEGORY EDITING
+   ═══════════════════════════════════════════════════ */
+.category-item.editing {
+    background-color: #fdfaf6; /* Soft highlight */
+    border-left: 4px solid #b5651d; /* Orange outline */
+    padding-left: calc(1rem - 4px); /* Adjust padding to compensate for the border */
+    transition: all 0.2s ease;
+}
