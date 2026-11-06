@@ -261,6 +261,21 @@ namespace BistroGo.Data.Migrations
                     { 5, "Cancelled" }
                 });
 
+            migrationBuilder.InsertData(
+                table: "MenuItems",
+                columns: new[] { "Id", "CategoryId", "Name", "Description", "Price", "IsAvailable", "ImageUrl", "CreatedByUserId" },
+                values: new object[,]
+                {
+                    { 1, 1, "Bruschetta", "Grilled bread, tomatoes, basil", "8.50", true, null, null },
+                    { 2, 1, "Caesar Salad", "Romaine, parmesan, croutons", "10.00", true, null, null },
+                    { 3, 2, "Margherita Pizza", "Tomato, mozzarella, basil", "14.00", true, null, null },
+                    { 4, 2, "Grilled Salmon", "Lemon butter, seasonal veg", "22.00", true, null, null },
+                    { 5, 2, "Ribeye Steak", "12oz, garlic butter", "28.00", true, null, null },
+                    { 6, 3, "Tiramisu", "Classic Italian dessert", "9.00", true, null, null },
+                    { 7, 4, "Espresso", "Double shot", "4.00", true, null, null },
+                    { 8, 4, "House Red", "Glass of Cabernet", "11.00", true, null, null }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Expenses_MenuItemId",
                 table: "Expenses",

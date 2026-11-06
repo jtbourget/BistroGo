@@ -1,5 +1,6 @@
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using BistroGo.Core.Identity;
 using BistroGo.Data.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -70,12 +71,12 @@ namespace BistroGo.Web.Pages.Reviews
         public async Task<IActionResult> OnGetAsync()
         {
             // Kitchen staff are not permitted to view or submit reviews
-            if (User.Identity?.IsAuthenticated == true && User.IsInRole(Roles.KitchenStaff))
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.KitchenStaff))
             {
                 return RedirectToPage("/Account/AccessDenied");
             }
 
-            IsManager = User.Identity?.IsAuthenticated == true && User.IsInRole(Roles.Manager);
+            IsManager = User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.Manager);
             CanSubmitReview = !IsManager;
 
             if (User.Identity?.IsAuthenticated == true)
@@ -98,13 +99,13 @@ namespace BistroGo.Web.Pages.Reviews
         public async Task<IActionResult> OnPostSubmitReviewAsync()
         {
             // Kitchen staff are not permitted to submit reviews
-            if (User.Identity?.IsAuthenticated == true && User.IsInRole(Roles.KitchenStaff))
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.KitchenStaff))
             {
                 return RedirectToPage("/Account/AccessDenied");
             }
 
             // Managers are not permitted to submit customer reviews
-            if (User.Identity?.IsAuthenticated == true && User.IsInRole(Roles.Manager))
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.Manager))
             {
                 ErrorMessage = "Managers are not permitted to submit reviews.";
                 return RedirectToPage();
@@ -160,7 +161,7 @@ namespace BistroGo.Web.Pages.Reviews
         public async Task<IActionResult> OnPostAddCommentAsync()
         {
             // Only managers can comment on reviews
-            if (User.Identity?.IsAuthenticated != true || !User.IsInRole(Roles.Manager))
+            if (User.Identity?.IsAuthenticated != true || !User.IsInRole(RoleNames.Manager))
             {
                 return Forbid();
             }

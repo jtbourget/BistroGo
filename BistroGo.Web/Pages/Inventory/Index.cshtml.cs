@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Authorization;
-using BistroGo.Data.Identity;
+using BistroGo.Core.Identity;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 
 namespace BistroGo.Web.Pages.Inventory;
 
-[Authorize(Roles = Roles.Manager)]
+[Authorize(Roles = RoleNames.Manager)]
 public class IndexModel : PageModel
 {
     private readonly IMenuItemRepository _menuItemRepo;
@@ -27,6 +27,12 @@ public class IndexModel : PageModel
 
     [BindProperty]
     public string? NewCategoryName { get; set; }
+
+    [BindProperty]
+    public EditItemInput EditItem { get; set; } = new();
+
+    [BindProperty]
+    public EditCategoryInput EditCategory { get; set; } = new();
 
     public async Task OnGetAsync()
     {
@@ -59,6 +65,75 @@ public class IndexModel : PageModel
         });
 
         TempData["Message"] = $"Added \"{NewItem.Name}\" to the menu.";
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostEditItemAsync()
+    {
+        if (!ModelState.IsValid)
+        {
+            await LoadDataAsync();
+            ViewData["OpenEditModal"] = true;
+            return Page();
+        }
+
+        var existingItem = await _menuItemRepo.GetByIdAsync(EditItem.Id);
+        if (existingItem == null)
+        {
+            TempData["Error"] = "Item not found.";
+            return RedirectToPage();
+        }
+
+        // Handle category (get or create)
+        var cat = await _categoryRepo.GetByNameAsync(EditItem.Category.Trim());
+        if (cat == null)
+        {
+            cat = await _categoryRepo.AddAsync(new MenuCategory { Name = EditItem.Category.Trim() });
+        }
+
+        // Update fields
+        existingItem.Name = EditItem.Name.Trim();
+        existingItem.Description = EditItem.Description.Trim();
+        existingItem.Price = EditItem.Price;
+        existingItem.CategoryId = cat.Id;
+        existingItem.ImageUrl = string.IsNullOrWhiteSpace(EditItem.ImageUrl) ? null : EditItem.ImageUrl.Trim();
+
+        await _menuItemRepo.UpdateAsync(existingItem);
+
+        TempData["Message"] = $"Updated \"{existingItem.Name}\".";
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostEditCategoryAsync()
+    {
+        if (!ModelState.IsValid)
+        {
+            await LoadDataAsync();
+            ViewData["OpenEditCategoryModal"] = true;
+            return Page();
+        }
+
+        var existingCategory = await _categoryRepo.GetByIdAsync(EditCategory.Id);
+        if (existingCategory == null)
+        {
+            TempData["Error"] = "Category not found.";
+            return RedirectToPage();
+        }
+
+        // Check if the new name is already taken by a DIFFERENT category
+        var duplicate = await _categoryRepo.GetByNameAsync(EditCategory.Name.Trim());
+        if (duplicate != null && duplicate.Id != existingCategory.Id)
+        {
+            TempData["Error"] = $"A category named \"{EditCategory.Name}\" already exists.";
+            await LoadDataAsync();
+            ViewData["OpenEditCategoryModal"] = true;
+            return Page();
+        }
+
+        existingCategory.Name = EditCategory.Name.Trim();
+        await _categoryRepo.UpdateAsync(existingCategory);
+
+        TempData["Message"] = $"Renamed category to \"{existingCategory.Name}\".";
         return RedirectToPage();
     }
 
@@ -119,5 +194,21 @@ public class IndexModel : PageModel
         public decimal Price { get; set; }
         public string Category { get; set; } = "";
         public string? ImageUrl { get; set; }
+    }
+
+    public class EditItemInput
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public decimal Price { get; set; }
+        public string Category { get; set; } = "";
+        public string? ImageUrl { get; set; }
+    }
+
+    public class EditCategoryInput
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
     }
 }

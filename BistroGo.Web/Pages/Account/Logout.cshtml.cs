@@ -1,3 +1,4 @@
+using BistroGo.Core.Identity;
 using BistroGo.Data.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

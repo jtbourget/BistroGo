@@ -1,3 +1,4 @@
+using BistroGo.Core.Identity;
 using BistroGo.Core.Interfaces;
 using BistroGo.Data.DataAccess;
 using BistroGo.Data.Identity;
@@ -66,11 +67,18 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
+// Apply any pending migrations and seed data on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<BistroGoDBContext>();
+    dbContext.Database.Migrate();
+}
+
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-    foreach (var role in new[] { Roles.Customer, Roles.KitchenStaff, Roles.Manager })
+    foreach (var role in new[] { RoleNames.Customer, RoleNames.KitchenStaff, RoleNames.Manager })
     {
         if (!await roleManager.RoleExistsAsync(role))
         {
@@ -92,7 +100,7 @@ using (var scope = app.Services.CreateScope())
         var result = await userManager.CreateAsync(adminUser, "Manager@123");
         if (result.Succeeded)
         {
-            await userManager.AddToRoleAsync(adminUser, Roles.Manager);
+            await userManager.AddToRoleAsync(adminUser, RoleNames.Manager);
         }
     }
 }

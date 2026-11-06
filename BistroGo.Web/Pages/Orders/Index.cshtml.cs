@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Authorization;
-using BistroGo.Data.Identity;
+using BistroGo.Core.Identity;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 
 namespace BistroGo.Web.Pages.Orders;
 
-[Authorize(Roles = Roles.Manager + "," + Roles.KitchenStaff)]
+[Authorize(Roles = RoleNames.Manager + "," + RoleNames.KitchenStaff)]
 public class IndexModel : PageModel
 {
     private readonly IOrderRepository _orderRepo;
