@@ -21,6 +21,7 @@ builder.Services.AddScoped<IMenuItemRepository, EfMenuItemRepository>();
 builder.Services.AddScoped<ICartService, EfCartService>();
 builder.Services.AddScoped<IMenuCategoryRepository, EfCategoryRepository>();
 builder.Services.AddScoped<IOrderRepository, EfOrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IOrderItemRepository, EfOrderItemRepository>();
 builder.Services.AddScoped<IPickupTimeSlotRepository, EfPickupTimeSlotRepository>();
 builder.Services.AddScoped<IReviewRepository, EfReviewRepository>();
@@ -72,6 +73,19 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<BistroGoDBContext>();
     dbContext.Database.Migrate();
+
+    if (!dbContext.PickupTimeSlots.Any())
+    {
+        dbContext.PickupTimeSlots.Add(new BistroGo.Core.Models.PickupTimeSlot
+        {
+            Id = 1,
+            SlotDate = DateOnly.FromDateTime(DateTime.Today),
+            StartTime = new TimeOnly(12, 0),
+            EndTime = new TimeOnly(13, 0),
+            MaxOrders = 20
+        });
+        dbContext.SaveChanges();
+    }
 }
 
 using (var scope = app.Services.CreateScope())

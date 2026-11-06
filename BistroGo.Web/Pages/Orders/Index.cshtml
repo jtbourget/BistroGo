@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model BistroGo.Web.Pages.Orders.IndexModel
 @{
     ViewData["Title"] = "Orders";
@@ -9,21 +9,39 @@
     <span class="text-muted">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
 </div>
 
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <div class="row g-4">
 
     <!-- ═══════════════════════════════════════════════════════════
          COLUMN 1 — CURRENT ORDERS
          ═══════════════════════════════════════════════════════════ -->
-    <div class="col-lg-4">
+    <div class="col-lg-5">
         <div class="dashboard-panel">
-            <div class="dashboard-panel-header">
+            <div class="dashboard-panel-header d-flex justify-content-between align-items-center mb-2">
                 <h3>Current Orders</h3>
+                <span class="badge bg-primary">@Model.CurrentOrders.Count</span>
+            </div>
+
+            <!-- Status Filter Tabs -->
+            <div class="btn-group btn-group-sm mb-3 w-100" role="group">
+                <a asp-page="/Orders/Index" asp-route-statusFilter="" class="btn @(string.IsNullOrEmpty(Model.StatusFilter) || Model.StatusFilter == "All" ? "btn-primary" : "btn-outline-primary")">All (@Model.AllCount)</a>
+                <a asp-page="/Orders/Index" asp-route-statusFilter="Received" class="btn @(Model.StatusFilter == "Received" ? "btn-primary" : "btn-outline-primary")">New (@Model.ReceivedCount)</a>
+                <a asp-page="/Orders/Index" asp-route-statusFilter="Preparing" class="btn @(Model.StatusFilter == "Preparing" ? "btn-primary" : "btn-outline-primary")">Prep (@Model.PreparingCount)</a>
+                <a asp-page="/Orders/Index" asp-route-statusFilter="Ready" class="btn @(Model.StatusFilter == "Ready" ? "btn-primary" : "btn-outline-primary")">Ready (@Model.ReadyCount)</a>
+                <a asp-page="/Orders/Index" asp-route-statusFilter="PickedUp" class="btn @(Model.StatusFilter == "PickedUp" ? "btn-primary" : "btn-outline-primary")">Done (@Model.PickedUpCount)</a>
             </div>
 
             @if (!Model.CurrentOrders.Any())
             {
                 <div class="dashboard-empty">
-                    No open orders. <a asp-page="/Menu/Index">Start one from the menu</a>.
+                    No orders matching this view. <a asp-page="/Menu/Index">Start one from the menu</a>.
                 </div>
             }
             else
@@ -31,16 +49,16 @@
                 <div class="dashboard-list">
                     @foreach (var order in Model.CurrentOrders)
                     {
-                        // 1. Determine the badge color based on the current status from the database
                         var badgeClass = order.Status switch
                         {
                             "Received" => "badge-reserved",
                             "Preparing" => "badge-occupied",
                             "Ready" => "badge-available",
-                            _ => "bg-secondary"
+                            "PickedUp" => "bg-secondary text-white",
+                            "Cancelled" => "bg-danger text-white",
+                            _ => "bg-secondary text-white"
                         };
 
-                        // 2. Determine the glow/shadow effect based on the status
                         var shadowClass = order.Status switch
                         {
                             "Received" => "status-received",
@@ -49,54 +67,70 @@
                             _ => ""
                         };
 
-                        <div class="thin-card">
-                            <span class="thin-card-icon">🧾</span>
-                            <span class="thin-card-body">
-                                <!--
-                                    The Order Data (ID, Customer Name, Table, Time, Total)
-                                    is populated directly from the SQLite database via
-                                    Entity Framework in Index.cshtml.cs -> LoadDataAsync().
-                                -->
-                                <span class="thin-card-title">#@order.Id — @order.CustomerName</span>
-                                <span class="thin-card-sub">Table @order.TableNumber · @order.PlacedAt.ToString("h:mm tt")</span>
-                            </span>
-                            <span class="thin-card-meta">
+                        <div class="thin-card mb-3 flex-column align-items-stretch p-3">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="thin-card-icon">🧾</span>
+                                    <div>
+                                        <span class="thin-card-title d-block fs-6">#@order.Id — @order.CustomerName</span>
+                                        <span class="thin-card-sub text-muted">Table @order.TableNumber · @order.PlacedAt.ToString("h:mm tt")</span>
+                                        @if (!string.IsNullOrEmpty(order.ConfirmationCode))
+                                        {
+                                            <span class="badge bg-light text-dark border ms-1 small">@order.ConfirmationCode</span>
+                                        }
+                                    </div>
+                                </div>
+                                <span class="card-price fs-6 fw-bold">$@order.Total.ToString("0.00")</span>
+                            </div>
 
-                                <!--
-                                    API INTEGRATION NOTE:
-                                    When you move to the API, this form will be intercepted by JavaScript.
-                                    Instead of a page reload, the JS will send a PUT request to something like:
-                                    /api/orders/{id}/status
-                                    with the new status string in the body.
-                                -->
+                            <!-- Order Items Section for Kitchen Staff -->
+                            <div class="order-items-box bg-light p-2 rounded mb-2 border" style="font-size: 0.85rem;">
+                                @if (order.Items.Any())
+                                {
+                                    @foreach (var item in order.Items)
+                                    {
+                                        <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-light">
+                                            <span><strong>@(item.Quantity)x</strong> @item.MenuItemName</span>
+                                            <span class="text-muted">$@((item.UnitPrice * item.Quantity).ToString("0.00"))</span>
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(item.SpecialInstructions))
+                                        {
+                                            <div class="text-danger small fst-italic ps-2 pb-1">
+                                                ⚠️ Note: @item.SpecialInstructions
+                                            </div>
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">No items recorded for this order.</span>
+                                }
+                            </div>
+
+                            <!-- Status Dropdown & Action Controls -->
+                            <div class="d-flex justify-content-between align-items-center">
                                 <form method="post" asp-page-handler="SetStatus" class="d-flex align-items-center mb-0">
-                                    <!-- The ID of the order we are updating is sent securely in the form payload -->
                                     <input type="hidden" name="id" value="@order.Id" />
-
-                                    <!-- The Wrapper with the dynamic shadow class -->
                                     <div class="status-dropdown-wrapper @shadowClass">
-
-                                        <!-- The colored badge (user sees this) -->
                                         <span class="badge @badgeClass">@order.Status</span>
-
-                                        <!--
-                                            THE INVISIBLE DROPDOWN
-                                            When the user changes this select, 'onchange' fires.
-                                            'this.form.submit()' sends a POST request to the server.
-                                            In Index.cshtml.cs, the 'OnPostSetStatusAsync' handler catches it,
-                                            updates the StatusId in the SQLite database, and reloads the page.
-                                        -->
                                         <select name="status" class="status-dropdown" onchange="this.form.submit()">
                                             <option value="Received" selected="@(order.Status == "Received")">Received</option>
                                             <option value="Preparing" selected="@(order.Status == "Preparing")">Preparing</option>
                                             <option value="Ready" selected="@(order.Status == "Ready")">Ready</option>
+                                            <option value="PickedUp" selected="@(order.Status == "PickedUp")">Picked Up / Completed</option>
+                                            <option value="Cancelled" selected="@(order.Status == "Cancelled")">Cancelled</option>
                                         </select>
-
                                     </div>
                                 </form>
 
-                                <span class="card-price ms-2">$@order.Total.ToString("0.00")</span>
-                            </span>
+                                @if (order.Status != "PickedUp" && order.Status != "Cancelled")
+                                {
+                                    <form method="post" asp-page-handler="Complete" class="mb-0">
+                                        <input type="hidden" name="id" value="@order.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success">✓ Complete</button>
+                                    </form>
+                                }
+                            </div>
                         </div>
                     }
                 </div>
@@ -104,11 +138,10 @@
         </div>
     </div>
 
-
     <!-- ═══════════════════════════════════════════════════════════
          COLUMN 2 — TABLES
          ═══════════════════════════════════════════════════════════ -->
-    <div class="col-lg-4">
+    <div class="col-lg-3">
         <div class="dashboard-panel">
             <div class="dashboard-panel-header">
                 <h3>Tables</h3>
