@@ -7,6 +7,9 @@
 <div class="page-header">
     <h1>📦 Manage Inventory</h1>
     <span class="text-muted">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+    <button type="button" class="btn btn-info ms-3" data-bs-toggle="modal" data-bs-target="#manageTaxRateModal" title="Manage sales tax rate">
+        📊 Manage Tax Rate
+    </button>
 </div>
 
 @if (TempData["Message"] != null)
@@ -272,6 +275,94 @@
     </div>
 </div>
 
+<!-- =========================================================================== -->
+<!-- TAX RATE MANAGEMENT MODAL -->
+<!-- =========================================================================== -->
+<div class="modal fade" id="manageTaxRateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content menu-modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📊 Manage Sales Tax Rate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Current Rate Display -->
+                <div class="mb-4">
+                    <label class="form-label">Current Active Rate</label>
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            class="form-control form-control-lg" 
+                            id="currentRateDisplay" 
+                            readonly 
+                            value="Loading..." 
+                            style="font-size: 1.25rem; font-weight: bold;">
+                        <span class="input-group-text" style="font-size: 1.25rem; font-weight: bold;">%</span>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        This rate is applied to all new orders. Valid range: 0% to 20%.
+                    </small>
+                </div>
+
+                <!-- Update Rate Form -->
+                <form id="updateTaxRateForm">
+                    <div class="mb-3">
+                        <label for="newRateInput" class="form-label">Update to New Rate</label>
+                        <div class="input-group">
+                            <input 
+                                type="number" 
+                                class="form-control form-control-lg" 
+                                id="newRateInput" 
+                                placeholder="Enter rate (0-20)"
+                                min="0"
+                                max="20"
+                                step="0.01"
+                                style="font-size: 1.1rem;"
+                                required>
+                            <span class="input-group-text" style="font-size: 1.1rem;">%</span>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Valid range: 0% to 20%. Enter as a percentage (e.g., 8.5 for 8.5%).
+                        </small>
+                    </div>
+
+                    <!-- Input Validation Error -->
+                    <div id="validationErrorAlert" class="alert alert-warning d-none" role="alert">
+                        <strong>Validation Error:</strong> <span id="validationErrorMessage"></span>
+                    </div>
+
+                    <!-- Success Message -->
+                    <div id="successAlert" class="alert alert-success d-none" role="alert">
+                        <strong>✓ Success!</strong>
+                        <div id="successMessage"></div>
+                        <small class="d-block mt-2 text-muted">
+                            The rate has been updated and will apply to new orders immediately.
+                        </small>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div id="errorAlert" class="alert alert-danger d-none" role="alert">
+                        <strong>✗ Error:</strong>
+                        <div id="errorMessage"></div>
+                    </div>
+
+                    <!-- Loading Indicator -->
+                    <div id="loadingIndicator" class="spinner-border d-none" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-success" id="submitBtn" form="updateTaxRateForm">
+                    Update Tax Rate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <script src="~/js/tax-rate-update.js" asp-append-version="true"></script>
     <script src="~/js/inventory.js" asp-append-version="true"></script>
 }

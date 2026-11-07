@@ -3,6 +3,7 @@ using BistroGo.Core.Models;
 using BistroGo.Core.Pricing;
 using BistroGo.Data.Identity;
 using BistroGo.Web.Cart;
+using BistroGo.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,11 +18,15 @@ public class CheckoutModel : PageModel
 
     private readonly ICartService _cart;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ITaxRateService _taxRateService;
+    private readonly TaxRateApiClient _taxRateApiClient;
 
-    public CheckoutModel(ICartService cart, UserManager<ApplicationUser> userManager)
+    public CheckoutModel(ICartService cart, UserManager<ApplicationUser> userManager, ITaxRateService taxRateService, TaxRateApiClient taxRateApiClient)
     {
         _cart = cart;
         _userManager = userManager;
+        _taxRateService = taxRateService;
+        _taxRateApiClient = taxRateApiClient;
     }
 
     /// <summary>
@@ -209,24 +214,49 @@ public class CheckoutModel : PageModel
 
         if (cart != null)
         {
+            // Fetch the current tax rate from the API (authoritative source)
+            // Falls back to the in-memory service if API call fails
+            var currentTaxRate = await GetCurrentTaxRateAsync();
+
             // Get the current user's roles to determine if they qualify for employee discount
             var user = await _userManager.GetUserAsync(User);
             if (user != null)
             {
                 var userRoles = await _userManager.GetRolesAsync(user);
-                // Recalculate the cart with discount consideration
-                OrderPricing.Recalculate(cart, userRoles);
+                // Recalculate the cart with discount consideration and current tax rate
+                OrderPricing.Recalculate(cart, userRoles, currentTaxRate);
             }
             else
             {
-                // For guests, recalculate without discount
-                OrderPricing.Recalculate(cart);
+                // For guests, recalculate without discount but with current tax rate
+                OrderPricing.Recalculate(cart, userRoles: null, currentTaxRate);
             }
 
             Subtotal = cart.Subtotal;
             DiscountAmount = cart.DiscountAmount;
             Tax = cart.Tax;
             Total = cart.Total;
+        }
+    }
+
+    /// <summary>
+    /// Fetches the current tax rate from the API endpoint using the TaxRateApiClient.
+    /// Falls back to the in-memory service if the API call fails.
+    /// </summary>
+    private async Task<decimal?> GetCurrentTaxRateAsync()
+    {
+        try
+        {
+            // Fetch from the API (authoritative source)
+            var rate = await _taxRateApiClient.GetCurrentRateAsync();
+            Console.WriteLine($"Fetched tax rate from API: {rate}");
+            return rate;
+        }
+        catch (Exception ex)
+        {
+            // Log error and fall back to service
+            Console.WriteLine($"Error fetching tax rate from API: {ex.Message}. Using in-memory service fallback.");
+            return null; // Will fall back to default in Recalculate
         }
     }
 }
