@@ -5,6 +5,7 @@ using BistroGo.Data.Identity;
 using BistroGo.Data.Repositories;
 using BistroGo.Data.Services;
 using BistroGo.Web.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
 
 builder.Services.AddDbContext<BistroGoDBContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -25,6 +27,11 @@ builder.Services.AddScoped<IOrderItemRepository, EfOrderItemRepository>();
 builder.Services.AddScoped<IPickupTimeSlotRepository, EfPickupTimeSlotRepository>();
 builder.Services.AddScoped<IReviewRepository, EfReviewRepository>();
 builder.Services.AddScoped<IExpenseRepository, EfExpenseRepository>();
+
+// Tax rate service: singleton so the in-memory rate persists across requests
+// Uses file-based persistence to survive application restarts
+builder.Services.AddSingleton<ITaxRateService>(provider =>
+    new TaxRateService(provider.GetRequiredService<IWebHostEnvironment>()));
 
 // API Clients
 var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7242/";
@@ -47,6 +54,7 @@ AddApiClient<OrderApiClient>();
 AddApiClient<PickupSlotApiClient>();
 AddApiClient<ReviewApiClient>();
 AddApiClient<ExpenseApiClient>();
+AddApiClient<TaxRateApiClient>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -121,6 +129,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+app.MapControllers();
 app.MapRazorPages()
    .WithStaticAssets();
 

@@ -274,4 +274,122 @@ public class OrderPricingTests
         Assert.Equal(8.00m, order.Tax);
         Assert.Equal(108.00m, order.Total);
     }
+
+    // ============================================================================
+    // DYNAMIC TAX RATE TESTS
+    // ============================================================================
+
+    [Fact]
+    public void Recalculate_WithCustomTaxRate_NinePercent_CalculatesTaxCorrectly()
+    {
+        var order = OrderWith(new OrderItem { Quantity = 1, UnitPrice = 100.00m });
+
+        // Use 9% tax rate
+        OrderPricing.Recalculate(order, userRoles: null, taxRate: 0.09m);
+
+        Assert.Equal(100.00m, order.Subtotal);
+        Assert.Equal(0m, order.DiscountAmount);
+        Assert.Equal(9.00m, order.Tax);       // 100 * 0.09
+        Assert.Equal(109.00m, order.Total);
+    }
+
+    [Fact]
+    public void Recalculate_WithCustomTaxRate_ZeroPercent_NoTax()
+    {
+        var order = OrderWith(new OrderItem { Quantity = 1, UnitPrice = 100.00m });
+
+        // Use 0% tax rate
+        OrderPricing.Recalculate(order, userRoles: null, taxRate: 0.00m);
+
+        Assert.Equal(100.00m, order.Subtotal);
+        Assert.Equal(0m, order.DiscountAmount);
+        Assert.Equal(0m, order.Tax);
+        Assert.Equal(100.00m, order.Total);
+    }
+
+    [Fact]
+    public void Recalculate_WithCustomTaxRate_MaximumTwentyPercent()
+    {
+        var order = OrderWith(new OrderItem { Quantity = 1, UnitPrice = 100.00m });
+
+        // Use 20% tax rate (maximum allowed)
+        OrderPricing.Recalculate(order, userRoles: null, taxRate: 0.20m);
+
+        Assert.Equal(100.00m, order.Subtotal);
+        Assert.Equal(0m, order.DiscountAmount);
+        Assert.Equal(20.00m, order.Tax);      // 100 * 0.20
+        Assert.Equal(120.00m, order.Total);
+    }
+
+    [Fact]
+    public void Recalculate_WithNullTaxRate_UsesDefault()
+    {
+        var order = OrderWith(new OrderItem { Quantity = 1, UnitPrice = 100.00m });
+
+        // Pass null for tax rate; should use default from PricingConstants (8%)
+        OrderPricing.Recalculate(order, userRoles: null, taxRate: null);
+
+        Assert.Equal(100.00m, order.Subtotal);
+        Assert.Equal(0m, order.DiscountAmount);
+        Assert.Equal(8.00m, order.Tax);
+        Assert.Equal(108.00m, order.Total);
+    }
+
+    [Fact]
+    public void Recalculate_WithDiscountAndCustomTaxRate()
+    {
+        var order = OrderWith(new OrderItem { Quantity = 1, UnitPrice = 100.00m });
+        var roles = new[] { RoleNames.KitchenStaff };
+
+        // Use 9% tax rate with employee discount
+        OrderPricing.Recalculate(order, roles, taxRate: 0.09m);
+
+        Assert.Equal(100.00m, order.Subtotal);
+        Assert.Equal(20.00m, order.DiscountAmount);
+        // Tax should be calculated on discounted subtotal: 80 * 0.09 = 7.20
+        Assert.Equal(7.20m, order.Tax);
+        Assert.Equal(87.20m, order.Total);
+    }
+
+    [Fact]
+    public void Recalculate_DifferentTaxRates_ProduceDifferentResults()
+    {
+        // Same subtotal, different tax rates should produce different totals
+        var order1 = OrderWith(new OrderItem { Quantity = 1, UnitPrice = 50.00m });
+        var order2 = OrderWith(new OrderItem { Quantity = 1, UnitPrice = 50.00m });
+        var order3 = OrderWith(new OrderItem { Quantity = 1, UnitPrice = 50.00m });
+
+        OrderPricing.Recalculate(order1, userRoles: null, taxRate: 0.08m);  // 8%
+        OrderPricing.Recalculate(order2, userRoles: null, taxRate: 0.10m);  // 10%
+        OrderPricing.Recalculate(order3, userRoles: null, taxRate: 0.12m);  // 12%
+
+        Assert.Equal(50.00m, order1.Subtotal);
+        Assert.Equal(50.00m, order2.Subtotal);
+        Assert.Equal(50.00m, order3.Subtotal);
+
+        Assert.Equal(4.00m, order1.Tax);
+        Assert.Equal(5.00m, order2.Tax);
+        Assert.Equal(6.00m, order3.Tax);
+
+        Assert.Equal(54.00m, order1.Total);
+        Assert.Equal(55.00m, order2.Total);
+        Assert.Equal(56.00m, order3.Total);
+    }
+
+    [Fact]
+    public void Recalculate_WithMultipleItems_AndDifferentTaxRate()
+    {
+        var order = OrderWith(
+            new OrderItem { Quantity = 2, UnitPrice = 25.00m },
+            new OrderItem { Quantity = 1, UnitPrice = 50.00m });
+
+        // Use 11% tax rate
+        OrderPricing.Recalculate(order, userRoles: null, taxRate: 0.11m);
+
+        Assert.Equal(100.00m, order.Subtotal);
+        Assert.Equal(0m, order.DiscountAmount);
+        // Tax: 100 * 0.11 = 11.00
+        Assert.Equal(11.00m, order.Tax);
+        Assert.Equal(111.00m, order.Total);
+    }
 }
