@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BistroGo.Core.Enumerations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using BistroGo.Data.Identity;
