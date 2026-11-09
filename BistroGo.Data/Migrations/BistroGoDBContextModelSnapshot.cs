@@ -478,7 +478,9 @@ namespace BistroGo.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("SlotDate", "StartTime")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_PickupTimeSlots_SlotDate_StartTime_Active")
+                        .HasFilter("\"IsArchived\" = 0");
 
                     b.ToTable("PickupTimeSlots", t =>
                         {

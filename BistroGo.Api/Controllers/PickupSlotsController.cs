@@ -1,6 +1,8 @@
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using Microsoft.AspNetCore.Mvc;
+using BistroGo.Api.Contracts;
+using BistroGo.Core.Enumerations;
 
 namespace BistroGo.Api.Controllers
 {
@@ -13,10 +15,12 @@ namespace BistroGo.Api.Controllers
     public class PickupSlotsController : ControllerBase
     {
         private readonly IPickupTimeSlotRepository _repository;
+        private readonly IPickupSlotService _service;
 
-        public PickupSlotsController(IPickupTimeSlotRepository repository)
+        public PickupSlotsController(IPickupTimeSlotRepository repository, IPickupSlotService service)
         {
             _repository = repository;
+            _service = service;
         }
 
         /// <summary>Retrieves all active pickup slots, optionally filtered by date.</summary>
@@ -49,8 +53,19 @@ namespace BistroGo.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<PickupTimeSlot>> Post([FromBody] PickupTimeSlot slot)
         {
-            var created = await _repository.AddAsync(slot);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            var outcome = await _service.CreateAsync(slot);
+
+            return outcome.Result switch
+            {
+                CreateSlotResult.Created =>
+                    CreatedAtAction(nameof(GetById), new { id = outcome.Slot!.Id }, outcome.Slot),
+                CreateSlotResult.Duplicate =>
+                    Conflict(new ProblemDetails { Title = "A slot already exists for that date and start time.", Status = StatusCodes.Status409Conflict }),
+                CreateSlotResult.DateInPast => BadRequestProblem("Slots can't be created for a date in the past."),
+                CreateSlotResult.EndNotAfterStart => BadRequestProblem("The end time must be after the start time."),
+                CreateSlotResult.InvalidCapacity => BadRequestProblem("Max orders must be at least 1."),
+                _ => throw new InvalidOperationException($"Unhandled result: {outcome.Result}.")
+            };
         }
 
         /// <summary>Updates an existing pickup time slot.</summary>
@@ -77,5 +92,35 @@ namespace BistroGo.Api.Controllers
             }
             return NoContent();
         }
+
+        /// <summary>Slots a customer can still book on a date (default today), with spots remaining.</summary>
+        [HttpGet("available")]
+        public async Task<ActionResult<IEnumerable<AvailableSlotResponse>>> GetAvailable([FromQuery] DateOnly? date = null)
+        {
+            var available = await _service.GetAvailableAsync(date);
+
+            return Ok(available.Select(a => new AvailableSlotResponse(
+                a.Slot.Id, a.Slot.SlotDate, a.Slot.StartTime, a.Slot.EndTime, a.Slot.MaxOrders, a.Remaining)));
+        }
+
+        /// <summary>Creates a day's slots in one request. Slots that already exist are skipped.</summary>
+        [HttpPost("bulk")]
+        public async Task<ActionResult<BulkSlotsResponse>> PostBulk([FromBody] BulkSlotRequest request)
+        {
+            var outcome = await _service.CreateDayAsync(request);
+
+            return outcome.Result switch
+            {
+                BulkSlotResult.Created => Ok(new BulkSlotsResponse(outcome.Created.Count, outcome.Skipped, outcome.Created)),
+                BulkSlotResult.DateInPast => BadRequestProblem("Slots can't be created for a date in the past."),
+                BulkSlotResult.InvalidHours => BadRequestProblem("Closing time must be after opening time."),
+                BulkSlotResult.InvalidSlotLength => BadRequestProblem("Slot length must be between 5 and 240 minutes."),
+                BulkSlotResult.InvalidCapacity => BadRequestProblem("Max orders must be at least 1."),
+                _ => throw new InvalidOperationException($"Unhandled result: {outcome.Result}.")
+            };
+        }
+
+        private BadRequestObjectResult BadRequestProblem(string title) =>
+            BadRequest(new ProblemDetails { Title = title, Status = StatusCodes.Status400BadRequest });
     }
 }
