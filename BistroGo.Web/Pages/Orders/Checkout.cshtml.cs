@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using BistroGo.Core.Pricing;
@@ -54,14 +55,23 @@ public class CheckoutModel : PageModel
     /// TODO: When auth is live, prefer Cart.UserId over guest fields.
     /// </summary>
     [BindProperty]
+    [Required]
+    [MaxLength(100)]
+    [Display(Name = "Name")]
     public string? GuestName { get; set; }
 
     /// <summary>Guest's phone (optional).</summary>
     [BindProperty]
+    [MaxLength(20)]
+    [Phone]
+    [Display(Name = "Phone")]
     public string? GuestPhone { get; set; }
 
     /// <summary>Guest's email (optional).</summary>
     [BindProperty]
+    [MaxLength(256)]
+    [EmailAddress]
+    [Display(Name = "Email")]
     public string? GuestEmail { get; set; }
 
     /// <summary>
@@ -73,6 +83,7 @@ public class CheckoutModel : PageModel
 
     /// <summary>Special instructions for the kitchen (optional).</summary>
     [BindProperty]
+    [Display(Name = "Special Instructions")]
     public string? SpecialInstructions { get; set; }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -91,6 +102,18 @@ public class CheckoutModel : PageModel
             return RedirectToPage("/Menu/Index");
         }
 
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var fullName = $"{user.FirstName} {user.LastName}".Trim();
+                GuestName = string.IsNullOrWhiteSpace(fullName) ? null : fullName;
+                GuestEmail = user.Email;
+                GuestPhone = user.PhoneNumber;
+            }
+        }
+
         return Page();
     }
 
@@ -106,9 +129,8 @@ public class CheckoutModel : PageModel
             return RedirectToPage("/Menu/Index");
         }
 
-        if (string.IsNullOrWhiteSpace(GuestName))
+        if (!ModelState.IsValid)
         {
-            ModelState.AddModelError("", "Please provide a name for the order.");
             return Page();
         }
 
@@ -210,12 +232,19 @@ public class CheckoutModel : PageModel
         if (cart != null)
         {
             // Get the current user's roles to determine if they qualify for employee discount
-            var user = await _userManager.GetUserAsync(User);
-            if (user != null)
+            if (User.Identity?.IsAuthenticated == true)
             {
-                var userRoles = await _userManager.GetRolesAsync(user);
-                // Recalculate the cart with discount consideration
-                OrderPricing.Recalculate(cart, userRoles);
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    var userRoles = await _userManager.GetRolesAsync(user);
+                    // Recalculate the cart with discount consideration
+                    OrderPricing.Recalculate(cart, userRoles);
+                }
+                else
+                {
+                    OrderPricing.Recalculate(cart);
+                }
             }
             else
             {

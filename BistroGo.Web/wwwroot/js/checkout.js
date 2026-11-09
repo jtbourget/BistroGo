@@ -122,11 +122,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Open Modal ──────────────────────────────────────────────
     openModalBtn?.addEventListener('click', function () {
-        // Basic validation before opening
-        if (checkoutForm && !checkoutForm.checkValidity()) {
+        // Form validation before opening
+        if (window.jQuery && $(checkoutForm).length) {
+            if (!$(checkoutForm).valid()) {
+                return;
+            }
+        } else if (checkoutForm && !checkoutForm.checkValidity()) {
             checkoutForm.reportValidity();
             return;
         }
+
         // Set the total in the modal text
         const modalTotalDisplay = document.getElementById('modalTotalDisplay');
         const checkoutTotal = document.getElementById('checkoutTotal');
@@ -134,6 +139,11 @@ document.addEventListener('DOMContentLoaded', function () {
             modalTotalDisplay.textContent = checkoutTotal.textContent;
         }
         confirmModal?.show();
+    });
+
+    checkoutForm?.addEventListener('submit', function (e) {
+        e.preventDefault();
+        openModalBtn?.click();
     });
 
     // ── Submit Order via AJAX ───────────────────────────────────

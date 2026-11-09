@@ -39,6 +39,11 @@ namespace BistroGo.Web.Pages.Account
             [EmailAddress]
             public string Email { get; set; } = string.Empty;
 
+            [MaxLength(20)]
+            [Phone]
+            [Display(Name = "Phone")]
+            public string? Phone { get; set; }
+
             [Required]
             [DataType(DataType.Password)]
             public string Password { get; set; } = string.Empty;
@@ -66,7 +71,8 @@ namespace BistroGo.Web.Pages.Account
                 UserName = Input.Email,
                 Email = Input.Email,
                 FirstName = Input.FirstName,
-                LastName = Input.LastName
+                LastName = Input.LastName,
+                PhoneNumber = Input.Phone
             };
 
             var result = await _userManager.CreateAsync(user, Input.Password);

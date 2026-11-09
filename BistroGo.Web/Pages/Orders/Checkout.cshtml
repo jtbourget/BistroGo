@@ -104,26 +104,31 @@
                     <h3>Your Details</h3>
                 </div>
 
-                <!-- Form doesn't submit normally; JS intercepts it -->
-                <form id="checkoutForm">
+                <form id="checkoutForm" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
                     <div class="mb-3">
-                        <label class="form-label">Name</label>
-                        <input name="guestName" id="guestName" class="form-control" placeholder="e.g. Alice Johnson" required />
+                        <label asp-for="GuestName" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input asp-for="GuestName" class="form-control" placeholder="e.g. Alice Johnson" autocomplete="name" />
+                        <span asp-validation-for="GuestName" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Phone <span class="text-muted small">(optional)</span></label>
-                        <input name="guestPhone" id="guestPhone" type="tel" class="form-control" placeholder="555-0101" />
+                        <label asp-for="GuestEmail" class="form-label">Email <span class="text-muted small">(optional)</span></label>
+                        <input asp-for="GuestEmail" class="form-control" placeholder="you@example.com" autocomplete="email" />
+                        <span asp-validation-for="GuestEmail" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Email <span class="text-muted small">(optional)</span></label>
-                        <input name="guestEmail" id="guestEmail" type="email" class="form-control" placeholder="you@example.com" />
+                        <label asp-for="GuestPhone" class="form-label">Phone <span class="text-muted small">(optional)</span></label>
+                        <input asp-for="GuestPhone" class="form-control" placeholder="555-0101" autocomplete="tel" />
+                        <span asp-validation-for="GuestPhone" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Notes for kitchen <span class="text-muted small">(optional)</span></label>
-                        <textarea name="specialInstructions" id="specialInstructions" class="form-control" rows="2" placeholder="e.g. No onions"></textarea>
+                        <label asp-for="SpecialInstructions" class="form-label">Special Instructions <span class="text-muted small">(optional)</span></label>
+                        <textarea asp-for="SpecialInstructions" class="form-control" rows="2" placeholder="e.g. No onions"></textarea>
+                        <span asp-validation-for="SpecialInstructions" class="text-danger small"></span>
                     </div>
 
                     <!-- Button triggers the modal, doesn't submit directly -->
@@ -168,5 +173,6 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script src="~/js/checkout.js" asp-append-version="true"></script>
 }
