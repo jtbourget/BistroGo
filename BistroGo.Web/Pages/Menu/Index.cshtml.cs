@@ -122,7 +122,7 @@ public class IndexModel : PageModel
                 total = l.UnitPrice * l.Quantity
             }),
             itemCount = lines.Sum(l => l.Quantity),
-            total = cart?.Total ?? 0m
+            subtotal = lines.Sum(l => l.UnitPrice * l.Quantity)
         });
     }
 }

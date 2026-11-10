@@ -86,7 +86,7 @@
             }
 
             if (cartTotal) {
-                cartTotal.textContent = '$' + (data.total ? data.total.toFixed(2) : '0.00');
+                cartTotal.textContent = '$' + (data.subtotal != null ? data.subtotal.toFixed(2) : '0.00');
             }
         }
 
