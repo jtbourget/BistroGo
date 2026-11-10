@@ -24,6 +24,8 @@ builder.Services.AddScoped<ICartService, EfCartService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<IPickupSlotService, PickupSlotService>();
 
 // Tax rate service: singleton so the in-memory rate persists across requests
 // Uses file-based persistence to survive application restarts

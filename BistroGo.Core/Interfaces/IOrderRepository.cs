@@ -1,3 +1,4 @@
+using BistroGo.Core.Enumerations;
 using BistroGo.Core.Models;
 
 namespace BistroGo.Core.Interfaces
@@ -22,6 +23,12 @@ namespace BistroGo.Core.Interfaces
 
         /// <summary>Updates an existing order's metadata and recalculates totals.</summary>
         Task<bool> UpdateAsync(Order order);
+
+        /// <summary>
+        /// Saves a placed order only if its slot still has room, checked inside a
+        /// transaction so two customers can't both take the last spot.
+        /// </summary>
+        Task<SlotSaveResult> UpdateIfSlotHasRoomAsync(Order order, int maxOrders);
 
         /// <summary>Soft-deletes an order by marking IsArchived = true and setting ArchivedAt timestamp.</summary>
         Task<bool> DeleteAsync(int id);

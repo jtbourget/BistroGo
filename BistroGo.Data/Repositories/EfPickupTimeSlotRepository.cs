@@ -69,5 +69,16 @@ namespace BistroGo.Data.Repositories
             await _db.SaveChangesAsync();
             return true;
         }
+
+        public async Task<int> CountBookedOrdersAsync(int slotId)
+        {
+            return await _db.BookedOrders(slotId).CountAsync();
+        }
+
+        public async Task AddRangeAsync(IEnumerable<PickupTimeSlot> slots)
+        {
+            _db.PickupTimeSlots.AddRange(slots);
+            await _db.SaveChangesAsync();
+        }
     }
 }

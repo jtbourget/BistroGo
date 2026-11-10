@@ -1,3 +1,4 @@
+using BistroGo.Core.Enumerations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using BistroGo.Data.DataAccess;
@@ -67,6 +68,9 @@ namespace BistroGo.Data.Repositories
 
             if (existing == null) return false;
 
+            if (!string.IsNullOrEmpty(order.UserId))
+                existing.UserId = order.UserId;
+
             existing.GuestName = order.GuestName;
             existing.GuestPhone = order.GuestPhone;
             existing.GuestEmail = order.GuestEmail;
@@ -76,9 +80,57 @@ namespace BistroGo.Data.Repositories
             existing.FinalizedAt = order.FinalizedAt;
             existing.ConfirmationCode = order.ConfirmationCode;
 
-            OrderPricing.Recalculate(existing);
+            if (order.Items != null && order.Items.Any())
+            {
+                foreach (var item in order.Items)
+                {
+                    var existingItem = existing.Items.FirstOrDefault(i => (item.Id != 0 && i.Id == item.Id) || (item.MenuItemId != 0 && i.MenuItemId == item.MenuItemId));
+                    if (existingItem != null)
+                    {
+                        existingItem.SpecialInstructions = item.SpecialInstructions;
+                        existingItem.Quantity = item.Quantity;
+                        existingItem.UnitPrice = item.UnitPrice;
+                    }
+                }
+            }
+
+            if (order.DiscountAmount > 0)
+            {
+                existing.DiscountAmount = order.DiscountAmount;
+                var discountedSubtotal = Math.Round(existing.Subtotal - existing.DiscountAmount, 2);
+                existing.Tax = Math.Round(discountedSubtotal * PricingConstants.TaxRate, 2);
+                existing.Total = Math.Round(discountedSubtotal + existing.Tax, 2);
+            }
+            else
+            {
+                OrderPricing.Recalculate(existing);
+            }
             await _db.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<SlotSaveResult> UpdateIfSlotHasRoomAsync(Order order, int maxOrders)
+        {
+            // Starting the transaction takes SQLite's write lock, so a second customer
+            // placing an order waits here until this one commits or rolls back.
+            await using var tx = await _db.Database.BeginTransactionAsync();
+
+            if (!await UpdateAsync(order))
+            {
+                return SlotSaveResult.OrderNotFound;   // leaving the method rolls back
+            }
+
+            // This count already includes the order we just saved.
+            var booked = await _db.BookedOrders(order.PickupSlotId!.Value).CountAsync();
+            if (booked > maxOrders)
+            {
+                await tx.RollbackAsync();
+                _db.ChangeTracker.Clear();   // forget the in-memory "finalized" copy
+                return SlotSaveResult.SlotFull;
+            }
+
+            await tx.CommitAsync();
+            return SlotSaveResult.Saved;
         }
 
         public async Task<bool> DeleteAsync(int id)

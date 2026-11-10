@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model BistroGo.Web.Pages.Orders.CheckoutModel
 @{
     ViewData["Title"] = "Checkout";
@@ -108,22 +108,42 @@
                 <form id="checkoutForm">
                     <div class="mb-3">
                         <label class="form-label">Name</label>
-                        <input name="guestName" id="guestName" class="form-control" placeholder="e.g. Alice Johnson" required />
+                        <input name="guestName" id="guestName" class="form-control" value="@Model.GuestName" placeholder="e.g. Alice Johnson" required />
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Phone <span class="text-muted small">(optional)</span></label>
-                        <input name="guestPhone" id="guestPhone" type="tel" class="form-control" placeholder="555-0101" />
+                        <input name="guestPhone" id="guestPhone" type="tel" class="form-control" value="@Model.GuestPhone" placeholder="555-0101" />
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Email <span class="text-muted small">(optional)</span></label>
-                        <input name="guestEmail" id="guestEmail" type="email" class="form-control" placeholder="you@example.com" />
+                        <input name="guestEmail" id="guestEmail" type="email" class="form-control" value="@Model.GuestEmail" placeholder="you@example.com" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Pickup Time Slot</label>
+                        @if (Model.AvailableSlots.Any())
+                        {
+                            <select name="pickupSlotId" id="pickupSlotId" class="form-select">
+                                @foreach (var slot in Model.AvailableSlots)
+                                {
+                                    <option value="@slot.Id" selected="@(Model.PickupSlotId == slot.Id)">
+                                        @slot.StartTime.ToString("h:mm tt") - @slot.EndTime.ToString("h:mm tt") (@slot.SlotDate.ToString("MMM d"))
+                                    </option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <input type="hidden" name="pickupSlotId" id="pickupSlotId" value="@(Model.PickupSlotId ?? 1)" />
+                            <p class="text-muted small mb-0">Standard Immediate Pickup</p>
+                        }
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Notes for kitchen <span class="text-muted small">(optional)</span></label>
-                        <textarea name="specialInstructions" id="specialInstructions" class="form-control" rows="2" placeholder="e.g. No onions"></textarea>
+                        <textarea name="specialInstructions" id="specialInstructions" class="form-control" rows="2" placeholder="e.g. No onions">@Model.SpecialInstructions</textarea>
                     </div>
 
                     <!-- Button triggers the modal, doesn't submit directly -->
