@@ -13,74 +13,51 @@
         <p class="lead mb-4" style="color: #7a6a58;">
             Fresh ingredients, warm atmosphere, and your favorites ready to order.
         </p>
-        <a asp-page="/Menu/Index" class="btn btn-primary btn-lg px-4 py-2">
-            🍴 Explore the Menu
+        <a asp-page="/Reviews/Index" class="btn btn-primary btn-lg px-4 py-2">
+            ⭐ Check out some Reviews!
         </a>
     </div>
     <div class="home-hero-image">
-        <!-- TODO: Replace with a real image from the Api or static assets -->
         <span class="home-hero-image-placeholder">🍽️</span>
     </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     QUICK ACTIONS
+     OUR STORY SECTION
      ═══════════════════════════════════════════════════════════════ -->
+<div class="row mt-5 align-items-center">
+    <div class="col-md-6">
+        <h2 class="mb-3">Our Story</h2>
+        <p class="text-muted mb-3">
+            BistroGo started with a simple idea: great food should be fast, fresh, and accessible to everyone.
+            We source our ingredients locally every morning to ensure that every dish we serve is of the highest quality.
+        </p>
+        <p class="text-muted mb-3">
+            Whether you're grabbing a quick bite on your lunch break or settling in for a cozy dinner,
+            our kitchen staff is dedicated to making your experience memorable.
+        </p>
+        <div class="d-flex gap-3 mt-4">
 <div>
-    <h3>Quick Actions</h3>
-    <div class="row g-3 mt-1">
-        <div class="@(User.Identity?.IsAuthenticated != true || !User.IsInRole(Roles.KitchenStaff) ? "col-md-4" : "col-md-6")">
-            <a asp-page="/Menu/Index" class="quick-action-card">
-                <span class="quick-action-icon">🍴</span>
-                <span class="quick-action-label">Browse Menu</span>
-                <span class="quick-action-desc">See everything we're serving today</span>
-            </a>
+                <h3 class="card-price mb-0">100%</h3>
+                <span class="text-muted small">Fresh Ingredients</span>
         </div>
-        <div class="@(User.Identity?.IsAuthenticated != true || !User.IsInRole(Roles.KitchenStaff) ? "col-md-4" : "col-md-6")">
-            <button type="button" class="quick-action-card" data-bs-toggle="modal" data-bs-target="#currentOrderModal">
-                <span class="quick-action-icon">🛒</span>
-                <span class="quick-action-label">Current Order</span>
-                <span class="quick-action-desc">Review what's in your cart</span>
-            </button>
+            <div class="border-start mx-2"></div>
+            <div>
+                <h3 class="card-price mb-0">🌿</h3>
+                <span class="text-muted small">Locally Sourced</span>
         </div>
-        @* Reviews action is visible to everyone except KitchenStaff *@
-        @if (User.Identity?.IsAuthenticated != true || !User.IsInRole(Roles.KitchenStaff))
-        {
-            <div class="col-md-4">
-                <a asp-page="/Reviews/Index" class="quick-action-card">
-                    <span class="quick-action-icon">⭐</span>
-                    <span class="quick-action-label">Reviews</span>
-                    <span class="quick-action-desc">@(User.IsInRole(Roles.Manager) ? "View feedback and responses" : "Leave ratings and feedback")</span>
-                </a>
+            <div class="border-start mx-2"></div>
+            <div>
+                <h3 class="card-price mb-0">👨‍🍳</h3>
+                <span class="text-muted small">Expert Chefs</span>
             </div>
-        }
     </div>
 </div>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     POPULAR NOW
-     ═══════════════════════════════════════════════════════════════ -->
-<div class="mt-5">
-    <h3>Popular Now!</h3>
-
-    <!-- TODO: Replace the static cards below with a @@foreach over real data
-         from the Api (e.g., GET /api/menuitems/popular).
-         Card structure stays the same — only the data source changes. -->
-    <div class="popular-slider mt-3">
-
-        <!-- TODO: @@foreach (var item in Model.PopularItems) { ... } -->
-
-        <div class="popular-card">
-            <div class="popular-card-image">
-                <span class="popular-card-image-placeholder">[img]</span>
+    <div class="col-md-6 text-center">
+        <!-- The main image container -->
+        <div class="story-image-container">
+            <img src="https://images.unsplash.com/photo-1790206391881-5600457b116f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D" />
             </div>
-            <div class="popular-card-info">
-                <span class="popular-card-name">Margherita Pizza</span>
-                <div class="popular-card-bottom">
-                    <span class="card-price">$14.00</span>
-                    <button type="button" class="btn btn-sm btn-add-to-order">
-                        <span class="plus">+</span>Add
-                    </button>
                 </div>
             </div>
         </div>
