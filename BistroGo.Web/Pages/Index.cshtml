@@ -37,89 +37,81 @@
             our kitchen staff is dedicated to making your experience memorable.
         </p>
         <div class="d-flex gap-3 mt-4">
-<div>
+            <div>
                 <h3 class="card-price mb-0">100%</h3>
                 <span class="text-muted small">Fresh Ingredients</span>
-        </div>
+            </div>
             <div class="border-start mx-2"></div>
             <div>
                 <h3 class="card-price mb-0">🌿</h3>
                 <span class="text-muted small">Locally Sourced</span>
-        </div>
+            </div>
             <div class="border-start mx-2"></div>
             <div>
                 <h3 class="card-price mb-0">👨‍🍳</h3>
                 <span class="text-muted small">Expert Chefs</span>
             </div>
+        </div>
     </div>
-</div>
     <div class="col-md-6 text-center">
         <!-- The main image container -->
         <div class="story-image-container">
             <img src="https://images.unsplash.com/photo-1790206391881-5600457b116f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D" />
-            </div>
-                </div>
-            </div>
         </div>
+    </div>
+</div>
 
-        <div class="popular-card">
-            <div class="popular-card-image">
-                <span class="popular-card-image-placeholder">[img]</span>
-            </div>
-            <div class="popular-card-info">
-                <span class="popular-card-name">Grilled Salmon</span>
-                <div class="popular-card-bottom">
-                    <span class="card-price">$22.00</span>
-                    <button type="button" class="btn btn-sm btn-add-to-order">
-                        <span class="plus">+</span>Add
-                    </button>
-                </div>
+<!-- ═══════════════════════════════════════════════════════════════
+     FEATURES / WHAT WE OFFER
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="mt-5 pt-4">
+    <h2 class="text-center mb-4">Why Choose BistroGo?</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <div class="display-5 mb-3">⚡</div>
+                <h5 class="card-title">Fast Service</h5>
+                <p class="text-muted small mb-0">Skip the line and order ahead. Your food will be hot and ready exactly when you need it.</p>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <div class="display-5 mb-3">🌱</div>
+                <h5 class="card-title">Dietary Options</h5>
+                <p class="text-muted small mb-0">From vegan to gluten-free, we have delicious options for every lifestyle and preference.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <div class="display-5 mb-3">❤️</div>
+                <h5 class="card-title">Made Fresh</h5>
+                <p class="text-muted small mb-0">Every dish is crafted fresh daily, and cooked to order. Ensuring the best taste and quality for our customers.</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <div class="popular-card">
-            <div class="popular-card-image">
-                <span class="popular-card-image-placeholder">[img]</span>
-            </div>
-            <div class="popular-card-info">
-                <span class="popular-card-name">Ribeye Steak</span>
-                <div class="popular-card-bottom">
-                    <span class="card-price">$28.00</span>
-                    <button type="button" class="btn btn-sm btn-add-to-order">
-                        <span class="plus">+</span>Add
-                    </button>
-                </div>
-            </div>
-        </div>
+<!-- ═══════════════════════════════════════════════════════════════
+     CALL TO ACTION
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="mt-5 p-5 text-center" style="background: linear-gradient(135deg, #fdfaf6 0%, #f5e6d3 100%); border-radius: 14px; border: 1px solid #e8d9c5;">
+    <h2 class="mb-3">Hungry Yet?</h2>
+    <p class="text-muted mb-4">Browse our menu and start building your perfect meal today.</p>
+    <a asp-page="/Menu/Index" class="btn btn-primary btn-lg px-5">
+        View Menu
+    </a>
+</div>
 
-        <div class="popular-card">
-            <div class="popular-card-image">
-                <span class="popular-card-image-placeholder">[img]</span>
-            </div>
-            <div class="popular-card-info">
-                <span class="popular-card-name">Tiramisu</span>
-                <div class="popular-card-bottom">
-                    <span class="card-price">$9.00</span>
-                    <button type="button" class="btn btn-sm btn-add-to-order">
-                        <span class="plus">+</span>Add
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="popular-card">
-            <div class="popular-card-image">
-                <span class="popular-card-image-placeholder">[img]</span>
-            </div>
-            <div class="popular-card-info">
-                <span class="popular-card-name">Bruschetta</span>
-                <div class="popular-card-bottom">
-                    <span class="card-price">$8.50</span>
-                    <button type="button" class="btn btn-sm btn-add-to-order">
-                        <span class="plus">+</span>Add
-                    </button>
-                </div>
-            </div>
-        </div>
-     </div>
+<!-- ═══════════════════════════════════════════════════════════════
+     ACCOUNT SHORTCUTS
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="mt-5 pt-3 text-center">
+    <p class="small text-muted">
+        Already have an account?
+        <a asp-page="/Account/Login" class="text-decoration-none" style="color: #b5651d;">Log in</a>
+    </p>
+    <p class="small text-muted">
+        Don't have an account yet?
+         <a asp-page="/Account/Register" class="text-decoration-none" style="color: #b5651d;">Register</a>
+    </p>
 </div>
