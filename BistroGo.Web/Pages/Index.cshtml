@@ -1,22 +1,21 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Welcome";
 }
 
 <!-- ═══════════════════════════════════════════════════════════════
-     HEADER
+     HERO SECTION
      ═══════════════════════════════════════════════════════════════ -->
-     <div class="page-header">
-    <h1>🏠 Home</h1>
-    <span class="text-muted">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
-</div>
-<!-- TODO: Text and image are hardcoded for now.
-     Later, this could pull from settings or a featured promo from the Api. -->
 <div class="home-hero">
     <div class="home-hero-text">
-        <h1>Welcome to BistroGo</h1>
-        <p>Fresh ingredients, warm atmosphere, and your favorites ready to order.</p>
+        <h1 class="display-4 fw-bold mb-3">Welcome to BistroGo</h1>
+        <p class="lead mb-4" style="color: #7a6a58;">
+            Fresh ingredients, warm atmosphere, and your favorites ready to order.
+        </p>
+        <a asp-page="/Menu/Index" class="btn btn-primary btn-lg px-4 py-2">
+            🍴 Explore the Menu
+        </a>
     </div>
     <div class="home-hero-image">
         <!-- TODO: Replace with a real image from the Api or static assets -->
