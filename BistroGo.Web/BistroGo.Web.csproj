@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Pages\Manage\" />
     <Folder Include="Pages\Stores\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>

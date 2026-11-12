@@ -12,10 +12,24 @@ namespace BistroGo.Core.Pricing
         /// <summary>
         /// Recalculates Subtotal, Tax and Total from the order's active (non-archived) lines.
         /// An order with no active lines gets totals of zero.
+        /// Uses the default tax rate from PricingConstants.
         /// </summary>
         public static void Recalculate(Order order)
         {
-            Recalculate(order, userRoles: null);
+            Recalculate(order, userRoles: null, taxRate: null);
+        }
+
+        /// <summary>
+        /// Recalculates Subtotal, Tax and Total from the order's active (non-archived) lines.
+        /// Applies employee discount if the user has a qualifying role (KitchenStaff or Manager).
+        /// An order with no active lines gets totals of zero.
+        /// Uses the default tax rate from PricingConstants.
+        /// </summary>
+        /// <param name="order">The order to recalculate.</param>
+        /// <param name="userRoles">The user's roles (from UserManager.GetRolesAsync). If null, no discount applied.</param>
+        public static void Recalculate(Order order, IEnumerable<string>? userRoles)
+        {
+            Recalculate(order, userRoles, taxRate: null);
         }
 
         /// <summary>
@@ -25,8 +39,12 @@ namespace BistroGo.Core.Pricing
         /// </summary>
         /// <param name="order">The order to recalculate.</param>
         /// <param name="userRoles">The user's roles (from UserManager.GetRolesAsync). If null, no discount applied.</param>
-        public static void Recalculate(Order order, IEnumerable<string>? userRoles)
+        /// <param name="taxRate">The tax rate to apply as a decimal (e.g., 0.08 for 8%). If null, uses PricingConstants.TaxRate.</param>
+        public static void Recalculate(Order order, IEnumerable<string>? userRoles, decimal? taxRate)
         {
+            // Use provided tax rate or fall back to default
+            var effectiveTaxRate = taxRate ?? PricingConstants.TaxRate;
+
             // Calculate base subtotal from active items
             var baseSubtotal = (order.Items ?? new List<OrderItem>())
                 .Where(i => !i.IsArchived)
@@ -48,7 +66,7 @@ namespace BistroGo.Core.Pricing
             // Set order values
             order.Subtotal = baseSubtotal;
             order.DiscountAmount = discountAmount;
-            order.Tax = Math.Round(discountedSubtotal * PricingConstants.TaxRate, 2);
+            order.Tax = Math.Round(discountedSubtotal * effectiveTaxRate, 2);
             order.Total = discountedSubtotal + order.Tax;
         }
 
