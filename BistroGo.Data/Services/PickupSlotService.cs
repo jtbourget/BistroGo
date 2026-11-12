@@ -1,6 +1,8 @@
 ﻿using BistroGo.Core.Enumerations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using BistroGo.Core.Scheduling;
+using Microsoft.Extensions.Options;
 
 namespace BistroGo.Data.Services
 {
@@ -8,11 +10,13 @@ namespace BistroGo.Data.Services
     {
         private readonly IPickupTimeSlotRepository _slots;
         private readonly TimeProvider _time;
+        private readonly TimeSpan _leadTime;
 
-        public PickupSlotService(IPickupTimeSlotRepository slots, TimeProvider time)
+        public PickupSlotService(IPickupTimeSlotRepository slots, TimeProvider time, IOptions<PickupSlotOptions> options)
         {
             _slots = slots;
             _time = time;
+            _leadTime = TimeSpan.FromMinutes(options.Value.LeadTimeMinutes);
         }
 
         // "Today" comes from the injected clock (not DateTime.Now) so tests can control it.
@@ -95,14 +99,13 @@ namespace BistroGo.Data.Services
 
             if (day < today) return Array.Empty<SlotAvailability>();
 
-            // Move _time.GetLocalNow().DateTime as parameter in FromDateTime method?
-            var timeNow = TimeOnly.FromDateTime(now);
             var available = new List<SlotAvailability>();
 
             // GetByDateAsync already leaves out archived slots (the DbContext's query filter).
             foreach (var slot in await _slots.GetByDateAsync(day))
             {
-                if (day == today && slot.StartTime <= timeNow) continue;   // already started
+                // Same rule order placement will use (step 4), so the list and the check can't disagree.
+                if (!PickupSlotRules.IsBookable(slot, now, _leadTime)) continue;
 
                 var remaining = slot.MaxOrders - await _slots.CountBookedOrdersAsync(slot.Id);
                 if (remaining > 0) available.Add(new SlotAvailability(slot, remaining));

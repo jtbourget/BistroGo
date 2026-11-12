@@ -1,7 +1,9 @@
 ﻿using BistroGo.Core.Enumerations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using BistroGo.Core.Scheduling;
 using BistroGo.Data.Services;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 
 namespace BistroGo.Tests;
@@ -30,7 +32,7 @@ public class PickupSlotServiceTests
         _slots.AddAsync(Arg.Any<PickupTimeSlot>()).Returns(call => call.Arg<PickupTimeSlot>());
 
         var clock = new FixedTimeProvider(new DateTimeOffset(2026, 11, 4, 12, 0, 0, TimeSpan.Zero));
-        _service = new PickupSlotService(_slots, clock);
+        _service = new PickupSlotService(_slots, clock, Options.Create(new PickupSlotOptions { LeadTimeMinutes = 15 }));
     }
 
     private static PickupTimeSlot Slot(DateOnly date, int startHour = 12, int endHour = 13, int max = 5) => new()
@@ -39,6 +41,14 @@ public class PickupSlotServiceTests
         StartTime = new TimeOnly(startHour, 0),
         EndTime = new TimeOnly(endHour, 0),
         MaxOrders = max
+    };
+
+    private static PickupTimeSlot SlotAt(DateOnly date, int hour, int minute) => new()
+    {
+        SlotDate = date,
+        StartTime = new TimeOnly(hour, minute),
+        EndTime = new TimeOnly(hour, minute).AddMinutes(30),
+        MaxOrders = 5
     };
 
     private static BulkSlotRequest Day(string opens, string closes, int minutes = 30, int max = 10, DateOnly? date = null) =>
@@ -246,5 +256,40 @@ public class PickupSlotServiceTests
 
         Assert.Single(result);
         await _slots.Received(1).GetByDateAsync(Today);
+    }
+
+    [Fact]
+    public async Task GetAvailable_Today_HidesSlotsInsideTheLeadTime()
+    {
+        // Clock says 12:00; lead time is 15 minutes.
+        _slots.GetByDateAsync(Today).Returns(new List<PickupTimeSlot>
+    {
+        SlotAt(Today, 12, 10),   // only 10 minutes away: hidden
+        SlotAt(Today, 12, 15),   // exactly 15 minutes away: still bookable
+        SlotAt(Today, 12, 30)
+    });
+
+        var result = await _service.GetAvailableAsync(Today);
+
+        Assert.Equal(
+            new[] { new TimeOnly(12, 15), new TimeOnly(12, 30) },
+            result.Select(a => a.Slot.StartTime));
+    }
+
+    [Fact]
+    public async Task GetAvailable_UsesTheConfiguredLeadTime()
+    {
+        var clock = new FixedTimeProvider(new DateTimeOffset(2026, 11, 4, 12, 0, 0, TimeSpan.Zero));
+        var service = new PickupSlotService(_slots, clock, Options.Create(new PickupSlotOptions { LeadTimeMinutes = 60 }));
+        _slots.GetByDateAsync(Today).Returns(new List<PickupTimeSlot>
+    {
+        SlotAt(Today, 12, 30),   // 30 minutes away: hidden with a 60-minute lead
+        SlotAt(Today, 13, 0)     // exactly 60 minutes away: bookable
+    });
+
+        var result = await service.GetAvailableAsync(Today);
+
+        var only = Assert.Single(result);
+        Assert.Equal(new TimeOnly(13, 0), only.Slot.StartTime);
     }
 }
