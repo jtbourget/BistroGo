@@ -18,8 +18,7 @@ public class CheckoutModel : PageModel
     private readonly IOrderService _orderService;
     private readonly IPickupTimeSlotRepository _pickupRepo;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly ITaxRateService _taxRateService;
-    private readonly TaxRateApiClient _taxRateApiClient;
+    private readonly ITaxRateApiClient _taxRateApi;
 
     
     public CheckoutModel(
@@ -27,17 +26,15 @@ public class CheckoutModel : PageModel
         IOrderRepository orderRepo,
         IOrderService orderService,
         IPickupTimeSlotRepository pickupRepo,
-        ITaxRateService taxRateService, 
-        TaxRateApiClient taxRateApiClient,
+        ITaxRateApiClient taxRateApi,
         UserManager<ApplicationUser> userManager)
     {
         _cart = cart;
         _orderRepo = orderRepo;
         _orderService = orderService;
         _pickupRepo = pickupRepo;
+        _taxRateApi = taxRateApi;
         _userManager = userManager;
-        _taxRateService = taxRateService;
-        _taxRateApiClient = taxRateApiClient;
     }
 
     /// <summary>Cart line items (each is an OrderItem).</summary>
@@ -415,15 +412,15 @@ public class CheckoutModel : PageModel
     {
         try
         {
-            // Fetch from the API (authoritative source)
-            var rate = await _taxRateApiClient.GetCurrentRateAsync();
-            Console.WriteLine($"Fetched tax rate from API: {rate}");
+            // Fetch from the service (authoritative source)
+            var rate = await _taxRateApi.GetCurrentRateAsync();
+            Console.WriteLine($"Fetched tax rate from service: {rate}");
             return rate;
         }
         catch (Exception ex)
         {
             // Log error and fall back to service
-            Console.WriteLine($"Error fetching tax rate from API: {ex.Message}. Using in-memory service fallback.");
+            Console.WriteLine($"Error fetching tax rate from service: {ex.Message}. Using in-memory service fallback.");
             return null; // Will fall back to default in Recalculate
         }
     }

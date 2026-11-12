@@ -49,19 +49,16 @@ namespace BistroGo.Data.Services
         }
 
         /// <summary>
-        /// Retrieves the current active tax rate in a thread-safe manner.
+        /// Retrieves the current active tax rate.
         /// </summary>
         public decimal GetCurrentRate()
         {
-            lock (_lockObject)
-            {
-                return _currentRate;
-            }
+            _currentRate = LoadRateFromFile() ?? _currentRate; // Refresh from file if available
+            return _currentRate;
         }
 
         /// <summary>
         /// Updates the current active tax rate if validation passes.
-        /// Thread-safe for concurrent updates (last-one-wins).
         /// Persists the rate to file after successful update.
         /// </summary>
         /// <param name="rate">The new rate as a decimal (0.00 to 0.20)</param>
@@ -74,10 +71,7 @@ namespace BistroGo.Data.Services
                 return false;
             }
 
-            lock (_lockObject)
-            {
-                _currentRate = rate;
-            }
+            _currentRate = rate;
 
             // Persist to file
             try
@@ -111,6 +105,7 @@ namespace BistroGo.Data.Services
             {
                 if (!File.Exists(_taxRateFilePath))
                 {
+                    Console.WriteLine(_taxRateFilePath);
                     return null;
                 }
 

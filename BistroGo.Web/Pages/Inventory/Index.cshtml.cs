@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using BistroGo.Core.Identity;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using BistroGo.Web.Services;
 
 namespace BistroGo.Web.Pages.Inventory;
 
@@ -12,15 +13,19 @@ public class IndexModel : PageModel
 {
     private readonly IMenuItemRepository _menuItemRepo;
     private readonly IMenuCategoryRepository _categoryRepo;
+    private readonly ITaxRateApiClient _taxRateApi;
 
-    public IndexModel(IMenuItemRepository menuItemRepo, IMenuCategoryRepository categoryRepo)
+    public IndexModel(IMenuItemRepository menuItemRepo, IMenuCategoryRepository categoryRepo, ITaxRateApiClient taxRateApi)
     {
         _menuItemRepo = menuItemRepo;
         _categoryRepo = categoryRepo;
+        _taxRateApi = taxRateApi;
     }
 
     public IEnumerable<MenuItem> Items { get; set; } = new List<MenuItem>();
     public IEnumerable<MenuCategory> Categories { get; set; } = new List<MenuCategory>();
+
+    public decimal? CurrentTaxRate { get; set; }
 
     [BindProperty]
     public NewItemInput NewItem { get; set; } = new();
@@ -33,6 +38,11 @@ public class IndexModel : PageModel
 
     [BindProperty]
     public EditCategoryInput EditCategory { get; set; } = new();
+    
+    public class UpdateTaxRateRequest
+    {
+        public decimal Rate { get; set; }
+    }
 
     public async Task OnGetAsync()
     {
@@ -178,6 +188,24 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
+    public async Task<IActionResult> OnPostUpdateTaxRateAsync([FromBody] UpdateTaxRateRequest request)
+    {
+        if (request is null || request.Rate < 0m || request.Rate > 0.20m)
+            return BadRequest(new { error = "Rate must be between 0% and 20%" });
+
+        try
+        {
+            var result = await _taxRateApi.UpdateRateAsync(request.Rate);
+            return new JsonResult(result);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Error updating tax rate: {ex.Message}");
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { error = "Failed to update tax rate" });
+        }
+    }
+
     private async Task LoadDataAsync()
     {
         Categories = (await _categoryRepo.GetAllAsync()).OrderBy(c => c.Name).ToList();
@@ -185,6 +213,12 @@ public class IndexModel : PageModel
             .OrderBy(i => i.Category?.Name ?? "")
             .ThenBy(i => i.Name)
             .ToList();
+
+        try { CurrentTaxRate = await _taxRateApi.GetCurrentRateAsync(); }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Failed to fetch current tax rate: {ex.Message}");
+        }
     }
 
     public class NewItemInput

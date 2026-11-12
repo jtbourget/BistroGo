@@ -1,11 +1,12 @@
 using System.Net.Http.Json;
+using BistroGo.Core.Interfaces;
 
 namespace BistroGo.Web.Services
 {
     /// <summary>
     /// Typed HTTP client for interacting with the Tax Rates API.
     /// </summary>
-    public class TaxRateApiClient
+    public class TaxRateApiClient : ITaxRateApiClient
     {
         private readonly HttpClient _client;
 

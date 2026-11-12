@@ -29,10 +29,6 @@ builder.Services.AddScoped<IPickupTimeSlotRepository, EfPickupTimeSlotRepository
 builder.Services.AddScoped<IReviewRepository, EfReviewRepository>();
 builder.Services.AddScoped<IExpenseRepository, EfExpenseRepository>();
 
-// Tax rate service: singleton so the in-memory rate persists across requests
-// Uses file-based persistence to survive application restarts
-builder.Services.AddSingleton<ITaxRateService>(provider =>
-    new TaxRateService(provider.GetRequiredService<IWebHostEnvironment>()));
 
 // API Clients
 var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7242/";
@@ -48,6 +44,11 @@ void AddApiClient<T>() where T : class =>
         c.BaseAddress = new Uri(apiBaseUrl);
         c.DefaultRequestHeaders.Add(ApiKeyHeader, apiKey);
     });
+builder.Services.AddHttpClient<ITaxRateApiClient, TaxRateApiClient>(c =>
+{
+    c.BaseAddress = new Uri(apiBaseUrl);
+    c.DefaultRequestHeaders.Add(ApiKeyHeader, apiKey);
+});
 
 AddApiClient<CategoryApiClient>();
 AddApiClient<MenuItemApiClient>();
@@ -55,7 +56,6 @@ AddApiClient<OrderApiClient>();
 AddApiClient<PickupSlotApiClient>();
 AddApiClient<ReviewApiClient>();
 AddApiClient<ExpenseApiClient>();
-AddApiClient<TaxRateApiClient>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {

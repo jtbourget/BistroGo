@@ -5,7 +5,7 @@
  */
 
 const TaxRateUpdateManager = (() => {
-    const API_ENDPOINT = '/api/taxrates/update';
+    const API_ENDPOINT = '?handler=UpdateTaxRate';
     const CURRENT_RATE_ENDPOINT = '/api/taxrates/current';
 
     // DOM Elements
@@ -34,8 +34,6 @@ const TaxRateUpdateManager = (() => {
 
         if (!form) return; // Page/modal might not be loaded if user is not manager
 
-        // Load and display current rate
-        displayCurrentRate();
 
         // Attach form submission handler
         form.addEventListener('submit', handleFormSubmit);
@@ -69,37 +67,6 @@ const TaxRateUpdateManager = (() => {
             form.reset();
             hideAllAlerts();
             newRateInput.classList.remove('is-valid', 'is-invalid');
-            displayCurrentRate(); // Refresh current rate display
-        }
-    }
-
-    /**
-     * Fetches and displays the current tax rate from the server.
-     */
-    async function displayCurrentRate() {
-        try {
-            const response = await fetch(CURRENT_RATE_ENDPOINT, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                console.warn('Failed to fetch current rate:', response.status);
-                // Use cached rate from TaxRateManager
-                const cachedRate = TaxRateManager.getCachedTaxRate();
-                currentRateDisplay.value = (cachedRate * 100).toFixed(2);
-                return;
-            }
-
-            const data = await response.json();
-            const ratePercent = (data.rate * 100).toFixed(2);
-            currentRateDisplay.value = ratePercent;
-        } catch (error) {
-            console.error('Error displaying current rate:', error);
-            // Fallback to cached rate
-            const cachedRate = TaxRateManager.getCachedTaxRate();
-            currentRateDisplay.value = (cachedRate * 100).toFixed(2);
         }
     }
 
@@ -187,12 +154,13 @@ const TaxRateUpdateManager = (() => {
         try {
             console.log(`Submitting tax rate update: ${ratePercent}% (${rateDecimal} decimal)`);
 
+            const csrfToken = document.querySelector('#csrfForm input[name="__RequestVerificationToken"]')?.value || '';
             const response = await fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': csrfToken
                 },
-                credentials: 'include',
                 body: JSON.stringify({ rate: rateDecimal })
             });
 
@@ -221,9 +189,6 @@ const TaxRateUpdateManager = (() => {
 
             // Success: Show message and refresh cache
             showSuccess(`Tax rate successfully updated to ${ratePercent.toFixed(2)}%`);
-
-            // Refresh the browser cache
-            await TaxRateManager.fetchTaxRate();
 
             // Update the displayed current rate
             currentRateDisplay.value = ratePercent.toFixed(2);

@@ -1,9 +1,10 @@
-using System.Security.Claims;
 using BistroGo.Core.Enumerations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using BistroGo.Data.Identity;
+using BistroGo.Data.Services;
 using BistroGo.Web.Pages.Orders;
+using BistroGo.Web.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using NSubstitute;
+using System.Security.Claims;
 using Xunit;
 
 namespace BistroGo.Tests;
@@ -21,6 +23,7 @@ public class CheckoutPageModelTests
     private readonly IOrderRepository _orderRepo = Substitute.For<IOrderRepository>();
     private readonly IOrderService _orderService = Substitute.For<IOrderService>();
     private readonly IPickupTimeSlotRepository _pickupRepo = Substitute.For<IPickupTimeSlotRepository>();
+    private readonly ITaxRateApiClient _taxRateApi = Substitute.For<ITaxRateApiClient>();
     private readonly IUserStore<ApplicationUser> _userStore = Substitute.For<IUserStore<ApplicationUser>>();
     private readonly UserManager<ApplicationUser> _userManager;
 
@@ -37,6 +40,7 @@ public class CheckoutPageModelTests
         {
             new() { Id = 1, SlotDate = DateOnly.FromDateTime(DateTime.Today), StartTime = new TimeOnly(12, 0), EndTime = new TimeOnly(13, 0) }
         });
+        _taxRateApi.GetCurrentRateAsync().Returns(0.08m); // 8% tax rate
     }
 
     private static (bool Success, string? Message, int? OrderId) ReadJson(IActionResult result)
@@ -72,7 +76,13 @@ public class CheckoutPageModelTests
             ViewData = viewData
         };
 
-        return new CheckoutModel(_cart, _orderRepo, _orderService, _pickupRepo, _userManager)
+        return new CheckoutModel(
+    _cart,
+    _orderRepo,
+    _orderService,
+    _pickupRepo,
+    _taxRateApi,
+    _userManager)
         {
             PageContext = pageContext,
             TempData = tempData

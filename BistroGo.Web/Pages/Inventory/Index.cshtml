@@ -295,7 +295,7 @@
                             class="form-control form-control-lg" 
                             id="currentRateDisplay" 
                             readonly 
-                            value="Loading..." 
+                               value="@(Model.CurrentTaxRate is { } r ? (r * 100).ToString("0.00") : "Unavailable")"
                             style="font-size: 1.25rem; font-weight: bold;">
                         <span class="input-group-text" style="font-size: 1.25rem; font-weight: bold;">%</span>
                     </div>
