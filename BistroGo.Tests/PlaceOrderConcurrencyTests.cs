@@ -1,11 +1,13 @@
 ﻿using BistroGo.Core.Enumerations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using BistroGo.Core.Scheduling;
 using BistroGo.Data.DataAccess;
 using BistroGo.Data.Repositories;
 using BistroGo.Data.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace BistroGo.Tests;
 
@@ -20,7 +22,9 @@ public class PlaceOrderConcurrencyTests : IDisposable
             .Options);
 
     private static OrderService NewService(BistroGoDBContext db) =>
-        new(new EfOrderRepository(db), new EfPickupTimeSlotRepository(db));
+    new(new EfOrderRepository(db), new EfPickupTimeSlotRepository(db),
+        new FixedTimeProvider(new DateTimeOffset(2026, 11, 5, 9, 0, 0, TimeSpan.Zero)),   // the slot is at noon that day
+        Options.Create(new PickupSlotOptions()));
 
     public void Dispose()
     {

@@ -1,5 +1,6 @@
 using BistroGo.Core.Identity;
 using BistroGo.Core.Interfaces;
+using BistroGo.Core.Scheduling;
 using BistroGo.Data.DataAccess;
 using BistroGo.Data.Identity;
 using BistroGo.Data.Repositories;
@@ -28,6 +29,9 @@ builder.Services.AddScoped<IOrderItemRepository, EfOrderItemRepository>();
 builder.Services.AddScoped<IPickupTimeSlotRepository, EfPickupTimeSlotRepository>();
 builder.Services.AddScoped<IReviewRepository, EfReviewRepository>();
 builder.Services.AddScoped<IExpenseRepository, EfExpenseRepository>();
+// The clock and pickup-slot settings, used by OrderService to check a slot is still bookable.
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.Configure<PickupSlotOptions>(builder.Configuration.GetSection(PickupSlotOptions.SectionName));
 
 // Tax rate service: singleton so the in-memory rate persists across requests
 // Uses file-based persistence to survive application restarts
