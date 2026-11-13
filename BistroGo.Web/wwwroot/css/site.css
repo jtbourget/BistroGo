@@ -724,35 +724,7 @@ body {
         .page-header h1 {
             margin: 0;
         }
-    /* ═══════════════════════════════════════════════════
-   TABLE GRID (Floor plan)
-   ═══════════════════════════════════════════════════ */
-    /* Auto-filling grid for the floor-plan table cards */
-    .table-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 1rem;
-    }
-    /* Individual table card in the floor-plan grid */
-    .table-card {
-        background: #fff;
-        border: 1px solid #e8d9c5;
-        border-radius: 10px;
-        padding: 1rem;
-        text-align: center;
-        box-shadow: 0 2px 6px rgba(74, 44, 23, 0.06);
-    }
-        /* Big table number inside a table card */
-        .table-card .table-number {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #4a2c17;
-        }
-        /* Small capacity label inside a table card */
-        .table-card .table-capacity {
-            color: #7a6a58;
-            font-size: 0.85rem;
-        }
+
     /* ═══════════════════════════════════════════════════
    RESPONSIVE — collapse sidebar on small screens
    ═══════════════════════════════════════════════════ */

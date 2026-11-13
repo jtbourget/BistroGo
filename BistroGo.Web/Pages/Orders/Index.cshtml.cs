@@ -24,8 +24,6 @@ public class IndexModel : PageModel
     public string? StatusFilter { get; set; }
 
     public List<OrderSummaryDto> CurrentOrders { get; set; } = new();
-    public List<TableDto> Tables { get; set; } = new();
-    public List<CustomerDto> Customers { get; set; } = new();
 
     public int AllCount { get; set; }
     public int ReceivedCount { get; set; }
@@ -105,7 +103,7 @@ public class IndexModel : PageModel
                 CustomerName = customerName,
                 CustomerPhone = o.GuestPhone,
                 CustomerEmail = o.GuestEmail,
-                TableNumber = o.PickupSlotId ?? 1,
+                PickupSlotId = o.PickupSlotId,
                 PlacedAt = o.FinalizedAt ?? o.CreatedAt,
                 Status = o.Status?.Name ?? "Received",
                 Total = o.Total,
@@ -139,33 +137,6 @@ public class IndexModel : PageModel
         {
             CurrentOrders = summaries;
         }
-
-        Tables = new List<TableDto>
-        {
-            new() { Number = 1,  Status = "Occupied"  },
-            new() { Number = 2,  Status = "Available" },
-            new() { Number = 3,  Status = "Occupied"  },
-            new() { Number = 4,  Status = "Available" },
-            new() { Number = 5,  Status = "Reserved"  },
-            new() { Number = 6,  Status = "Available" },
-            new() { Number = 7,  Status = "Occupied"  },
-            new() { Number = 8,  Status = "Available" },
-            new() { Number = 9,  Status = "Available" },
-            new() { Number = 10, Status = "Available" },
-            new() { Number = 11, Status = "Reserved"  },
-            new() { Number = 12, Status = "Occupied"  },
-        };
-
-        Customers = summaries
-            .Where(s => !string.IsNullOrWhiteSpace(s.CustomerName))
-            .GroupBy(s => s.CustomerName)
-            .Select(g => new CustomerDto
-            {
-                Name = g.Key,
-                Phone = g.FirstOrDefault()?.CustomerPhone ?? "N/A",
-                VisitCount = g.Count()
-            })
-            .ToList();
     }
 
     public class OrderSummaryDto
@@ -174,7 +145,7 @@ public class IndexModel : PageModel
         public string CustomerName { get; set; } = "";
         public string? CustomerPhone { get; set; }
         public string? CustomerEmail { get; set; }
-        public int TableNumber { get; set; }
+        public int? PickupSlotId { get; set; }
         public DateTime PlacedAt { get; set; }
         public string Status { get; set; } = "";
         public decimal Total { get; set; }
@@ -190,18 +161,5 @@ public class IndexModel : PageModel
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public string? SpecialInstructions { get; set; }
-    }
-
-    public class TableDto
-    {
-        public int Number { get; set; }
-        public string Status { get; set; } = "";
-    }
-
-    public class CustomerDto
-    {
-        public string Name { get; set; } = "";
-        public string Phone { get; set; } = "";
-        public int VisitCount { get; set; }
     }
 }

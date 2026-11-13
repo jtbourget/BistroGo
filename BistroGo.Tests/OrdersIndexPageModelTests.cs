@@ -117,7 +117,7 @@ public class OrdersIndexPageModelTests
         Assert.Equal("Bob Smith", orderDto.CustomerName);
         Assert.Equal("Received", orderDto.Status);
         Assert.Equal("BG-ABC123", orderDto.ConfirmationCode);
-        Assert.Equal(2, orderDto.TableNumber);
+        Assert.Equal(2, orderDto.PickupSlotId);
         Assert.Equal(28.00m, orderDto.Total);
 
         // Verify Order Items and Customizations
@@ -221,5 +221,23 @@ public class OrdersIndexPageModelTests
         Assert.Equal(OrderStatusIds.PickedUp, order.StatusId);
         await _orderRepo.Received(1).UpdateAsync(order);
         Assert.IsType<RedirectToPageResult>(result);
+    }
+
+    [Fact]
+    public void IndexModel_TablesAndCustomersViewsAndDtos_AreRemoved()
+    {
+        // Assert that Tables and Customers properties are removed from IndexModel
+        Assert.Null(typeof(IndexModel).GetProperty("Tables"));
+        Assert.Null(typeof(IndexModel).GetProperty("Customers"));
+
+        // Assert that TableDto and CustomerDto nested types are removed
+        Assert.Null(typeof(IndexModel).GetNestedType("TableDto"));
+        Assert.Null(typeof(IndexModel).GetNestedType("CustomerDto"));
+
+        // Assert that OrderSummaryDto does not have TableNumber
+        var orderSummaryType = typeof(IndexModel).GetNestedType("OrderSummaryDto");
+        Assert.NotNull(orderSummaryType);
+        Assert.Null(orderSummaryType.GetProperty("TableNumber"));
+        Assert.NotNull(orderSummaryType.GetProperty("PickupSlotId"));
     }
 }
