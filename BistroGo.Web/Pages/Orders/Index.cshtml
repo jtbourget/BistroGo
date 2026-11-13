@@ -20,9 +20,9 @@
 <div class="row g-4">
 
     <!-- ═══════════════════════════════════════════════════════════
-         COLUMN 1 — CURRENT ORDERS
+         CURRENT ORDERS
          ═══════════════════════════════════════════════════════════ -->
-    <div class="col-lg-5">
+    <div class="col-12">
         <div class="dashboard-panel">
             <div class="dashboard-panel-header d-flex justify-content-between align-items-center mb-2">
                 <h3>Current Orders</h3>
@@ -73,7 +73,7 @@
                                     <span class="thin-card-icon">🧾</span>
                                     <div>
                                         <span class="thin-card-title d-block fs-6">#@order.Id — @order.CustomerName</span>
-                                        <span class="thin-card-sub text-muted">Table @order.TableNumber · @order.PlacedAt.ToString("h:mm tt")</span>
+                                        <span class="thin-card-sub text-muted">@(order.PickupSlotId.HasValue ? $"Pickup Slot #{order.PickupSlotId} · " : "")Placed at @order.PlacedAt.ToString("h:mm tt")</span>
                                         @if (!string.IsNullOrEmpty(order.ConfirmationCode))
                                         {
                                             <span class="badge bg-light text-dark border ms-1 small">@order.ConfirmationCode</span>
@@ -131,73 +131,6 @@
                                     </form>
                                 }
                             </div>
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════
-         COLUMN 2 — TABLES
-         ═══════════════════════════════════════════════════════════ -->
-    <div class="col-lg-3">
-        <div class="dashboard-panel">
-            <div class="dashboard-panel-header">
-                <h3>Tables</h3>
-            </div>
-
-            <div class="dashboard-list">
-                @foreach (var t in Model.Tables)
-                {
-                    var badgeClass = t.Status switch
-                    {
-                        "Available" => "badge-available",
-                        "Occupied" => "badge-occupied",
-                        "Reserved" => "badge-reserved",
-                        _ => "bg-secondary"
-                    };
-                    <div class="thin-card">
-                        <span class="thin-card-icon">🪑</span>
-                        <span class="thin-card-body">
-                            <span class="thin-card-title">Table @t.Number</span>
-                        </span>
-                        <span class="thin-card-meta">
-                            <span class="badge @badgeClass">@t.Status</span>
-                        </span>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════
-         COLUMN 3 — CUSTOMERS
-         ═══════════════════════════════════════════════════════════ -->
-    <div class="col-lg-4">
-        <div class="dashboard-panel">
-            <div class="dashboard-panel-header">
-                <h3>Customers</h3>
-            </div>
-
-            @if (!Model.Customers.Any())
-            {
-                <div class="dashboard-empty">No customers yet.</div>
-            }
-            else
-            {
-                <div class="dashboard-list">
-                    @foreach (var c in Model.Customers)
-                    {
-                        <div class="thin-card">
-                            <span class="thin-card-icon">👤</span>
-                            <span class="thin-card-body">
-                                <span class="thin-card-title">@c.Name</span>
-                                <span class="thin-card-sub">@c.Phone</span>
-                            </span>
-                            <span class="thin-card-meta">
-                                <span class="text-muted small">@c.VisitCount visits</span>
-                            </span>
                         </div>
                     }
                 </div>

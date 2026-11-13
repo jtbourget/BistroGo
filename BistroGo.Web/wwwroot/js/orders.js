@@ -10,20 +10,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const id       = card.getAttribute('data-order-id') || '';
         const customer = card.getAttribute('data-order-customer') || '';
-        const table    = card.getAttribute('data-order-table') || '';
         const status   = card.getAttribute('data-order-status') || '';
         const total    = card.getAttribute('data-order-total') || '0.00';
         const time     = card.getAttribute('data-order-time') || '';
 
         const modalId = modal.querySelector('#orderModalId');
         const modalCustomer = modal.querySelector('#orderModalCustomer');
-        const modalTable = modal.querySelector('#orderModalTable');
         const modalTime = modal.querySelector('#orderModalTime');
         const modalTotal = modal.querySelector('#orderModalTotal');
 
         if (modalId) modalId.textContent = '#' + id;
         if (modalCustomer) modalCustomer.textContent = customer;
-        if (modalTable) modalTable.textContent = 'Table ' + table;
         if (modalTime) modalTime.textContent = time;
         if (modalTotal) modalTotal.textContent = '$' + total;
 
