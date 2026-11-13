@@ -1,9 +1,7 @@
 ﻿using BistroGo.Core.Enumerations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
-using BistroGo.Core.Scheduling;
 using BistroGo.Data.Services;
-using Microsoft.Extensions.Options;
 using NSubstitute;
 
 namespace BistroGo.Tests;
@@ -32,7 +30,7 @@ public class PickupSlotServiceTests
         _slots.AddAsync(Arg.Any<PickupTimeSlot>()).Returns(call => call.Arg<PickupTimeSlot>());
 
         var clock = new FixedTimeProvider(new DateTimeOffset(2026, 11, 4, 12, 0, 0, TimeSpan.Zero));
-        _service = new PickupSlotService(_slots, clock, Options.Create(new PickupSlotOptions { LeadTimeMinutes = 15 }));
+        _service = new PickupSlotService(_slots, clock, TestOptions.Lead());
     }
 
     private static PickupTimeSlot Slot(DateOnly date, int startHour = 12, int endHour = 13, int max = 5) => new()
@@ -280,7 +278,7 @@ public class PickupSlotServiceTests
     public async Task GetAvailable_UsesTheConfiguredLeadTime()
     {
         var clock = new FixedTimeProvider(new DateTimeOffset(2026, 11, 4, 12, 0, 0, TimeSpan.Zero));
-        var service = new PickupSlotService(_slots, clock, Options.Create(new PickupSlotOptions { LeadTimeMinutes = 60 }));
+        var service = new PickupSlotService(_slots, clock, TestOptions.Lead(60));
         _slots.GetByDateAsync(Today).Returns(new List<PickupTimeSlot>
     {
         SlotAt(Today, 12, 30),   // 30 minutes away: hidden with a 60-minute lead

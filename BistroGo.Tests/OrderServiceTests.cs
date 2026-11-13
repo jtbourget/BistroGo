@@ -1,9 +1,7 @@
 ﻿using BistroGo.Core.Enumerations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
-using BistroGo.Core.Scheduling;
 using BistroGo.Data.Services;
-using Microsoft.Extensions.Options;
 using NSubstitute;
 
 namespace BistroGo.Tests;
@@ -23,7 +21,7 @@ public class OrderServiceTests
     {
         // The clock is frozen at noon on Nov 4, 2026, with a 15-minute lead time.
         var clock = new FixedTimeProvider(new DateTimeOffset(2026, 11, 4, 12, 0, 0, TimeSpan.Zero));
-        _service = new OrderService(_repo, _slots, clock, Options.Create(new PickupSlotOptions { LeadTimeMinutes = 15 }));
+        _service = new OrderService(_repo, _slots, clock, TestOptions.Lead());
     }
 
     // By default the slot is tomorrow at noon, comfortably in the future.
