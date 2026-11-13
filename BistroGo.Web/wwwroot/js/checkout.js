@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Disable Place Order if cart becomes empty
                 const openBtn = document.getElementById('openConfirmModalBtn');
-                if (openBtn) openBtn.disabled = !hasLines;
+                if (openBtn) openBtn.disabled = !hasLines || !document.getElementById('pickupSlotId');
             } catch (err) {
                 console.error('[Checkout] Cart update error:', err);
             }
@@ -177,6 +177,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (menuBadge) menuBadge.classList.add('d-none');
             } else {
                 alert(data.message || 'Failed to place order.');
+
+                if (data.refreshSlots) {
+                    window.location.reload();   // show the fresh list of times that can still be booked
+                    return;
+                }
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Place Order';
             }

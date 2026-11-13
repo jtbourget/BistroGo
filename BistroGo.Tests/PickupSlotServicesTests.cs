@@ -290,4 +290,32 @@ public class PickupSlotServiceTests
         var only = Assert.Single(result);
         Assert.Equal(new TimeOnly(13, 0), only.Slot.StartTime);
     }
+
+    [Fact]
+    public async Task GetUpcoming_CombinesTheDaysInOrder()
+    {
+        _slots.GetByDateAsync(Today).Returns(new List<PickupTimeSlot> { SlotAt(Today, 13, 0) });
+        _slots.GetByDateAsync(Tomorrow).Returns(new List<PickupTimeSlot> { SlotAt(Tomorrow, 9, 0) });
+
+        var result = await _service.GetUpcomingAsync(2);
+
+        Assert.Equal(new[] { Today, Tomorrow }, result.Select(a => a.Slot.SlotDate));
+    }
+
+    [Fact]
+    public async Task GetUpcoming_OnlyLooksAsFarAsRequested()
+    {
+        await _service.GetUpcomingAsync(1);
+
+        await _slots.Received(1).GetByDateAsync(Today);
+        await _slots.DidNotReceive().GetByDateAsync(Tomorrow);
+    }
+
+    [Fact]
+    public async Task GetUpcoming_WithZeroDays_ReturnsNothing()
+    {
+        var result = await _service.GetUpcomingAsync(0);
+
+        Assert.Empty(result);
+    }
 }

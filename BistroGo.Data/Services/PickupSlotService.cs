@@ -113,5 +113,13 @@ namespace BistroGo.Data.Services
 
             return available;
         }
+
+        public async Task<IReadOnlyList<SlotAvailability>> GetUpcomingAsync(int days)
+        {
+            var result = new List<SlotAvailability>();
+            for (var i = 0; i < days; i++)
+                result.AddRange(await GetAvailableAsync(Today.AddDays(i)));
+            return result;
+        }
     }
 }

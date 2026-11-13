@@ -16,7 +16,7 @@ public class CheckoutModel : PageModel
     private readonly ICartService _cart;
     private readonly IOrderRepository _orderRepo;
     private readonly IOrderService _orderService;
-    private readonly IPickupTimeSlotRepository _pickupRepo;
+    private readonly IPickupSlotService _slotService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ITaxRateService _taxRateService;
     private readonly TaxRateApiClient _taxRateApiClient;
@@ -26,7 +26,7 @@ public class CheckoutModel : PageModel
         ICartService cart,
         IOrderRepository orderRepo,
         IOrderService orderService,
-        IPickupTimeSlotRepository pickupRepo,
+        IPickupSlotService slotService,
         ITaxRateService taxRateService, 
         TaxRateApiClient taxRateApiClient,
         UserManager<ApplicationUser> userManager)
@@ -34,7 +34,7 @@ public class CheckoutModel : PageModel
         _cart = cart;
         _orderRepo = orderRepo;
         _orderService = orderService;
-        _pickupRepo = pickupRepo;
+        _slotService = slotService;
         _userManager = userManager;
         _taxRateService = taxRateService;
         _taxRateApiClient = taxRateApiClient;
@@ -85,6 +85,7 @@ public class CheckoutModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         await LoadCartAsync();
+        await LoadSlotsAsync();
 
         if (!Lines.Any())
         {
@@ -103,8 +104,6 @@ public class CheckoutModel : PageModel
             }
         }
 
-        var slots = await _pickupRepo.GetAllAsync();
-        AvailableSlots = slots.Where(s => !s.IsArchived).ToList();
         if (AvailableSlots.Any() && PickupSlotId == null)
         {
             PickupSlotId = AvailableSlots.First().Id;
@@ -117,6 +116,7 @@ public class CheckoutModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         await LoadCartAsync();
+        await LoadSlotsAsync();
 
         if (!Lines.Any())
         {
@@ -163,8 +163,6 @@ public class CheckoutModel : PageModel
             if (string.IsNullOrWhiteSpace(GuestName))
             {
                 ModelState.AddModelError("GuestName", "Please provide a name for the order.");
-                var slots = await _pickupRepo.GetAllAsync();
-                AvailableSlots = slots.Where(s => !s.IsArchived).ToList();
                 return Page();
             }
 
@@ -174,8 +172,8 @@ public class CheckoutModel : PageModel
         int? resolvedSlotId = PickupSlotId ?? cart.PickupSlotId;
         if (resolvedSlotId == null)
         {
-            var availableSlot = (await _pickupRepo.GetAllAsync()).FirstOrDefault(s => !s.IsArchived);
-            resolvedSlotId = availableSlot?.Id ?? 1;
+            ModelState.AddModelError("", "Please choose a pickup time.");
+            return Page();
         }
 
         cart.UserId = resolvedUserId;
@@ -225,11 +223,24 @@ public class CheckoutModel : PageModel
             PlaceOrderResult.AlreadyPlaced => "This order has already been placed.",
             PlaceOrderResult.NotFound => "Order was not found.",
             PlaceOrderResult.PickupSlotRequired => "A pickup time slot is required.",
+            PlaceOrderResult.SlotUnavailable => "That pickup time is no longer available. Please choose another.",
+            PlaceOrderResult.SlotFull => "That pickup time just filled up. Please choose another.",
             _ => "Failed to place order."
         };
 
         ModelState.AddModelError("", errorMsg);
+        await LoadSlotsAsync();   // So the list is refreshed after a refusal
         return Page();
+    }
+
+    // -- Helpers --
+    private const int DaysToShow = 2;   // today and tomorrow
+
+    // Fills the slot list from the slot service, so the page only offers times that can still be booked.
+    private async Task LoadSlotsAsync()
+    {
+        var upcoming = await _slotService.GetUpcomingAsync(DaysToShow);
+        AvailableSlots = upcoming.Select(a => a.Slot).ToList();
     }
 
     // ── AJAX handler for the modal submission ──
@@ -275,10 +286,7 @@ public class CheckoutModel : PageModel
 
         int? resolvedSlotId = pickupSlotId ?? PickupSlotId ?? cart.PickupSlotId;
         if (resolvedSlotId == null)
-        {
-            var availableSlot = (await _pickupRepo.GetAllAsync()).FirstOrDefault(s => !s.IsArchived);
-            resolvedSlotId = availableSlot?.Id ?? 1;
-        }
+            return new JsonResult(new { success = false, message = "Please choose a pickup time." });
 
         cart.UserId = resolvedUserId;
         cart.GuestName = finalCustomerName;
@@ -326,10 +334,14 @@ public class CheckoutModel : PageModel
             PlaceOrderResult.AlreadyPlaced => "Order has already been placed.",
             PlaceOrderResult.NotFound => "Order was not found.",
             PlaceOrderResult.PickupSlotRequired => "A pickup time slot is required.",
+            PlaceOrderResult.SlotUnavailable => "That pickup time is no longer available. Please choose another.",
+            PlaceOrderResult.SlotFull => "That pickup time just filled up. Please choose another.",
             _ => "Failed to place order."
         };
 
-        return new JsonResult(new { success = false, message = errorMsg });
+        // Tell the page to reload when the slot was the problem, so the picker shows fresh times.
+        var slotProblem = result is PlaceOrderResult.SlotUnavailable or PlaceOrderResult.SlotFull;
+        return new JsonResult(new { success = false, message = errorMsg, refreshSlots = slotProblem });
     }
 
     // ── AJAX handlers for the inline cart editor on this page ──

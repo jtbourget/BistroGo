@@ -32,6 +32,7 @@ builder.Services.AddScoped<IExpenseRepository, EfExpenseRepository>();
 // The clock and pickup-slot settings, used by OrderService to check a slot is still bookable.
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.Configure<PickupSlotOptions>(builder.Configuration.GetSection(PickupSlotOptions.SectionName));
+builder.Services.AddScoped<IPickupSlotService, PickupSlotService>();
 
 // Tax rate service: singleton so the in-memory rate persists across requests
 // Uses file-based persistence to survive application restarts
