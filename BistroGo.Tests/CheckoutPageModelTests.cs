@@ -4,6 +4,7 @@ using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
 using BistroGo.Data.Identity;
 using BistroGo.Web.Pages.Orders;
+using BistroGo.Web.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +22,8 @@ public class CheckoutPageModelTests
     private readonly IOrderRepository _orderRepo = Substitute.For<IOrderRepository>();
     private readonly IOrderService _orderService = Substitute.For<IOrderService>();
     private readonly IPickupTimeSlotRepository _pickupRepo = Substitute.For<IPickupTimeSlotRepository>();
+    private readonly ITaxRateService _taxRateService = Substitute.For<ITaxRateService>();
+    private readonly TaxRateApiClient _taxRateApiClient = new(new HttpClient());
     private readonly IUserStore<ApplicationUser> _userStore = Substitute.For<IUserStore<ApplicationUser>>();
     private readonly UserManager<ApplicationUser> _userManager;
 
@@ -72,7 +75,7 @@ public class CheckoutPageModelTests
             ViewData = viewData
         };
 
-        return new CheckoutModel(_cart, _orderRepo, _orderService, _pickupRepo, _userManager)
+        return new CheckoutModel(_cart, _orderRepo, _orderService, _pickupRepo, _taxRateService, _taxRateApiClient, _userManager)
         {
             PageContext = pageContext,
             TempData = tempData
