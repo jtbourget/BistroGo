@@ -5,21 +5,35 @@
 }
 
 <!-- ═══════════════════════════════════════════════════════════════
-     HERO SECTION
+     HEADER
      ═══════════════════════════════════════════════════════════════ -->
-<div class="home-hero">
-    <div class="home-hero-text">
-        <h1 class="display-4 fw-bold mb-3">Welcome to BistroGo</h1>
-        <p class="lead mb-4" style="color: #7a6a58;">
-            Fresh ingredients, warm atmosphere, and your favorites ready to order.
+<div class="row align-items-center mt-4 mb-5 pb-4 position-relative">
+
+    <!-- Decorative background blob -->
+    <div class="hero-bg-blob" style="width: 100vw; right: auto; left: 50%; transform: translate(-50%, -50%); opacity: 0.5;"></div>
+
+    <!-- CENTERED TEXT -->
+    <div class="col-lg-8 mx-auto text-center position-relative z-1 py-5">
+        <span class="badge bg-secondary mb-3 px-3 py-2" style="font-size: 0.9rem;">
+            🍽️ Fresh & Local
+        </span>
+        <h1 class="display-3 fw-bold mb-3" style="color: #4a2c17; line-height: 1.2;">
+            Good food,<br>great vibes.
+        </h1>
+        <p class="lead mb-4 mx-auto" style="color: #7a6a58; max-width: 600px;">
+            Welcome to BistroGo. We serve fresh, locally sourced ingredients crafted into your favorite meals. Dine in or order ahead for pickup.
         </p>
-        <a asp-page="/Reviews/Index" class="btn btn-primary btn-lg px-4 py-2">
-            ⭐ Check out some Reviews!
-        </a>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a asp-page="/Menu/Index" class="btn btn-primary btn-lg px-5 shadow-sm">
+                Browse Menu
+            </a>
+            <a asp-page="/Account/Login" class="btn btn-outline-primary btn-lg px-5">
+                Login
+            </a>
+        </div>
     </div>
-    <div class="home-hero-image">
-        <span class="home-hero-image-placeholder">🍽️</span>
-    </div>
+
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
