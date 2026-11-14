@@ -1,6 +1,8 @@
 ﻿using BistroGo.Core.Enumerations;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using BistroGo.Core.Scheduling;
+using Microsoft.Extensions.Options;
 
 namespace BistroGo.Data.Services
 {
@@ -8,11 +10,15 @@ namespace BistroGo.Data.Services
     {
         private readonly IOrderRepository _orders;
         private readonly IPickupTimeSlotRepository _slots;
+        private readonly TimeProvider _time;
+        private readonly TimeSpan _leadTime;
 
-        public OrderService(IOrderRepository orders, IPickupTimeSlotRepository slots)
+        public OrderService(IOrderRepository orders, IPickupTimeSlotRepository slots, TimeProvider time, IOptions<PickupSlotOptions> options)
         {
             _orders = orders;
             _slots = slots;
+            _time = time;
+            _leadTime = TimeSpan.FromMinutes(options.Value.LeadTimeMinutes);
         }
 
         public async Task<PlaceOrderResult> PlaceOrderAsync(int id)
@@ -27,6 +33,11 @@ namespace BistroGo.Data.Services
             // The slot must still exist (archived slots are hidden by the repository)...
             var slot = await _slots.GetByIdAsync(order.PickupSlotId.Value);
             if (slot == null) return PlaceOrderResult.SlotUnavailable;
+
+            // ...and it must still be far enough ahead. A customer may have picked it earlier
+            // and taken a while to check out. Same rule the available-slots list uses.
+            if (!PickupSlotRules.IsBookable(slot, _time.GetLocalNow().DateTime, _leadTime))
+                return PlaceOrderResult.SlotUnavailable;
 
             // ...and have room. Booked orders count against MaxOrders.
             var booked = await _slots.CountBookedOrdersAsync(slot.Id);

@@ -1,5 +1,8 @@
+using BistroGo.Api.Errors;
+using BistroGo.Api.Security;
 using BistroGo.Core.Identity;
 using BistroGo.Core.Interfaces;
+using BistroGo.Core.Scheduling;
 using BistroGo.Data.DataAccess;
 using BistroGo.Data.Identity;
 using BistroGo.Data.Repositories;
@@ -7,8 +10,6 @@ using BistroGo.Data.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using BistroGo.Api.Security;
-using BistroGo.Api.Errors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +63,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LogoutPath = "/Account/Logout";
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
+
+builder.Services.Configure<PickupSlotOptions>(builder.Configuration.GetSection(PickupSlotOptions.SectionName));
 
 var app = builder.Build();
 app.UseExceptionHandler();   // must be first, so it wraps everything below it

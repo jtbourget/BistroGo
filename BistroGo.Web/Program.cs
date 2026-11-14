@@ -1,5 +1,6 @@
 using BistroGo.Core.Identity;
 using BistroGo.Core.Interfaces;
+using BistroGo.Core.Scheduling;
 using BistroGo.Data.DataAccess;
 using BistroGo.Data.Identity;
 using BistroGo.Data.Repositories;
@@ -28,6 +29,10 @@ builder.Services.AddScoped<IOrderItemRepository, EfOrderItemRepository>();
 builder.Services.AddScoped<IPickupTimeSlotRepository, EfPickupTimeSlotRepository>();
 builder.Services.AddScoped<IReviewRepository, EfReviewRepository>();
 builder.Services.AddScoped<IExpenseRepository, EfExpenseRepository>();
+// The clock and pickup-slot settings, used by OrderService to check a slot is still bookable.
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.Configure<PickupSlotOptions>(builder.Configuration.GetSection(PickupSlotOptions.SectionName));
+builder.Services.AddScoped<IPickupSlotService, PickupSlotService>();
 
 // Tax rate service: singleton so the in-memory rate persists across requests
 // Uses file-based persistence to survive application restarts
@@ -82,17 +87,16 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<BistroGoDBContext>();
     dbContext.Database.Migrate();
 
-    if (!dbContext.PickupTimeSlots.Any())
+    // DEMO ONLY: keep today and the next two days stocked with pickup slots
+    // (11:00-20:00, every 30 minutes, 10 orders each). Safe on every start because
+    // CreateDayAsync skips slots that already exist. To be replaced by the background
+    // slot generator in a later sprint.
+    var slotService = scope.ServiceProvider.GetRequiredService<IPickupSlotService>();
+    for (var i = 0; i < 3; i++)
     {
-        dbContext.PickupTimeSlots.Add(new BistroGo.Core.Models.PickupTimeSlot
-        {
-            Id = 1,
-            SlotDate = DateOnly.FromDateTime(DateTime.Today),
-            StartTime = new TimeOnly(12, 0),
-            EndTime = new TimeOnly(13, 0),
-            MaxOrders = 20
-        });
-        dbContext.SaveChanges();
+        var day = DateOnly.FromDateTime(DateTime.Today).AddDays(i);
+        await slotService.CreateDayAsync(
+            new BulkSlotRequest(day, new TimeOnly(11, 0), new TimeOnly(20, 0), 30, 10));
     }
 }
 

@@ -121,25 +121,67 @@
                         <input name="guestEmail" id="guestEmail" type="email" class="form-control" value="@Model.GuestEmail" placeholder="you@example.com" />
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Pickup Time Slot</label>
+                    <fieldset class="mb-3">
+                        <legend class="form-label fs-6">Pickup time</legend>
+
                         @if (Model.AvailableSlots.Any())
                         {
-                            <select name="pickupSlotId" id="pickupSlotId" class="form-select">
-                                @foreach (var slot in Model.AvailableSlots)
-                                {
-                                    <option value="@slot.Id" selected="@(Model.PickupSlotId == slot.Id)">
-                                        @slot.StartTime.ToString("h:mm tt") - @slot.EndTime.ToString("h:mm tt") (@slot.SlotDate.ToString("MMM d"))
-                                    </option>
-                                }
-                            </select>
+                            var today = DateOnly.FromDateTime(DateTime.Today);
+                            var first = Model.AvailableSlots.First();
+                            var firstDay = first.SlotDate == today ? "today" : first.SlotDate.ToString("ddd, MMM d");
+
+                            <button type="button" id="asapBtn" class="btn btn-primary w-100 mb-1" aria-describedby="asapStatus">
+                                ASAP
+                            </button>
+                            <div id="asapStatus" class="small text-muted mb-3" role="status" aria-live="polite">
+                                Earliest available: @first.StartTime.ToString("h:mm tt") @firstDay
+                            </div>
+
+                            @foreach (var day in Model.AvailableSlots.GroupBy(s => s.SlotDate))
+                            {
+                                var heading = day.Key == today ? "Today"
+                                            : day.Key == today.AddDays(1) ? "Tomorrow"
+                                            : day.Key.ToString("dddd");
+                                var groupLabel = $"{heading}, {day.Key:MMMM d}";
+
+                                <div class="mb-3" role="group" aria-label="@groupLabel">
+                                    <div class="small fw-semibold text-muted mb-1">
+                                        @heading <span class="fw-normal">· @day.Key.ToString("MMM d")</span>
+                                    </div>
+                                    <div class="row row-cols-3 row-cols-sm-4 row-cols-lg-3 g-2">
+                                        @foreach (var slot in day)
+                                        {
+                                            var inputId = $"slot-{slot.Id}";
+                                            var slotLabel = $"{slot.StartTime:h:mm tt} {heading.ToLower()}";
+
+                                            <div class="col">
+                                                <input type="radio" class="btn-check" name="pickupSlotId" id="@inputId" value="@slot.Id"
+                                                       data-label="@slotLabel" autocomplete="off"
+                                                       checked="@(Model.PickupSlotId == slot.Id)" />
+                                                <label class="btn btn-outline-primary btn-sm w-100 text-nowrap" for="@inputId">
+                                                    @slot.StartTime.ToString("h:mm tt")
+                                                    <span class="visually-hidden"> to @slot.EndTime.ToString("h:mm tt"), @groupLabel</span>
+                                                </label>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <div id="slotError" class="text-danger small d-none" role="alert">
+                                Please choose a pickup time.
+                            </div>
                         }
                         else
                         {
-                            <input type="hidden" name="pickupSlotId" id="pickupSlotId" value="@(Model.PickupSlotId ?? 1)" />
-                            <p class="text-muted small mb-0">Standard Immediate Pickup</p>
+                            <button type="button" id="asapBtn" class="btn btn-primary w-100 mb-2" disabled aria-describedby="asapStatus">
+                                ASAP
+                            </button>
+                            <div id="asapStatus" class="alert alert-warning mb-0" role="status">
+                                No pickup times are available right now, so ASAP can't be used. Please check back soon.
+                            </div>
                         }
-                    </div>
+                    </fieldset>
 
                     <div class="mb-3">
                         <label class="form-label">Notes for kitchen <span class="text-muted small">(optional)</span></label>
@@ -147,7 +189,7 @@
                     </div>
 
                     <!-- Button triggers the modal, doesn't submit directly -->
-                    <button type="button" id="openConfirmModalBtn" class="btn btn-primary w-100 mb-2" disabled="@(!Model.Lines.Any())">
+                    <button type="button" id="openConfirmModalBtn" class="btn btn-primary w-100 mb-2" disabled="@(!Model.Lines.Any() || !Model.AvailableSlots.Any())">
                         ✓ Place Order
                     </button>
                     <a asp-page="/Menu/Index" class="btn btn-outline-primary w-100">Cancel</a>

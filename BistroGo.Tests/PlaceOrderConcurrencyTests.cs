@@ -20,7 +20,9 @@ public class PlaceOrderConcurrencyTests : IDisposable
             .Options);
 
     private static OrderService NewService(BistroGoDBContext db) =>
-        new(new EfOrderRepository(db), new EfPickupTimeSlotRepository(db));
+    new(new EfOrderRepository(db), new EfPickupTimeSlotRepository(db),
+        new FixedTimeProvider(new DateTimeOffset(2026, 11, 5, 9, 0, 0, TimeSpan.Zero)),   // the slot is at noon that day
+        TestOptions.Lead());
 
     public void Dispose()
     {
