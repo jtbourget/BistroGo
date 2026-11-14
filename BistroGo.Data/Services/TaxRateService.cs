@@ -39,9 +39,16 @@ namespace BistroGo.Data.Services
             _taxRateFilePath = Path.Combine(appDataPath, TaxRateFileName);
 
             // Create App_Data directory if it doesn't exist
-            if (!Directory.Exists(appDataPath))
+            try
             {
-                Directory.CreateDirectory(appDataPath);
+                if (!Directory.Exists(appDataPath))
+                {
+                    Directory.CreateDirectory(appDataPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Unable to create App_Data directory: {ex.Message}");
             }
 
             // Load the rate from file if it exists, otherwise use the default

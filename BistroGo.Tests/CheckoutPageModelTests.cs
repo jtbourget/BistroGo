@@ -22,7 +22,6 @@ public class CheckoutPageModelTests
     private readonly IOrderRepository _orderRepo = Substitute.For<IOrderRepository>();
     private readonly IOrderService _orderService = Substitute.For<IOrderService>();
     private readonly IPickupTimeSlotRepository _pickupRepo = Substitute.For<IPickupTimeSlotRepository>();
-    private readonly ITaxRateService _taxRateService = Substitute.For<ITaxRateService>();
     private readonly TaxRateApiClient _taxRateApiClient = new(new HttpClient());
     private readonly IUserStore<ApplicationUser> _userStore = Substitute.For<IUserStore<ApplicationUser>>();
     private readonly UserManager<ApplicationUser> _userManager;
@@ -75,7 +74,7 @@ public class CheckoutPageModelTests
             ViewData = viewData
         };
 
-        return new CheckoutModel(_cart, _orderRepo, _orderService, _pickupRepo, _taxRateService, _taxRateApiClient, _userManager)
+        return new CheckoutModel(_cart, _orderRepo, _orderService, _pickupRepo, _taxRateApiClient, _userManager)
         {
             PageContext = pageContext,
             TempData = tempData
@@ -292,5 +291,75 @@ public class CheckoutPageModelTests
         var (success, message, _) = ReadJson(result);
         Assert.False(success);
         Assert.Contains("not found", message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task OnGetAsync_WhenCartEmpty_RedirectsToMenu()
+    {
+        // Arrange
+        var token = Guid.NewGuid();
+        var model = CreateModel(guestToken: token);
+        _cart.GetCartAsync(Arg.Any<CartOwner>()).Returns((Order?)null);
+
+        // Act
+        var result = await model.OnGetAsync();
+
+        // Assert
+        var redirect = Assert.IsType<RedirectToPageResult>(result);
+        Assert.Equal("/Menu/Index", redirect.PageName);
+        Assert.Contains("empty", model.TempData["Message"]?.ToString() ?? "", StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task OnGetAsync_WithItems_LoadsCartAndAvailableSlots()
+    {
+        // Arrange
+        var token = Guid.NewGuid();
+        var model = CreateModel(guestToken: token);
+        var cart = new Order
+        {
+            Id = 70,
+            GuestToken = token,
+            Items = new List<OrderItem>
+            {
+                new() { Id = 1, MenuItemId = 1, Quantity = 2, UnitPrice = 8.50m, MenuItem = new MenuItem { Id = 1, Name = "Bruschetta" } }
+            }
+        };
+        _cart.GetCartAsync(Arg.Any<CartOwner>()).Returns(cart);
+
+        // Act
+        var result = await model.OnGetAsync();
+
+        // Assert
+        Assert.IsType<PageResult>(result);
+        Assert.Single(model.Lines);
+        Assert.Equal(17.00m, model.Subtotal);
+        Assert.Single(model.AvailableSlots);
+        Assert.Equal(1, model.PickupSlotId);
+    }
+
+    [Fact]
+    public async Task OnGetAsync_WithNullMenuItem_DoesNotThrowNullReferenceException()
+    {
+        // Arrange
+        var token = Guid.NewGuid();
+        var model = CreateModel(guestToken: token);
+        var cart = new Order
+        {
+            Id = 80,
+            GuestToken = token,
+            Items = new List<OrderItem>
+            {
+                new() { Id = 1, MenuItemId = 999, Quantity = 1, UnitPrice = 10.00m, MenuItem = null }
+            }
+        };
+        _cart.GetCartAsync(Arg.Any<CartOwner>()).Returns(cart);
+
+        // Act
+        var result = await model.OnGetAsync();
+
+        // Assert
+        Assert.IsType<PageResult>(result);
+        Assert.Single(model.Lines);
     }
 }

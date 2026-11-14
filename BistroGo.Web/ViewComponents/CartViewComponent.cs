@@ -29,7 +29,7 @@ public class CartViewComponent : ViewComponent
         var owner = CartOwnerResolver.Find(HttpContext);
         var cart = owner == null ? null : await _cart.GetCartAsync(owner);
 
-        var lines = cart?.Items.OrderBy(i => i.MenuItem!.Name).ToList() ?? new List<OrderItem>();
+        var lines = cart?.Items.OrderBy(i => i.MenuItem?.Name ?? "").ToList() ?? new List<OrderItem>();
 
         // Calculate the cart subtotal directly from individual items, don't include discounts or tax.
         var subtotal = lines.Sum(i => i.UnitPrice * i.Quantity);

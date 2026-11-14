@@ -18,7 +18,6 @@ public class CheckoutModel : PageModel
     private readonly IOrderService _orderService;
     private readonly IPickupTimeSlotRepository _pickupRepo;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly ITaxRateService _taxRateService;
     private readonly TaxRateApiClient _taxRateApiClient;
 
     
@@ -26,8 +25,7 @@ public class CheckoutModel : PageModel
         ICartService cart,
         IOrderRepository orderRepo,
         IOrderService orderService,
-        IPickupTimeSlotRepository pickupRepo,
-        ITaxRateService taxRateService, 
+        IPickupTimeSlotRepository pickupRepo, 
         TaxRateApiClient taxRateApiClient,
         UserManager<ApplicationUser> userManager)
     {
@@ -36,7 +34,6 @@ public class CheckoutModel : PageModel
         _orderService = orderService;
         _pickupRepo = pickupRepo;
         _userManager = userManager;
-        _taxRateService = taxRateService;
         _taxRateApiClient = taxRateApiClient;
     }
 
@@ -354,7 +351,7 @@ public class CheckoutModel : PageModel
     private async Task<object> BuildCartJsonAsync(CartOwner? owner)
     {
         var cart = owner == null ? null : await _cart.GetCartAsync(owner);
-        var lines = cart?.Items.OrderBy(i => i.MenuItem!.Name).ToList() ?? new List<OrderItem>();
+        var lines = cart?.Items.OrderBy(i => i.MenuItem?.Name ?? "").ToList() ?? new List<OrderItem>();
 
         return new
         {
@@ -378,7 +375,7 @@ public class CheckoutModel : PageModel
         var owner = CartOwnerResolver.Find(HttpContext);
         var cart = owner == null ? null : await _cart.GetCartAsync(owner);
 
-        Lines = cart?.Items.OrderBy(i => i.MenuItem!.Name).ToList() ?? new List<OrderItem>();
+        Lines = cart?.Items.OrderBy(i => i.MenuItem?.Name ?? "").ToList() ?? new List<OrderItem>();
 
         if (cart != null)
         {
@@ -387,12 +384,19 @@ public class CheckoutModel : PageModel
             var currentTaxRate = await GetCurrentTaxRateAsync();
 
             // Get the current user's roles to determine if they qualify for employee discount
-            var user = await _userManager.GetUserAsync(User);
-            if (user != null)
+            if (User.Identity?.IsAuthenticated == true)
             {
-                var userRoles = await _userManager.GetRolesAsync(user);
-                // Recalculate the cart with discount consideration and current tax rate
-                OrderPricing.Recalculate(cart, userRoles, currentTaxRate);
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    var userRoles = await _userManager.GetRolesAsync(user);
+                    // Recalculate the cart with discount consideration and current tax rate
+                    OrderPricing.Recalculate(cart, userRoles, currentTaxRate);
+                }
+                else
+                {
+                    OrderPricing.Recalculate(cart, userRoles: null, currentTaxRate);
+                }
             }
             else
             {
