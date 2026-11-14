@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Disable Place Order if cart becomes empty
                 const openBtn = document.getElementById('openConfirmModalBtn');
-                if (openBtn) openBtn.disabled = !hasLines || !document.getElementById('pickupSlotId');
+                if (openBtn) openBtn.disabled = !hasLines || !document.querySelector('input[name="pickupSlotId"]');
             } catch (err) {
                 console.error('[Checkout] Cart update error:', err);
             }
@@ -119,12 +119,41 @@ document.addEventListener('DOMContentLoaded', function () {
     const openModalBtn = document.getElementById('openConfirmModalBtn');
     const submitBtn = document.getElementById('confirmPlaceOrderBtn');
     const checkoutForm = document.getElementById('checkoutForm');
+    // ── ASAP: choose the earliest time in the grid ──────────────────
+    const asapBtn = document.getElementById('asapBtn');
+    const asapStatus = document.getElementById('asapStatus');
+    const slotError = document.getElementById('slotError');
+
+    asapBtn?.addEventListener('click', function () {
+        // The grid is in time order, so the first option is the earliest bookable one.
+        const earliest = document.querySelector('input[name="pickupSlotId"]');
+        if (!earliest) return;
+
+        earliest.checked = true;
+        slotError?.classList.add('d-none');
+        if (asapStatus) asapStatus.textContent = 'Earliest time selected: ' + earliest.dataset.label;
+    });
+
+    // Choosing a time by hand clears the error and updates the status line
+    document.querySelectorAll('input[name="pickupSlotId"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            slotError?.classList.add('d-none');
+            if (asapStatus) asapStatus.textContent = 'Selected: ' + radio.dataset.label;
+        });
+    });
 
     // ── Open Modal ──────────────────────────────────────────────
     openModalBtn?.addEventListener('click', function () {
         // Basic validation before opening
         if (checkoutForm && !checkoutForm.checkValidity()) {
             checkoutForm.reportValidity();
+            return;
+        }
+
+        // A pickup time must be chosen before the confirm dialog opens
+        if (!document.querySelector('input[name="pickupSlotId"]:checked')) {
+            document.getElementById('slotError')?.classList.remove('d-none');
+            document.getElementById('asapBtn')?.focus();
             return;
         }
         // Set the total in the modal text

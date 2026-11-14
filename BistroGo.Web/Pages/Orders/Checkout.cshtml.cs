@@ -104,11 +104,6 @@ public class CheckoutModel : PageModel
             }
         }
 
-        if (AvailableSlots.Any() && PickupSlotId == null)
-        {
-            PickupSlotId = AvailableSlots.First().Id;
-        }
-
         return Page();
     }
 
