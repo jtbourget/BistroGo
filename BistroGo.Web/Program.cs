@@ -34,11 +34,6 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.Configure<PickupSlotOptions>(builder.Configuration.GetSection(PickupSlotOptions.SectionName));
 builder.Services.AddScoped<IPickupSlotService, PickupSlotService>();
 
-// Tax rate service: singleton so the in-memory rate persists across requests
-// Uses file-based persistence to survive application restarts
-builder.Services.AddSingleton<ITaxRateService>(provider =>
-    new TaxRateService(provider.GetRequiredService<IWebHostEnvironment>()));
-
 // API Clients
 var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7242/";
 

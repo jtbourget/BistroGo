@@ -294,4 +294,74 @@ public class CheckoutPageModelTests
         Assert.False(success);
         Assert.Contains("not found", message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task OnGetAsync_WhenCartEmpty_RedirectsToMenu()
+    {
+        // Arrange
+        var token = Guid.NewGuid();
+        var model = CreateModel(guestToken: token);
+        _cart.GetCartAsync(Arg.Any<CartOwner>()).Returns((Order?)null);
+
+        // Act
+        var result = await model.OnGetAsync();
+
+        // Assert
+        var redirect = Assert.IsType<RedirectToPageResult>(result);
+        Assert.Equal("/Menu/Index", redirect.PageName);
+        Assert.Contains("empty", model.TempData["Message"]?.ToString() ?? "", StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task OnGetAsync_WithItems_LoadsCartAndAvailableSlots()
+    {
+        // Arrange
+        var token = Guid.NewGuid();
+        var model = CreateModel(guestToken: token);
+        var cart = new Order
+        {
+            Id = 70,
+            GuestToken = token,
+            Items = new List<OrderItem>
+            {
+                new() { Id = 1, MenuItemId = 1, Quantity = 2, UnitPrice = 8.50m, MenuItem = new MenuItem { Id = 1, Name = "Bruschetta" } }
+            }
+        };
+        _cart.GetCartAsync(Arg.Any<CartOwner>()).Returns(cart);
+
+        // Act
+        var result = await model.OnGetAsync();
+
+        // Assert
+        Assert.IsType<PageResult>(result);
+        Assert.Single(model.Lines);
+        Assert.Equal(17.00m, model.Subtotal);
+        Assert.Single(model.AvailableSlots);
+        Assert.Equal(1, model.PickupSlotId);
+    }
+
+    [Fact]
+    public async Task OnGetAsync_WithNullMenuItem_DoesNotThrowNullReferenceException()
+    {
+        // Arrange
+        var token = Guid.NewGuid();
+        var model = CreateModel(guestToken: token);
+        var cart = new Order
+        {
+            Id = 80,
+            GuestToken = token,
+            Items = new List<OrderItem>
+            {
+                new() { Id = 1, MenuItemId = 999, Quantity = 1, UnitPrice = 10.00m, MenuItem = null }
+            }
+        };
+        _cart.GetCartAsync(Arg.Any<CartOwner>()).Returns(cart);
+
+        // Act
+        var result = await model.OnGetAsync();
+
+        // Assert
+        Assert.IsType<PageResult>(result);
+        Assert.Single(model.Lines);
+    }
 }
