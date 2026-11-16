@@ -22,6 +22,11 @@ namespace BistroGo.Web.Services
         {
             try
             {
+                if (_client.BaseAddress == null)
+                {
+                    return 0.08m;
+                }
+
                 var response = await _client.GetAsync("api/taxrates/current");
 
                 if (!response.IsSuccessStatusCode)
