@@ -26,7 +26,6 @@ public class CheckoutModel : PageModel
         IOrderRepository orderRepo,
         IOrderService orderService,
         IPickupSlotService slotService,
-        ITaxRateService taxRateService, 
         TaxRateApiClient taxRateApiClient,
         UserManager<ApplicationUser> userManager)
     {
