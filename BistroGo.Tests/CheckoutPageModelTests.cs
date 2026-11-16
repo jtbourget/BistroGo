@@ -23,7 +23,6 @@ public class CheckoutPageModelTests
     private readonly IOrderService _orderService = Substitute.For<IOrderService>();
     private readonly IPickupTimeSlotRepository _pickupRepo = Substitute.For<IPickupTimeSlotRepository>();
     private readonly IPickupSlotService _pickupSlotService = Substitute.For<IPickupSlotService>();
-    private readonly ITaxRateService _taxRateService = Substitute.For<ITaxRateService>();
     private readonly TaxRateApiClient _taxRateApiClient = new(new HttpClient());
     private readonly IUserStore<ApplicationUser> _userStore = Substitute.For<IUserStore<ApplicationUser>>();
     private readonly UserManager<ApplicationUser> _userManager;
@@ -37,10 +36,16 @@ public class CheckoutPageModelTests
             .Returns(callInfo => callInfo.Arg<ClaimsPrincipal>()?.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
         _orderRepo.UpdateAsync(Arg.Any<Order>()).Returns(true);
-        _pickupRepo.GetAllAsync().Returns(new List<PickupTimeSlot>
+        var defaultSlot = new PickupTimeSlot
         {
-            new() { Id = 1, SlotDate = DateOnly.FromDateTime(DateTime.Today), StartTime = new TimeOnly(12, 0), EndTime = new TimeOnly(13, 0) }
-        });
+            Id = 1,
+            SlotDate = DateOnly.FromDateTime(DateTime.Today),
+            StartTime = new TimeOnly(12, 0),
+            EndTime = new TimeOnly(13, 0)
+        };
+        _pickupRepo.GetAllAsync().Returns(new List<PickupTimeSlot> { defaultSlot });
+        _pickupSlotService.GetUpcomingAsync(Arg.Any<int>())
+            .Returns(new List<SlotAvailability> { new(defaultSlot, 10) });
     }
 
     private static (bool Success, string? Message, int? OrderId) ReadJson(IActionResult result)
@@ -76,7 +81,7 @@ public class CheckoutPageModelTests
             ViewData = viewData
         };
 
-        return new CheckoutModel(_cart, _orderRepo, _orderService, _pickupSlotService, _taxRateService, _taxRateApiClient, _userManager)
+        return new CheckoutModel(_cart, _orderRepo, _orderService, _pickupSlotService, _taxRateApiClient, _userManager)
         {
             PageContext = pageContext,
             TempData = tempData
@@ -337,7 +342,7 @@ public class CheckoutPageModelTests
         Assert.Single(model.Lines);
         Assert.Equal(17.00m, model.Subtotal);
         Assert.Single(model.AvailableSlots);
-        Assert.Equal(1, model.PickupSlotId);
+        Assert.Null(model.PickupSlotId);
     }
 
     [Fact]
