@@ -20,5 +20,9 @@
   <ItemGroup>
     <ProjectReference Include="..\BistroGo.Core\BistroGo.Core.csproj" />
   </ItemGroup>
+	
+  <ItemGroup>
+	<FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 
 </Project>

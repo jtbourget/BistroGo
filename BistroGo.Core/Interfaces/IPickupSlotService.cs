@@ -22,9 +22,14 @@ namespace BistroGo.Core.Interfaces
         Task<BulkSlotOutcome> CreateDayAsync(BulkSlotRequest request);
 
         /// <summary>
-        /// Slots on a day that can still be booked: not archived, not already started, not full.
-        /// A null date means today.
+        /// Slots on a day that can still be booked: not archived, starting at least the
+        /// configured lead time from now, and not full. A null date means today.
         /// </summary>
         Task<IReadOnlyList<SlotAvailability>> GetAvailableAsync(DateOnly? date);
+
+        /// <summary>
+        /// Bookable slots from today through the next <paramref name="days"/> days (1 = today only), earliest first.
+        /// </summary>
+        Task<IReadOnlyList<SlotAvailability>> GetUpcomingAsync(int days);
     }
 }

@@ -1,0 +1,93 @@
+name: Build and Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore Dependencies
+        run: dotnet restore BistroGo.slnx
+
+      - name: Build Solution
+        run: dotnet build BistroGo.slnx --configuration Release --no-restore
+
+      - name: Run Unit Tests
+        run: dotnet test BistroGo.Tests/BistroGo.Tests.csproj --configuration Release --no-build --verbosity normal
+
+      - name: Publish API
+        run: dotnet publish BistroGo.Api/BistroGo.Api.csproj --configuration Release --no-restore -o ./publish/api
+
+      - name: Publish Web App
+        run: dotnet publish BistroGo.Web/BistroGo.Web.csproj --configuration Release --no-restore -o ./publish/web
+
+      - name: Upload API Artifact
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-artifact
+          path: ./publish/api
+
+      - name: Upload Web Artifact
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-artifact
+          path: ./publish/web
+
+  deploy-api:
+    name: Deploy API
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download API Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-artifact
+          path: ./publish/api
+
+      - name: Deploy to Azure App Service (API)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_API_APP_NAME || secrets.AZURE_API_APP_NAME || 'bistrogo-api' }}
+          publish-profile: ${{ secrets.AZURE_API_PUBLISH_PROFILE }}
+          package: ./publish/api
+
+  deploy-web:
+    name: Deploy Web
+    needs: [build-and-test, deploy-api]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Web Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-artifact
+          path: ./publish/web
+
+      - name: Deploy to Azure App Service (Web)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEB_APP_NAME || secrets.AZURE_WEB_APP_NAME || 'bistrogo-web' }}
+          publish-profile: ${{ secrets.AZURE_WEB_PUBLISH_PROFILE }}
+          package: ./publish/web
