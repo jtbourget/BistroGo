@@ -8,6 +8,9 @@ namespace BistroGo.Tests;
 
 public class OrderServiceTests
 {
+    private static readonly DateOnly Today = new(2026, 11, 4);
+    private static readonly DateOnly Tomorrow = new(2026, 11, 5);
+
     // A fake repository: it implements IOrderRepository but only does what each test tells it to.
     private readonly IOrderRepository _repo = Substitute.For<IOrderRepository>();
 
@@ -16,12 +19,21 @@ public class OrderServiceTests
 
     public OrderServiceTests()
     {
-        _service = new OrderService(_repo, _slots);
+        // The clock is frozen at noon on Nov 4, 2026, with a 15-minute lead time.
+        var clock = new FixedTimeProvider(new DateTimeOffset(2026, 11, 4, 12, 0, 0, TimeSpan.Zero));
+        _service = new OrderService(_repo, _slots, clock, TestOptions.Lead());
     }
 
-    private void GivenSlot(int slotId, int maxOrders, int booked)
+    // By default the slot is tomorrow at noon, comfortably in the future.
+    private void GivenSlot(int slotId, int maxOrders, int booked, DateOnly? date = null, TimeOnly? start = null)
     {
-        _slots.GetByIdAsync(slotId).Returns(new PickupTimeSlot { Id = slotId, MaxOrders = maxOrders });
+        _slots.GetByIdAsync(slotId).Returns(new PickupTimeSlot
+        {
+            Id = slotId,
+            MaxOrders = maxOrders,
+            SlotDate = date ?? Tomorrow,
+            StartTime = start ?? new TimeOnly(12, 0)
+        });
         _slots.CountBookedOrdersAsync(slotId).Returns(booked);
     }
 
@@ -153,5 +165,45 @@ public class OrderServiceTests
         var result = await _service.PlaceOrderAsync(1);
 
         Assert.Equal(PlaceOrderResult.NotFound, result);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_WhenTheSlotHasAlreadyStarted_ReturnsSlotUnavailable()
+    {
+        var order = new Order { Id = 1, PickupSlotId = 3 };
+        _repo.GetByIdAsync(1).Returns(order);
+        GivenSlot(3, maxOrders: 10, booked: 0, date: Today, start: new TimeOnly(11, 0));   // the clock says 12:00
+
+        var result = await _service.PlaceOrderAsync(1);
+
+        Assert.Equal(PlaceOrderResult.SlotUnavailable, result);
+        Assert.False(order.IsFinalized);
+        await _repo.DidNotReceive().UpdateIfSlotHasRoomAsync(Arg.Any<Order>(), Arg.Any<int>());
+    }
+
+    [Fact]
+    public async Task PlaceOrder_WhenTheSlotIsInsideTheLeadTime_ReturnsSlotUnavailable()
+    {
+        var order = new Order { Id = 1, PickupSlotId = 3 };
+        _repo.GetByIdAsync(1).Returns(order);
+        GivenSlot(3, maxOrders: 10, booked: 0, date: Today, start: new TimeOnly(12, 10));   // only 10 minutes away
+
+        var result = await _service.PlaceOrderAsync(1);
+
+        Assert.Equal(PlaceOrderResult.SlotUnavailable, result);
+        await _repo.DidNotReceive().UpdateIfSlotHasRoomAsync(Arg.Any<Order>(), Arg.Any<int>());
+    }
+
+    [Fact]
+    public async Task PlaceOrder_WhenTheSlotIsExactlyAtTheLeadTime_Places()
+    {
+        var order = new Order { Id = 1, PickupSlotId = 3 };
+        _repo.GetByIdAsync(1).Returns(order);
+        _repo.UpdateIfSlotHasRoomAsync(order, Arg.Any<int>()).Returns(SlotSaveResult.Saved);
+        GivenSlot(3, maxOrders: 10, booked: 0, date: Today, start: new TimeOnly(12, 15));   // exactly 15 minutes away
+
+        var result = await _service.PlaceOrderAsync(1);
+
+        Assert.Equal(PlaceOrderResult.Placed, result);
     }
 }

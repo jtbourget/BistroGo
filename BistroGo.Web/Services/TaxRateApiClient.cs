@@ -89,7 +89,7 @@ namespace BistroGo.Web.Services
     /// </summary>
     public class TaxRateUpdateResponse
     {
-        public string Message { get; set; }
+        public string? Message { get; set; }
         public decimal NewRate { get; set; }
     }
 
@@ -98,6 +98,6 @@ namespace BistroGo.Web.Services
     /// </summary>
     public class ErrorResponse
     {
-        public string Error { get; set; }
+        public string? Error { get; set; }
     }
 }
