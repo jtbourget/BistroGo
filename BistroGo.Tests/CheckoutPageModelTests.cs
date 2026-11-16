@@ -22,6 +22,7 @@ public class CheckoutPageModelTests
     private readonly IOrderRepository _orderRepo = Substitute.For<IOrderRepository>();
     private readonly IOrderService _orderService = Substitute.For<IOrderService>();
     private readonly IPickupTimeSlotRepository _pickupRepo = Substitute.For<IPickupTimeSlotRepository>();
+    private readonly IPickupSlotService _pickupSlotService = Substitute.For<IPickupSlotService>();
     private readonly ITaxRateService _taxRateService = Substitute.For<ITaxRateService>();
     private readonly TaxRateApiClient _taxRateApiClient = new(new HttpClient());
     private readonly IUserStore<ApplicationUser> _userStore = Substitute.For<IUserStore<ApplicationUser>>();
@@ -75,7 +76,7 @@ public class CheckoutPageModelTests
             ViewData = viewData
         };
 
-        return new CheckoutModel(_cart, _orderRepo, _orderService, _pickupRepo, _taxRateService, _taxRateApiClient, _userManager)
+        return new CheckoutModel(_cart, _orderRepo, _orderService, _pickupSlotService, _taxRateService, _taxRateApiClient, _userManager)
         {
             PageContext = pageContext,
             TempData = tempData
