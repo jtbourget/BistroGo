@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace BistroGo.Web.Pages.Menu;
 
+// Page model for the menu page: shows available items (optionally filtered by category)
+// and handles cart add/update/remove via standard POST and JSON endpoints.
 public class IndexModel : PageModel
 {
     private readonly IMenuItemRepository _menu;
@@ -17,58 +19,58 @@ public class IndexModel : PageModel
         _cart = cart;
     }
 
-    public List<MenuItem> MenuItems { get; set; } = new();     // was List<MenuItemDto>
+    // View data: filtered menu, category dropdown options, and the active filter.
+    public List<MenuItem> MenuItems { get; set; } = new();
     public List<string> Categories { get; set; } = new();
     public string? SelectedCategory { get; set; }
+
+    // Cart snapshot for the page's own badge (populated in OnGet).
     public IReadOnlyList<OrderItem> OrderLines { get; private set; } = new List<OrderItem>();
     public decimal OrderTotal { get; private set; }
 
-    public async Task OnGetAsync(string? category)             // was: public void OnGet
+
+    // Loads available items, builds categories, applies the optional filter, and loads the cart badge.
+    public async Task OnGetAsync(string? category)
     {
         SelectedCategory = category;
 
-        // Already sorted by category DisplayOrder, then name.
+        // IsAvailable filters out items marked unavailable; repo already sorts by DisplayOrder then name.
         var all = (await _menu.GetAllAsync()).Where(m => m.IsAvailable).ToList(); // IsAvailable filters items markes as unavailable
 
-        // Distinct() keeps first-seen order, so the dropdown follows DisplayOrder
-        // (the old OrderBy(c => c) sorted alphabetically).
+        // Distinct() preserves first-seen order, so categories follow DisplayOrder (not alphabetical).
         Categories = all.Select(m => m.Category!.Name).Distinct().ToList();
 
+        // No category = show all; otherwise filter to the selected category.
         MenuItems = string.IsNullOrEmpty(category)
             ? all
             : all.Where(m => m.Category!.Name == category).ToList();
 
-        // Cart for the Menu page's own badge. Find (not FindOrCreate): looking must never create a cart.
+        // Find (not FindOrCreate): viewing the menu must never create a cart.
         var owner = CartOwnerResolver.Find(HttpContext);
         var cart = owner == null ? null : await _cart.GetCartAsync(owner);
         OrderLines = cart?.Items.ToList() ?? new List<OrderItem>();
         OrderTotal = cart?.Total ?? 0m;
     }
 
-    /// <summary>
-    /// Handles the POST when a user adds a menu item to their order.
-    /// The cart is saved in the database, owned by the logged-in user or a guest cookie.
-    /// </summary>
-    /// <param name="menuItemId">The database id of the menu item to add.</param>
-    /// <param name="category">The currently selected category to redirect back to.</param>
+    // Adds an item to the cart (creating the cart if needed) and redirects back, preserving the filter.
     public async Task<IActionResult> OnPostAddToOrderAsync(int menuItemId, int quantity, string? category)
     {
+        // FindOrCreate: adding legitimately creates a cart owned by the user or guest cookie.
         var owner = CartOwnerResolver.FindOrCreate(HttpContext);
 
-        // Ensure quantity is at least 1 (in case the hidden input fails)
+        // Guard against a missing/tampered hidden input.
         if (quantity < 1) quantity = 1;
 
         bool added = false;
 
-        // Loop and call the service for the requested quantity
+        // Add one at a time so a mid-way failure (item unavailable) stops the loop.
         for (int i = 0; i < quantity; i++)
         {
             added = await _cart.AddItemAsync(owner, menuItemId);
-
-            // If the item becomes unavailable or fails to add, stop the loop
             if (!added) break;
         }
 
+        // Flash message via TempData (PRG pattern) to report success or unavailability.
         if (added)
         {
             var item = await _menu.GetByIdAsync(menuItemId);
@@ -86,9 +88,10 @@ public class IndexModel : PageModel
         return RedirectToPage(new { category });
     }
 
-    // The cart modal's -/+ and ✕ buttons (JavaScript in _Layout) POST here and redraw from the JSON.
+    // Sets an absolute quantity for a line (cart modal -/+ buttons); returns updated cart JSON.
     public async Task<IActionResult> OnPostUpdateQuantityJsonAsync(int menuItemId, int quantity)
     {
+        // Find, not FindOrCreate: nothing to update without a cart.
         var owner = CartOwnerResolver.Find(HttpContext);   // Find, not FindOrCreate: nothing to update without a cart
         if (owner != null)
             await _cart.SetQuantityAsync(owner, menuItemId, quantity);
@@ -96,6 +99,7 @@ public class IndexModel : PageModel
         return await CartJsonAsync(owner);
     }
 
+    // Removes a line entirely (cart modal ✕ button); returns updated cart JSON.
     public async Task<IActionResult> OnPostRemoveLineJsonAsync(int menuItemId)
     {
         var owner = CartOwnerResolver.Find(HttpContext);
@@ -105,9 +109,10 @@ public class IndexModel : PageModel
         return await CartJsonAsync(owner);
     }
 
-    // Same JSON shape the script already expects (lines / itemCount / total).
+    // Serializes the cart (lines, itemCount, total) into the JSON shape the modal script expects.
     private async Task<IActionResult> CartJsonAsync(CartOwner? owner)
     {
+        // Null owner means no cart: return empty lines and a zero total.
         var cart = owner == null ? null : await _cart.GetCartAsync(owner);
         var lines = cart?.Items.OrderBy(i => i.MenuItem!.Name).ToList() ?? new List<OrderItem>();
 

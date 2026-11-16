@@ -7,6 +7,8 @@ using BistroGo.Core.Models;
 
 namespace BistroGo.Web.Pages.Inventory;
 
+// Manager-only page for managing menu items and categories (add, edit, delete).
+// Uses a mix of [BindProperty] inputs and named POST handlers for each action.
 [Authorize(Roles = RoleNames.Manager)]
 public class IndexModel : PageModel
 {
@@ -19,9 +21,11 @@ public class IndexModel : PageModel
         _categoryRepo = categoryRepo;
     }
 
+    // Data rendered on the page: all items (grouped by category) and all categories.
     public IEnumerable<MenuItem> Items { get; set; } = new List<MenuItem>();
     public IEnumerable<MenuCategory> Categories { get; set; } = new List<MenuCategory>();
 
+    // Bound inputs for the add-item form, add-category field, and the two edit modals.
     [BindProperty]
     public NewItemInput NewItem { get; set; } = new();
 
@@ -39,8 +43,10 @@ public class IndexModel : PageModel
         await LoadDataAsync();
     }
 
+    // Adds a new menu item; reopens the modal with errors if the form is invalid.
     public async Task<IActionResult> OnPostAddItemAsync()
     {
+        // Invalid form: reload data, flag the modal to reopen, and re-render.
         if (!ModelState.IsValid)
         {
             await LoadDataAsync();
@@ -48,6 +54,7 @@ public class IndexModel : PageModel
             return Page();
         }
 
+        // Get the category by name, creating it on the fly if it doesn't exist.
         var cat = await _categoryRepo.GetByNameAsync(NewItem.Category.Trim());
         if (cat == null)
         {
@@ -68,8 +75,10 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
+    // Updates an existing item's fields; reopens the edit modal if the form is invalid.
     public async Task<IActionResult> OnPostEditItemAsync()
     {
+        // Invalid form: reload data, flag the edit modal to reopen, and re-render.
         if (!ModelState.IsValid)
         {
             await LoadDataAsync();
@@ -104,8 +113,10 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
+    // Renames a category, rejecting a name already used by a different category.
     public async Task<IActionResult> OnPostEditCategoryAsync()
     {
+        // Invalid form: reload data, flag the edit-category modal to reopen, and re-render.
         if (!ModelState.IsValid)
         {
             await LoadDataAsync();
@@ -137,13 +148,16 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
+    // Adds a category from the quick-add field, rejecting duplicates.
     public async Task<IActionResult> OnPostAddCategoryAsync()
     {
+        // Ignore blank submissions; otherwise check for an existing name first.
         if (!string.IsNullOrWhiteSpace(NewCategoryName))
         {
             var trimmedName = NewCategoryName.Trim();
             var existing = await _categoryRepo.GetByNameAsync(trimmedName);
 
+            // Duplicate: report an error instead of adding; otherwise create it.
             if (existing != null)
             {
                 TempData["Error"] = $"Category \"{trimmedName}\" already exists.";
@@ -158,6 +172,7 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
+    // Deletes a menu item by id and reports success via TempData.
     public async Task<IActionResult> OnPostDeleteItemAsync(int id)
     {
         var deleted = await _menuItemRepo.DeleteAsync(id);
@@ -168,6 +183,7 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
+    // Deletes a category by id and reports success via TempData.
     public async Task<IActionResult> OnPostDeleteCategoryAsync(int id)
     {
         var deleted = await _categoryRepo.DeleteAsync(id);
@@ -178,6 +194,7 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
+    // Loads categories (alphabetical) and items (by category name, then item name) for the page.
     private async Task LoadDataAsync()
     {
         Categories = (await _categoryRepo.GetAllAsync()).OrderBy(c => c.Name).ToList();
@@ -187,6 +204,7 @@ public class IndexModel : PageModel
             .ToList();
     }
 
+    // Form models for the add/edit actions; each maps directly to its modal's fields.
     public class NewItemInput
     {
         public string Name { get; set; } = "";
