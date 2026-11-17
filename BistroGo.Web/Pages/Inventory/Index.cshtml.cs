@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using BistroGo.Core.Identity;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace BistroGo.Web.Pages.Inventory;
 
@@ -61,13 +62,26 @@ public class IndexModel : PageModel
             cat = await _categoryRepo.AddAsync(new MenuCategory { Name = NewItem.Category.Trim() });
         }
 
+        // Handle Images Upload
+        string? imagePath = null;
+        if (NewItem.ImageFile != null && NewItem.ImageFile.Length > 0)
+        {
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(NewItem.ImageFile.FileName);
+            var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/menu", fileName);
+            using (var stream = new FileStream(savePath, FileMode.Create))
+            {
+                await NewItem.ImageFile.CopyToAsync(stream);
+            }
+            imagePath = "/images/menu/" + fileName;
+        }
+
         await _menuItemRepo.AddAsync(new MenuItem
         {
             Name = NewItem.Name.Trim(),
             Description = NewItem.Description.Trim(),
             Price = NewItem.Price,
             CategoryId = cat.Id,
-            ImageUrl = string.IsNullOrWhiteSpace(NewItem.ImageUrl) ? null : NewItem.ImageUrl.Trim(),
+            ImageUrl = imagePath,
             IsAvailable = true
         });
 
@@ -100,12 +114,31 @@ public class IndexModel : PageModel
             cat = await _categoryRepo.AddAsync(new MenuCategory { Name = EditItem.Category.Trim() });
         }
 
+        // Handle File Upload for Edit
+        string? imagePath = existingItem.ImageUrl; 
+        if (EditItem.ImageFile != null && EditItem.ImageFile.Length > 0)
+        {
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(EditItem.ImageFile.FileName);
+            var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/menu", fileName);
+            using (var stream = new FileStream(savePath, FileMode.Create))
+            {
+                await EditItem.ImageFile.CopyToAsync(stream);
+            }
+            imagePath = "/images/menu/" + fileName;
+
+            // Delete the old image to save space
+            if (!string.IsNullOrEmpty(existingItem.ImageUrl))
+            {
+                var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingItem.ImageUrl.TrimStart('/'));
+                if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+            }
+        }
         // Update fields
         existingItem.Name = EditItem.Name.Trim();
         existingItem.Description = EditItem.Description.Trim();
         existingItem.Price = EditItem.Price;
         existingItem.CategoryId = cat.Id;
-        existingItem.ImageUrl = string.IsNullOrWhiteSpace(EditItem.ImageUrl) ? null : EditItem.ImageUrl.Trim();
+        existingItem.ImageUrl = imagePath;
 
         await _menuItemRepo.UpdateAsync(existingItem);
 
@@ -211,7 +244,7 @@ public class IndexModel : PageModel
         public string Description { get; set; } = "";
         public decimal Price { get; set; }
         public string Category { get; set; } = "";
-        public string? ImageUrl { get; set; }
+        public IFormFile? ImageFile { get; set; } // Optional file upload for the image
     }
 
     public class EditItemInput
@@ -221,7 +254,8 @@ public class IndexModel : PageModel
         public string Description { get; set; } = "";
         public decimal Price { get; set; }
         public string Category { get; set; } = "";
-        public string? ImageUrl { get; set; }
+        public IFormFile? ImageFile { get; set; } // Optional file upload for the image
+        public string? ExistingImageUrl { get; set; } // For keeping the old image if no new one is uploaded
     }
 
     public class EditCategoryInput
