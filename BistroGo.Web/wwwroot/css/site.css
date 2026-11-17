@@ -933,6 +933,18 @@ h3 {
     font-size: 0.8rem;
 }
 
+input[type="file"].form-control {
+    padding: 0.5rem;
+    background-color: #fdfaf6;
+    border: 2px dashed #e8d9c5;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+    input[type="file"].form-control:hover {
+        border-color: #b5651d;
+    }
+
 /* ═══════════════════════════════════════════════════
    PASSWORD TOOLTIP ICON
    ═══════════════════════════════════════════════════ */
@@ -1098,3 +1110,5 @@ h3 {
 
 /* ═══════════════════════════════════════════════════
    INLINE CATEGORY EDIT
+   ═══════════════════════════════════════════════════ */
+
