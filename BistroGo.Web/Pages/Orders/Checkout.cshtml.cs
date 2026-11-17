@@ -225,7 +225,7 @@ public class CheckoutModel : PageModel
     }
 
     // -- Helpers --
-    private const int DaysToShow = 2;   // today and tomorrow
+    private const int DaysToShow = 1;   // today and tomorrow
 
     // Fills the slot list from the slot service, so the page only offers times that can still be booked.
     private async Task LoadSlotsAsync()

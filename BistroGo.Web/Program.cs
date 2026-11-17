@@ -106,12 +106,8 @@ using (var scope = app.Services.CreateScope())
     // CreateDayAsync skips slots that already exist. To be replaced by the background
     // slot generator in a later sprint.
     var slotService = scope.ServiceProvider.GetRequiredService<IPickupSlotService>();
-    for (var i = 0; i < 3; i++)
-    {
-        var day = DateOnly.FromDateTime(DateTime.Today).AddDays(i);
-        await slotService.CreateDayAsync(
-            new BulkSlotRequest(day, new TimeOnly(11, 0), new TimeOnly(20, 0), 30, 10));
-    }
+    await slotService.CreateDayAsync(new BulkSlotRequest(
+        DateOnly.FromDateTime(DateTime.Today), new TimeOnly(11, 0), new TimeOnly(20, 0), 30, 10));
 }
 
 using (var scope = app.Services.CreateScope())
