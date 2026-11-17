@@ -1,6 +1,8 @@
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Pricing;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Text.Json;
 
 namespace BistroGo.Data.Services
@@ -16,6 +18,7 @@ namespace BistroGo.Data.Services
         private decimal _currentRate;
         private readonly object _lockObject = new();
         private readonly string _taxRateFilePath;
+        private readonly ILogger<TaxRateService> _logger;
 
         /// <summary>
         /// Minimum allowed tax rate (0%).
@@ -32,8 +35,10 @@ namespace BistroGo.Data.Services
         /// </summary>
         private const string TaxRateFileName = "taxrate.json";
 
-        public TaxRateService(IWebHostEnvironment env)
+        public TaxRateService(IWebHostEnvironment env, ILogger<TaxRateService>? logger = null)
         {
+            _logger = logger ?? NullLogger<TaxRateService>.Instance;
+
             // Determine the file path for persistence
             var appDataPath = Path.Combine(env.ContentRootPath, "App_Data");
             _taxRateFilePath = Path.Combine(appDataPath, TaxRateFileName);
@@ -48,11 +53,12 @@ namespace BistroGo.Data.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Warning: Unable to create App_Data directory: {ex.Message}");
+                _logger.LogWarning(ex, "Unable to create App_Data directory at {AppDataPath}", appDataPath);
             }
 
             // Load the rate from file if it exists, otherwise use the default
             _currentRate = LoadRateFromFile() ?? PricingConstants.TaxRate;
+            _logger.LogInformation("Initialized TaxRateService with rate {TaxRate}", _currentRate);
         }
 
         /// <summary>
@@ -78,6 +84,7 @@ namespace BistroGo.Data.Services
             // Validate the rate
             if (!IsValidRate(rate))
             {
+                _logger.LogWarning("Tax rate update validation failed: {Rate} is outside [{MinRate}, {MaxRate}]", rate, MinRate, MaxRate);
                 return false;
             }
 
@@ -94,9 +101,10 @@ namespace BistroGo.Data.Services
             catch (Exception ex)
             {
                 // Log error but don't fail the update
-                Console.WriteLine($"Warning: Failed to persist tax rate to file: {ex.Message}");
+                _logger.LogError(ex, "Failed to persist tax rate to file at {FilePath}", _taxRateFilePath);
             }
 
+            _logger.LogInformation("Updated active tax rate to {Rate}", rate);
             return true;
         }
 
@@ -118,6 +126,7 @@ namespace BistroGo.Data.Services
             {
                 if (!File.Exists(_taxRateFilePath))
                 {
+                    _logger.LogDebug("Tax rate file not found at {FilePath}. Using default rate.", _taxRateFilePath);
                     return null;
                 }
 
@@ -127,7 +136,7 @@ namespace BistroGo.Data.Services
                 if (doc.RootElement.TryGetProperty("rate", out var rateElement) &&
                     rateElement.TryGetDecimal(out var rate))
                 {
-                    Console.WriteLine($"Loaded tax rate from file: {rate}");
+                    _logger.LogInformation("Loaded tax rate from file: {Rate}", rate);
                     return rate;
                 }
 
@@ -135,7 +144,7 @@ namespace BistroGo.Data.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error reading tax rate file: {ex.Message}. Using default rate.");
+                _logger.LogError(ex, "Error reading tax rate file at {FilePath}. Using default rate.", _taxRateFilePath);
                 return null;
             }
         }
@@ -154,7 +163,7 @@ namespace BistroGo.Data.Services
             var data = new { rate };
             var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(_taxRateFilePath, json);
-            Console.WriteLine($"Saved tax rate to file: {rate}");
+            _logger.LogInformation("Saved tax rate {Rate} to file at {FilePath}", rate, _taxRateFilePath);
         }
     }
 }

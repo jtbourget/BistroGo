@@ -1,5 +1,7 @@
 using BistroGo.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BistroGo.Api.Controllers
 {
@@ -12,10 +14,12 @@ namespace BistroGo.Api.Controllers
     public class TaxRatesController : ControllerBase
     {
         private readonly ITaxRateService _taxRateService;
+        private readonly ILogger<TaxRatesController> _logger;
 
-        public TaxRatesController(ITaxRateService taxRateService)
+        public TaxRatesController(ITaxRateService taxRateService, ILogger<TaxRatesController>? logger = null)
         {
             _taxRateService = taxRateService;
+            _logger = logger ?? NullLogger<TaxRatesController>.Instance;
         }
 
         /// <summary>
@@ -25,7 +29,9 @@ namespace BistroGo.Api.Controllers
         [HttpGet("current")]
         public IActionResult GetCurrentRate()
         {
+            _logger.LogInformation("Retrieving current tax rate");
             var rate = _taxRateService.GetCurrentRate();
+            _logger.LogInformation("Current tax rate is {Rate}", rate);
             return Ok(new { rate });
         }
 
@@ -41,15 +47,19 @@ namespace BistroGo.Api.Controllers
         {
             if (updateRequest == null || updateRequest.Rate < 0)
             {
+                _logger.LogWarning("Invalid tax rate update request received");
                 return BadRequest(new { error = "Invalid rate value" });
             }
 
+            _logger.LogInformation("Attempting to update tax rate to {NewRate}", updateRequest.Rate);
             bool success = _taxRateService.UpdateRate(updateRequest.Rate);
             if (!success)
             {
+                _logger.LogWarning("Tax rate update rejected: {Rate} is outside permitted 0%-20% bounds", updateRequest.Rate);
                 return BadRequest(new { error = "Rate must be between 0% and 20%" });
             }
 
+            _logger.LogInformation("Tax rate successfully updated to {NewRate}", updateRequest.Rate);
             return Ok(new { message = "Tax rate updated successfully", newRate = updateRequest.Rate });
         }
     }

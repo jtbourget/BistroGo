@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using BistroGo.Data.Identity;
 using BistroGo.Core.Interfaces;
 using BistroGo.Core.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BistroGo.Web.Pages.Orders;
 
@@ -13,11 +15,16 @@ public class IndexModel : PageModel
 {
     private readonly IOrderRepository _orderRepo;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ILogger<IndexModel> _logger;
 
-    public IndexModel(IOrderRepository orderRepo, UserManager<ApplicationUser> userManager)
+    public IndexModel(
+        IOrderRepository orderRepo,
+        UserManager<ApplicationUser> userManager,
+        ILogger<IndexModel>? logger = null)
     {
         _orderRepo = orderRepo;
         _userManager = userManager;
+        _logger = logger ?? NullLogger<IndexModel>.Instance;
     }
 
     [BindProperty(SupportsGet = true)]
@@ -34,43 +41,80 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        await LoadDataAsync();
+        _logger.LogInformation("Kitchen/Manager orders dashboard loaded with filter: {StatusFilter}", StatusFilter ?? "All");
+        try
+        {
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while loading orders dashboard");
+            throw;
+        }
     }
 
     // Completes an order — sets status to PickedUp/Served
     public async Task<IActionResult> OnPostCompleteAsync(int id)
     {
-        var order = await _orderRepo.GetByIdAsync(id);
-        if (order != null)
+        _logger.LogInformation("Marking order {OrderId} as completed (PickedUp)", id);
+        try
         {
-            order.StatusId = OrderStatusIds.PickedUp;
-            await _orderRepo.UpdateAsync(order);
-            TempData["Message"] = $"Order #{order.Id} marked as Picked Up / Completed.";
+            var order = await _orderRepo.GetByIdAsync(id);
+            if (order != null)
+            {
+                order.StatusId = OrderStatusIds.PickedUp;
+                await _orderRepo.UpdateAsync(order);
+                _logger.LogInformation("Order {OrderId} successfully marked as PickedUp", id);
+                TempData["Message"] = $"Order #{order.Id} marked as Picked Up / Completed.";
+            }
+            else
+            {
+                _logger.LogWarning("Complete order failed: order {OrderId} not found", id);
+            }
+            return RedirectToPage(new { statusFilter = StatusFilter });
         }
-        return RedirectToPage(new { statusFilter = StatusFilter });
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error completing order {OrderId}", id);
+            throw;
+        }
     }
 
     // Changes status to a specific value (Received, Preparing, Ready, PickedUp, Cancelled)
     public async Task<IActionResult> OnPostSetStatusAsync(int id, string status)
     {
-        var order = await _orderRepo.GetByIdAsync(id);
-        if (order != null && !string.IsNullOrWhiteSpace(status))
+        _logger.LogInformation("Setting status of order {OrderId} to '{Status}'", id, status);
+        try
         {
-            if (status.Equals("Preparing", StringComparison.OrdinalIgnoreCase))
-                order.StatusId = OrderStatusIds.Preparing;
-            else if (status.Equals("Ready", StringComparison.OrdinalIgnoreCase))
-                order.StatusId = OrderStatusIds.Ready;
-            else if (status.Equals("Waiting", StringComparison.OrdinalIgnoreCase) || status.Equals("Received", StringComparison.OrdinalIgnoreCase))
-                order.StatusId = OrderStatusIds.Received;
-            else if (status.Equals("PickedUp", StringComparison.OrdinalIgnoreCase) || status.Equals("Completed", StringComparison.OrdinalIgnoreCase))
-                order.StatusId = OrderStatusIds.PickedUp;
-            else if (status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) || status.Equals("Canceled", StringComparison.OrdinalIgnoreCase))
-                order.StatusId = OrderStatusIds.Cancelled;
+            var order = await _orderRepo.GetByIdAsync(id);
+            if (order != null && !string.IsNullOrWhiteSpace(status))
+            {
+                if (status.Equals("Preparing", StringComparison.OrdinalIgnoreCase))
+                    order.StatusId = OrderStatusIds.Preparing;
+                else if (status.Equals("Ready", StringComparison.OrdinalIgnoreCase))
+                    order.StatusId = OrderStatusIds.Ready;
+                else if (status.Equals("Waiting", StringComparison.OrdinalIgnoreCase) || status.Equals("Received", StringComparison.OrdinalIgnoreCase))
+                    order.StatusId = OrderStatusIds.Received;
+                else if (status.Equals("PickedUp", StringComparison.OrdinalIgnoreCase) || status.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                    order.StatusId = OrderStatusIds.PickedUp;
+                else if (status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) || status.Equals("Canceled", StringComparison.OrdinalIgnoreCase))
+                    order.StatusId = OrderStatusIds.Cancelled;
 
-            await _orderRepo.UpdateAsync(order);
-            TempData["Message"] = $"Order #{order.Id} set to {status}.";
+                await _orderRepo.UpdateAsync(order);
+                _logger.LogInformation("Successfully updated order {OrderId} status to '{Status}'", id, status);
+                TempData["Message"] = $"Order #{order.Id} set to {status}.";
+            }
+            else
+            {
+                _logger.LogWarning("SetStatus failed: order {OrderId} not found or invalid status '{Status}'", id, status);
+            }
+            return RedirectToPage(new { statusFilter = StatusFilter });
         }
-        return RedirectToPage(new { statusFilter = StatusFilter });
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting status for order {OrderId}", id);
+            throw;
+        }
     }
 
     private async Task LoadDataAsync()
@@ -137,6 +181,8 @@ public class IndexModel : PageModel
         {
             CurrentOrders = summaries;
         }
+
+        _logger.LogDebug("Loaded {Count} orders for dashboard view", CurrentOrders.Count);
     }
 
     public class OrderSummaryDto

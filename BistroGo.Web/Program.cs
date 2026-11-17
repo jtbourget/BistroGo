@@ -5,14 +5,39 @@ using BistroGo.Data.DataAccess;
 using BistroGo.Data.Identity;
 using BistroGo.Data.Repositories;
 using BistroGo.Data.Services;
+using BistroGo.Web.Middleware;
 using BistroGo.Web.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Console;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure console log formatting based on environment (human-readable in Dev, structured JSON in Production)
+builder.Logging.ClearProviders();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Logging.AddSimpleConsole(options =>
+    {
+        options.IncludeScopes = true;
+        options.SingleLine = true;
+        options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff ";
+    });
+}
+else
+{
+    builder.Logging.AddJsonConsole(options =>
+    {
+        options.IncludeScopes = true;
+        options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ ";
+    });
+}
+
 // Add services to the container.
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<CorrelationIdDelegatingHandler>();
+
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
@@ -20,7 +45,6 @@ builder.Services.AddDbContext<BistroGoDBContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IMenuItemRepository, EfMenuItemRepository>();
-
 builder.Services.AddScoped<ICartService, EfCartService>();
 builder.Services.AddScoped<IMenuCategoryRepository, EfCategoryRepository>();
 builder.Services.AddScoped<IOrderRepository, EfOrderRepository>();
@@ -29,6 +53,7 @@ builder.Services.AddScoped<IOrderItemRepository, EfOrderItemRepository>();
 builder.Services.AddScoped<IPickupTimeSlotRepository, EfPickupTimeSlotRepository>();
 builder.Services.AddScoped<IReviewRepository, EfReviewRepository>();
 builder.Services.AddScoped<IExpenseRepository, EfExpenseRepository>();
+
 // The clock and pickup-slot settings, used by OrderService to check a slot is still bookable.
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.Configure<PickupSlotOptions>(builder.Configuration.GetSection(PickupSlotOptions.SectionName));
@@ -42,7 +67,7 @@ var apiKey = builder.Configuration["ApiSettings:Key"]
     ?? builder.Configuration["ApiSettings__Key"]
     ?? "";
 
-// Registers a typed HTTP client that always sends the shared key to the API.
+// Registers a typed HTTP client that sends the shared key and forwards Correlation IDs to the API.
 void AddApiClient<T>() where T : class =>
     builder.Services.AddHttpClient<T>(c =>
     {
@@ -66,7 +91,7 @@ void AddApiClient<T>() where T : class =>
         {
             c.DefaultRequestHeaders.TryAddWithoutValidation(ApiKeyHeader, key);
         }
-    });
+    }).AddHttpMessageHandler<CorrelationIdDelegatingHandler>();
 
 AddApiClient<CategoryApiClient>();
 AddApiClient<MenuItemApiClient>();
@@ -94,6 +119,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 var app = builder.Build();
+
+// Correlation ID middleware runs early so all web request logs, scopes, and downstream calls carry the ID
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 // Apply any pending migrations and seed data on startup
 using (var scope = app.Services.CreateScope())
