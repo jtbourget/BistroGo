@@ -176,7 +176,7 @@
 <div class="modal fade" id="newItemModal" tabindex="-1" aria-labelledby="newItemModalLabel" aria-hidden="true" data-open-modal="@(ViewData["OpenModal"] as bool? == true ? "true" : "false")">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content menu-modal-content">
-            <form method="post" asp-page-handler="AddItem">
+            <form method="post" asp-page-handler="AddItem" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title" id="newItemModalLabel">+ New Menu Item</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -207,8 +207,8 @@
                         </div>
                     </div>
                     <div class="mb-0">
-                        <label asp-for="NewItem.ImageUrl" class="form-label">Image URL (optional)</label>
-                        <input asp-for="NewItem.ImageUrl" class="form-control" placeholder="https://..." />
+                        <label asp-for="NewItem.ImageFile" class="form-label">Image Upload</label>
+                        <input asp-for="NewItem.ImageFile" type="file" accept="image/png, image/jpeg" class="form-control" />
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -224,7 +224,7 @@
 <div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true" data-open-modal="@(ViewData["OpenEditModal"] as bool? == true ? "true" : "false")">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content menu-modal-content">
-            <form method="post" asp-page-handler="EditItem">
+            <form method="post" asp-page-handler="EditItem" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title">✏️ Edit Menu Item</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -261,10 +261,18 @@
                             </div>
                         </div>
 
-                        <div class="mb-0">
-                            <label asp-for="EditItem.ImageUrl" class="form-label">Image URL (optional)</label>
-                            <input asp-for="EditItem.ImageUrl" class="form-control" id="edit-image" placeholder="https://..." />
+                    <div class="mb-0">
+                        <label asp-for="EditItem.ImageFile" class="form-label">Replace Image (Optional)</label>
+                        <input asp-for="EditItem.ImageFile" type="file" accept="image/png, image/jpeg" class="form-control" />
+
+                        <!-- Pass the existing image path so it doesn't get wiped if no new image is uploaded -->
+                        <input type="hidden" asp-for="EditItem.ExistingImageUrl" id="edit-existing-image" />
+
+                        <!-- Show the current image as a preview -->
+                        <div class="mt-2" id="edit-image-preview-container">
+                            <img id="edit-image-preview" src="" style="max-height: 60px; border-radius: 4px; display: none;" />
                         </div>
+                    </div>
                     </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>

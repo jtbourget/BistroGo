@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
         new bootstrap.Modal(newItemModalEl).show();
     }
 
-    // ── Handle Edit Item Click (Populate Modal) ──
+    // ── 3. Handle Edit Item Click (Populate Modal) ──
     document.querySelectorAll('.edit-item-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             const id = this.getAttribute('data-id');
@@ -42,7 +42,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('edit-desc').value = desc || '';
                 document.getElementById('edit-price').value = price || '';
                 document.getElementById('edit-category').value = category || '';
-                document.getElementById('edit-image').value = image || '';
+
+                // Handle the image preview
+                const previewContainer = document.getElementById('edit-image-preview-container');
+                const previewImg = document.getElementById('edit-image-preview');
+                const hiddenExisting = document.getElementById('edit-existing-image');
+
+                if (hiddenExisting) hiddenExisting.value = image || '';
+
+                if (image && image.trim() !== '') {
+                    previewImg.src = image;
+                    previewImg.style.display = 'block';
+                } else {
+                    previewImg.style.display = 'none';
+                }
             }, 100);
         });
     });
