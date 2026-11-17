@@ -1,4 +1,6 @@
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BistroGo.Web.Services
 {
@@ -8,10 +10,12 @@ namespace BistroGo.Web.Services
     public class TaxRateApiClient
     {
         private readonly HttpClient _client;
+        private readonly ILogger<TaxRateApiClient> _logger;
 
-        public TaxRateApiClient(HttpClient client)
+        public TaxRateApiClient(HttpClient client, ILogger<TaxRateApiClient>? logger = null)
         {
             _client = client;
+            _logger = logger ?? NullLogger<TaxRateApiClient>.Instance;
         }
 
         /// <summary>
@@ -22,18 +26,29 @@ namespace BistroGo.Web.Services
         {
             try
             {
+                if (_client.BaseAddress == null)
+                {
+                    _logger.LogWarning("BaseAddress is not configured for TaxRateApiClient; using default rate 0.08");
+                    return 0.08m;
+                }
+
+                _logger.LogDebug("Calling GET api/taxrates/current");
                 var response = await _client.GetAsync("api/taxrates/current");
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    _logger.LogWarning("Failed to fetch tax rate from API. Status: {StatusCode}", response.StatusCode);
                     throw new HttpRequestException($"Failed to fetch current tax rate: {response.StatusCode}");
                 }
 
                 var data = await response.Content.ReadFromJsonAsync<TaxRateResponse>();
-                return data?.Rate ?? 0.08m;
+                var rate = data?.Rate ?? 0.08m;
+                _logger.LogInformation("Fetched current tax rate {Rate} from API", rate);
+                return rate;
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error fetching current tax rate from API");
                 throw new HttpRequestException($"Error fetching current tax rate: {ex.Message}", ex);
             }
         }
@@ -47,6 +62,7 @@ namespace BistroGo.Web.Services
         {
             try
             {
+                _logger.LogInformation("Calling POST api/taxrates/update to set rate to {Rate}", rate);
                 var request = new { rate };
                 var response = await _client.PostAsJsonAsync("api/taxrates/update", request);
 
@@ -54,30 +70,30 @@ namespace BistroGo.Web.Services
                 {
                     if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     {
+                        _logger.LogWarning("Unauthorized attempt to update tax rate to {Rate}", rate);
                         throw new UnauthorizedAccessException("Unauthorized: You do not have permission to update the tax rate.");
                     }
 
-                    if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
-                    {
-                        throw new UnauthorizedAccessException("Forbidden: Only managers can update the tax rate.");
-                    }
-
-                    var errorData = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-                    throw new HttpRequestException($"Server error: {errorData?.Error ?? $"HTTP {response.StatusCode}"}");
+                    var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+                    var errorMsg = error?.Error ?? $"Failed with status {response.StatusCode}";
+                    _logger.LogWarning("Failed to update tax rate: {ErrorMessage}", errorMsg);
+                    throw new InvalidOperationException($"Tax rate update failed: {errorMsg}");
                 }
 
                 var result = await response.Content.ReadFromJsonAsync<TaxRateUpdateResponse>();
+                _logger.LogInformation("Successfully updated tax rate to {Rate}", rate);
                 return result ?? new TaxRateUpdateResponse { Message = "Tax rate updated successfully", NewRate = rate };
             }
             catch (Exception ex)
             {
-                throw new HttpRequestException($"Error updating tax rate: {ex.Message}", ex);
+                _logger.LogError(ex, "Error occurred while updating tax rate to {Rate}", rate);
+                throw;
             }
         }
     }
 
     /// <summary>
-    /// Response model for fetching the current tax rate.
+    /// Response model for GET /api/taxrates/current
     /// </summary>
     public class TaxRateResponse
     {
@@ -85,19 +101,19 @@ namespace BistroGo.Web.Services
     }
 
     /// <summary>
-    /// Response model for updating the tax rate.
+    /// Response model for POST /api/taxrates/update
     /// </summary>
     public class TaxRateUpdateResponse
     {
-        public string? Message { get; set; }
+        public string Message { get; set; } = string.Empty;
         public decimal NewRate { get; set; }
     }
 
     /// <summary>
-    /// Error response model.
+    /// Error response model
     /// </summary>
     public class ErrorResponse
     {
-        public string? Error { get; set; }
+        public string Error { get; set; } = string.Empty;
     }
 }

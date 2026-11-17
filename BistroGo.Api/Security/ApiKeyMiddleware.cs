@@ -1,6 +1,10 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BistroGo.Api.Security
 {
@@ -14,14 +18,16 @@ namespace BistroGo.Api.Security
 
         private readonly RequestDelegate _next;
         private readonly byte[] _expectedKey;
+        private readonly ILogger<ApiKeyMiddleware> _logger;
 
         /// <summary>
         /// Runs once at startup. Reads ApiSettings:Key from configuration and stores it as bytes
         /// for comparison. Throws if the key is missing, so the API refuses to start unprotected.
         /// </summary>
-        public ApiKeyMiddleware(RequestDelegate next, IConfiguration config)
+        public ApiKeyMiddleware(RequestDelegate next, IConfiguration config, ILogger<ApiKeyMiddleware>? logger = null)
         {
             _next = next;
+            _logger = logger ?? NullLogger<ApiKeyMiddleware>.Instance;
 
             var key = config["ApiSettings:Key"];
             if (string.IsNullOrWhiteSpace(key))
@@ -48,6 +54,9 @@ namespace BistroGo.Api.Security
             // Constant-time comparison, so response timing can't reveal how close a guess was.
             if (!CryptographicOperations.FixedTimeEquals(provided, _expectedKey))
             {
+                _logger.LogWarning("Unauthorized access attempt to {Path} from IP {RemoteIp}",
+                    context.Request.Path, context.Connection.RemoteIpAddress);
+
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await context.Response.WriteAsJsonAsync(new ProblemDetails
                 {
@@ -57,6 +66,7 @@ namespace BistroGo.Api.Security
                 return;
             }
 
+            _logger.LogDebug("API key verified successfully for {Path}", context.Request.Path);
             await _next(context);
         }
     }

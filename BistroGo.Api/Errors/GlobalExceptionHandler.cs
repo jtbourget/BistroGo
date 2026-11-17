@@ -1,12 +1,15 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using BistroGo.Core.Logging;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BistroGo.Api.Errors
 {
     /// <summary>
     /// Catches any exception a controller or repository didn't handle, logs the full
-    /// details on the server, and returns a short ProblemDetails response to the caller.
+    /// details on the server with correlation ID context, and returns a short ProblemDetails response to the caller.
     /// </summary>
     public class GlobalExceptionHandler : IExceptionHandler
     {
@@ -24,9 +27,13 @@ namespace BistroGo.Api.Errors
         public async ValueTask<bool> TryHandleAsync(
             HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
-            // Full detail (including the stack trace) goes to the server log only.
-            _logger.LogError(exception, "Unhandled exception for {Method} {Path}",
-                httpContext.Request.Method, httpContext.Request.Path);
+            var correlationId = httpContext.Items[CorrelationConstants.PropertyName]?.ToString()
+                ?? httpContext.Request.Headers[CorrelationConstants.HeaderName].FirstOrDefault()
+                ?? httpContext.TraceIdentifier;
+
+            // Full detail (including the stack trace) goes to the server log with correlation ID.
+            _logger.LogError(exception, "Unhandled exception for {Method} {Path} [CorrelationId: {CorrelationId}]",
+                httpContext.Request.Method, httpContext.Request.Path, correlationId);
 
             var (status, title) = exception switch
             {
@@ -35,9 +42,10 @@ namespace BistroGo.Api.Errors
                 _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
             };
 
-            // Caller only ever gets the title, no internal details.
+            // Caller gets the title, traceId, and correlationId, but no internal sensitive details.
             var problem = new ProblemDetails { Status = status, Title = title };
             problem.Extensions["traceId"] = httpContext.TraceIdentifier;
+            problem.Extensions["correlationId"] = correlationId;
 
             httpContext.Response.StatusCode = status;
             await httpContext.Response.WriteAsJsonAsync(problem, cancellationToken);

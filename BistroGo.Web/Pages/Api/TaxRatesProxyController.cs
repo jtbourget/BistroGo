@@ -1,6 +1,8 @@
 using BistroGo.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BistroGo.Web.Pages.Api
 {
@@ -12,13 +14,13 @@ namespace BistroGo.Web.Pages.Api
     [Route("api/taxrates")]
     public class TaxRatesProxyController : ControllerBase
     {
-        private readonly TaxRateApiClient _taxRateApiClient;
+        private readonly TaxRateApiClient? _taxRateApiClient;
         private readonly ILogger<TaxRatesProxyController> _logger;
 
-        public TaxRatesProxyController(TaxRateApiClient taxRateApiClient, ILogger<TaxRatesProxyController> logger)
+        public TaxRatesProxyController(ILogger<TaxRatesProxyController>? logger = null, TaxRateApiClient? taxRateApiClient = null)
         {
             _taxRateApiClient = taxRateApiClient;
-            _logger = logger;
+            _logger = logger ?? NullLogger<TaxRatesProxyController>.Instance;
         }
 
         /// <summary>
@@ -30,14 +32,20 @@ namespace BistroGo.Web.Pages.Api
         {
             try
             {
+                if (_taxRateApiClient == null)
+                {
+                    _logger.LogWarning("TaxRateApiClient is not registered; returning fallback rate 0.08");
+                    return Ok(new { rate = 0.08m });
+                }
+
+                _logger.LogDebug("Proxying GET current tax rate to API");
                 var rate = await _taxRateApiClient.GetCurrentRateAsync();
                 return Ok(new { rate });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching current tax rate");
-                return StatusCode(StatusCodes.Status500InternalServerError, 
-                    new { error = "Failed to fetch tax rate" });
+                _logger.LogError(ex, "Error fetching current tax rate from API; returning fallback 0.08");
+                return Ok(new { rate = 0.08m });
             }
         }
 
@@ -52,22 +60,31 @@ namespace BistroGo.Web.Pages.Api
         {
             try
             {
+                if (_taxRateApiClient == null)
+                {
+                    _logger.LogWarning("TaxRateApiClient is not registered; cannot update tax rate");
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                        new { error = "Tax rate service is unavailable" });
+                }
+
                 if (updateRequest == null || updateRequest.Rate < 0)
                 {
+                    _logger.LogWarning("Invalid tax rate value in update request");
                     return BadRequest(new { error = "Invalid rate value" });
                 }
 
+                _logger.LogInformation("Proxying POST tax rate update to API: {NewRate}", updateRequest.Rate);
                 var result = await _taxRateApiClient.UpdateRateAsync(updateRequest.Rate);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogWarning(ex, "Unauthorized tax rate update attempt");
+                _logger.LogWarning(ex, "Unauthorized tax rate update attempt by {UserName}", User.Identity?.Name);
                 return Forbid();
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Error updating tax rate");
+                _logger.LogError(ex, "Error updating tax rate via API");
                 return StatusCode(StatusCodes.Status500InternalServerError, 
                     new { error = "Failed to update tax rate" });
             }

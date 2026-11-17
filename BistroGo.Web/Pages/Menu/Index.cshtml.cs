@@ -3,6 +3,8 @@ using BistroGo.Core.Models;
 using BistroGo.Web.Cart;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BistroGo.Web.Pages.Menu;
 
@@ -12,11 +14,13 @@ public class IndexModel : PageModel
 {
     private readonly IMenuItemRepository _menu;
     private readonly ICartService _cart;
+    private readonly ILogger<IndexModel> _logger;
 
-    public IndexModel(IMenuItemRepository menu, ICartService cart)
+    public IndexModel(IMenuItemRepository menu, ICartService cart, ILogger<IndexModel>? logger = null)
     {
         _menu = menu;
         _cart = cart;
+        _logger = logger ?? NullLogger<IndexModel>.Instance;
     }
 
     // View data: filtered menu, category dropdown options, and the active filter.
@@ -28,85 +32,124 @@ public class IndexModel : PageModel
     public IReadOnlyList<OrderItem> OrderLines { get; private set; } = new List<OrderItem>();
     public decimal OrderTotal { get; private set; }
 
-
     // Loads available items, builds categories, applies the optional filter, and loads the cart badge.
     public async Task OnGetAsync(string? category)
     {
-        SelectedCategory = category;
+        _logger.LogInformation("Menu page loaded with category filter: {Category}", category ?? "All");
+        try
+        {
+            SelectedCategory = category;
 
-        // IsAvailable filters out items marked unavailable; repo already sorts by DisplayOrder then name.
-        var all = (await _menu.GetAllAsync()).Where(m => m.IsAvailable).ToList(); // IsAvailable filters items markes as unavailable
+            // IsAvailable filters out items marked unavailable; repo already sorts by DisplayOrder then name.
+            var all = (await _menu.GetAllAsync()).Where(m => m.IsAvailable).ToList();
 
-        // Distinct() preserves first-seen order, so categories follow DisplayOrder (not alphabetical).
-        Categories = all.Select(m => m.Category!.Name).Distinct().ToList();
+            // Distinct() preserves first-seen order, so categories follow DisplayOrder (not alphabetical).
+            Categories = all.Select(m => m.Category!.Name).Distinct().ToList();
 
-        // No category = show all; otherwise filter to the selected category.
-        MenuItems = string.IsNullOrEmpty(category)
-            ? all
-            : all.Where(m => m.Category!.Name == category).ToList();
+            // No category = show all; otherwise filter to the selected category.
+            MenuItems = string.IsNullOrEmpty(category)
+                ? all
+                : all.Where(m => m.Category!.Name == category).ToList();
 
-        // Find (not FindOrCreate): viewing the menu must never create a cart.
-        var owner = CartOwnerResolver.Find(HttpContext);
-        var cart = owner == null ? null : await _cart.GetCartAsync(owner);
-        OrderLines = cart?.Items.ToList() ?? new List<OrderItem>();
-        OrderTotal = cart?.Total ?? 0m;
+            // Find (not FindOrCreate): viewing the menu must never create a cart.
+            var owner = CartOwnerResolver.Find(HttpContext);
+            var cart = owner == null ? null : await _cart.GetCartAsync(owner);
+            OrderLines = cart?.Items.ToList() ?? new List<OrderItem>();
+            OrderTotal = cart?.Total ?? 0m;
+
+            _logger.LogDebug("Menu page displayed {Count} items across {CatCount} categories", MenuItems.Count, Categories.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while loading menu page");
+            throw;
+        }
     }
 
     // Adds an item to the cart (creating the cart if needed) and redirects back, preserving the filter.
     public async Task<IActionResult> OnPostAddToOrderAsync(int menuItemId, int quantity, string? category)
     {
-        // FindOrCreate: adding legitimately creates a cart owned by the user or guest cookie.
-        var owner = CartOwnerResolver.FindOrCreate(HttpContext);
-
-        // Guard against a missing/tampered hidden input.
-        if (quantity < 1) quantity = 1;
-
-        bool added = false;
-
-        // Add one at a time so a mid-way failure (item unavailable) stops the loop.
-        for (int i = 0; i < quantity; i++)
+        _logger.LogInformation("Adding MenuItemId {MenuItemId} (Qty: {Quantity}) to order", menuItemId, quantity);
+        try
         {
-            added = await _cart.AddItemAsync(owner, menuItemId);
-            if (!added) break;
-        }
+            // FindOrCreate: adding legitimately creates a cart owned by the user or guest cookie.
+            var owner = CartOwnerResolver.FindOrCreate(HttpContext);
 
-        // Flash message via TempData (PRG pattern) to report success or unavailability.
-        if (added)
-        {
-            var item = await _menu.GetByIdAsync(menuItemId);
+            // Guard against a missing/tampered hidden input.
+            if (quantity < 1) quantity = 1;
 
-            if (quantity > 1)
-                TempData["Message"] = $"Added {quantity} x \"{item?.Name}\" to your order.";
+            bool added = false;
+
+            // Add one at a time so a mid-way failure (item unavailable) stops the loop.
+            for (int i = 0; i < quantity; i++)
+            {
+                added = await _cart.AddItemAsync(owner, menuItemId);
+                if (!added) break;
+            }
+
+            // Flash message via TempData (PRG pattern) to report success or unavailability.
+            if (added)
+            {
+                var item = await _menu.GetByIdAsync(menuItemId);
+
+                if (quantity > 1)
+                    TempData["Message"] = $"Added {quantity} x \"{item?.Name}\" to your order.";
+                else
+                    TempData["Message"] = $"Added \"{item?.Name}\" to your order.";
+
+                _logger.LogInformation("Successfully added {Quantity} x '{ItemName}' to order", quantity, item?.Name);
+            }
             else
-                TempData["Message"] = $"Added \"{item?.Name}\" to your order.";
-        }
-        else
-        {
-            TempData["Message"] = "Sorry, that item isn't available.";
-        }
+            {
+                _logger.LogWarning("Failed to add item {MenuItemId} to order: item not available", menuItemId);
+                TempData["Message"] = "Sorry, that item isn't available.";
+            }
 
-        return RedirectToPage(new { category });
+            return RedirectToPage(new { category });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while adding item {MenuItemId} to order", menuItemId);
+            throw;
+        }
     }
 
     // Sets an absolute quantity for a line (cart modal -/+ buttons); returns updated cart JSON.
     public async Task<IActionResult> OnPostUpdateQuantityJsonAsync(int menuItemId, int quantity)
     {
-        // Find, not FindOrCreate: nothing to update without a cart.
-        var owner = CartOwnerResolver.Find(HttpContext);   // Find, not FindOrCreate: nothing to update without a cart
-        if (owner != null)
-            await _cart.SetQuantityAsync(owner, menuItemId, quantity);
+        _logger.LogInformation("Updating quantity for MenuItemId {MenuItemId} to {Quantity}", menuItemId, quantity);
+        try
+        {
+            var owner = CartOwnerResolver.Find(HttpContext);
+            if (owner != null)
+                await _cart.SetQuantityAsync(owner, menuItemId, quantity);
 
-        return await CartJsonAsync(owner);
+            return await CartJsonAsync(owner);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while updating quantity for item {MenuItemId}", menuItemId);
+            throw;
+        }
     }
 
     // Removes a line entirely (cart modal ✕ button); returns updated cart JSON.
     public async Task<IActionResult> OnPostRemoveLineJsonAsync(int menuItemId)
     {
-        var owner = CartOwnerResolver.Find(HttpContext);
-        if (owner != null)
-            await _cart.RemoveItemAsync(owner, menuItemId);
+        _logger.LogInformation("Removing line item for MenuItemId {MenuItemId}", menuItemId);
+        try
+        {
+            var owner = CartOwnerResolver.Find(HttpContext);
+            if (owner != null)
+                await _cart.RemoveItemAsync(owner, menuItemId);
 
-        return await CartJsonAsync(owner);
+            return await CartJsonAsync(owner);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while removing line for item {MenuItemId}", menuItemId);
+            throw;
+        }
     }
 
     // Serializes the cart (lines, itemCount, total) into the JSON shape the modal script expects.

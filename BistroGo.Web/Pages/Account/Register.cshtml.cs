@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BistroGo.Core.Interfaces;
 using BistroGo.Web.Cart;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BistroGo.Web.Pages.Account
 {
@@ -14,12 +16,18 @@ namespace BistroGo.Web.Pages.Account
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ICartService _cart;
+        private readonly ILogger<RegisterModel> _logger;
 
-        public RegisterModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ICartService cart)
+        public RegisterModel(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager, 
+            ICartService cart,
+            ILogger<RegisterModel>? logger = null)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _cart = cart;
+            _logger = logger ?? NullLogger<RegisterModel>.Instance;
         }
 
         [BindProperty]
@@ -52,52 +60,68 @@ namespace BistroGo.Web.Pages.Account
 
         public void OnGet()
         {
+            _logger.LogInformation("Registration page accessed");
         }
 
         public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
         {
-            if (!ModelState.IsValid)
+            _logger.LogInformation("Registration attempt for email: {Email}", Input.Email);
+            try
             {
-                return Page();
-            }
-
-            var user = new ApplicationUser
-            {
-                UserName = Input.Email,
-                Email = Input.Email,
-                FirstName = Input.FirstName,
-                LastName = Input.LastName
-            };
-
-            var result = await _userManager.CreateAsync(user, Input.Password);
-
-            if (!result.Succeeded)
-            {
-                foreach (var error in result.Errors)
+                if (!ModelState.IsValid)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    _logger.LogWarning("Registration form validation failed for {Email}", Input.Email);
+                    return Page();
                 }
-                return Page();
+
+                var user = new ApplicationUser
+                {
+                    UserName = Input.Email,
+                    Email = Input.Email,
+                    FirstName = Input.FirstName,
+                    LastName = Input.LastName
+                };
+
+                var result = await _userManager.CreateAsync(user, Input.Password);
+
+                if (!result.Succeeded)
+                {
+                    _logger.LogWarning("Registration failed for {Email}: {Errors}",
+                        Input.Email, string.Join("; ", result.Errors.Select(e => e.Description)));
+
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return Page();
+                }
+
+                _logger.LogInformation("User created successfully with id {UserId}. Assigning Customer role.", user.Id);
+                await _userManager.AddToRoleAsync(user, RoleNames.Customer);
+
+                await _signInManager.SignInAsync(user, isPersistent: false);
+
+                // Merge guest cart with the new user cart if a guest token exists
+                var guestToken = CartOwnerResolver.ReadGuestToken(HttpContext);
+                if (guestToken != null)
+                {
+                    _logger.LogInformation("Merging guest cart {GuestToken} into newly registered user {UserId}", guestToken.Value, user.Id);
+                    await _cart.MergeGuestCartAsync(guestToken.Value, user.Id);
+                    CartOwnerResolver.ClearGuestToken(HttpContext);
+                }
+
+                if (returnUrl != null && Url.IsLocalUrl(returnUrl))
+                {
+                    return LocalRedirect(returnUrl);
+                }
+
+                return RedirectToPage("/Index");
             }
-
-            await _userManager.AddToRoleAsync(user, RoleNames.Customer);
-
-            await _signInManager.SignInAsync(user, isPersistent: false);
-
-            // Merge guest cart with the new user cart if a guest token exists
-            var guestToken = CartOwnerResolver.ReadGuestToken(HttpContext);
-            if (guestToken != null)
+            catch (Exception ex)
             {
-                await _cart.MergeGuestCartAsync(guestToken.Value, user.Id);
-                CartOwnerResolver.ClearGuestToken(HttpContext);
+                _logger.LogError(ex, "Error occurred during user registration for {Email}", Input.Email);
+                throw;
             }
-
-            if (returnUrl != null && Url.IsLocalUrl(returnUrl))
-            {
-                return LocalRedirect(returnUrl);
-            }
-
-            return RedirectToPage("/Index");
         }
     }
 }

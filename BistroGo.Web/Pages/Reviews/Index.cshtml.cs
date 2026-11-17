@@ -5,6 +5,8 @@ using BistroGo.Data.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.ComponentModel.DataAnnotations;
 
 namespace BistroGo.Web.Pages.Reviews
@@ -19,11 +21,16 @@ namespace BistroGo.Web.Pages.Reviews
     {
         private readonly IReviewRepository _reviewRepo;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<IndexModel> _logger;
 
-        public IndexModel(IReviewRepository reviewRepo, UserManager<ApplicationUser> userManager)
+        public IndexModel(
+            IReviewRepository reviewRepo,
+            UserManager<ApplicationUser> userManager,
+            ILogger<IndexModel>? logger = null)
         {
             _reviewRepo = reviewRepo;
             _userManager = userManager;
+            _logger = logger ?? NullLogger<IndexModel>.Instance;
         }
 
         public string? CurrentUserName { get; set; }
@@ -70,138 +77,178 @@ namespace BistroGo.Web.Pages.Reviews
 
         public async Task<IActionResult> OnGetAsync()
         {
-            // Kitchen staff are not permitted to view or submit reviews
-            if (User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.KitchenStaff))
+            _logger.LogInformation("Reviews page accessed");
+            try
             {
-                return RedirectToPage("/Account/AccessDenied");
+                // Kitchen staff are not permitted to view or submit reviews
+                if (User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.KitchenStaff))
+                {
+                    _logger.LogWarning("Access denied to reviews page for kitchen staff {UserName}", User.Identity.Name);
+                    return RedirectToPage("/Account/AccessDenied");
+                }
+
+                IsManager = User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.Manager);
+                CanSubmitReview = !IsManager;
+
+                if (User.Identity?.IsAuthenticated == true)
+                {
+                    var user = await _userManager.GetUserAsync(User);
+                    if (user != null && !string.IsNullOrWhiteSpace(user.FirstName))
+                    {
+                        CurrentUserName = $"{user.FirstName} {user.LastName}".Trim();
+                    }
+                    else
+                    {
+                        CurrentUserName = User.Identity.Name;
+                    }
+                }
+
+                Reviews = await _reviewRepo.GetAllAsync();
+                _logger.LogDebug("Loaded {Count} reviews (average rating: {AverageRating})", Reviews.Count, AverageRating);
+                return Page();
             }
-
-            IsManager = User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.Manager);
-            CanSubmitReview = !IsManager;
-
-            if (User.Identity?.IsAuthenticated == true)
+            catch (Exception ex)
             {
-                var user = await _userManager.GetUserAsync(User);
-                if (user != null && !string.IsNullOrWhiteSpace(user.FirstName))
-                {
-                    CurrentUserName = $"{user.FirstName} {user.LastName}".Trim();
-                }
-                else
-                {
-                    CurrentUserName = User.Identity.Name;
-                }
+                _logger.LogError(ex, "Error occurred while loading reviews page");
+                throw;
             }
-
-            Reviews = await _reviewRepo.GetAllAsync();
-            return Page();
         }
 
         public async Task<IActionResult> OnPostSubmitReviewAsync()
         {
-            // Kitchen staff are not permitted to submit reviews
-            if (User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.KitchenStaff))
+            _logger.LogInformation("Review submission received, Rating: {Rating}", ReviewInput.Rating);
+            try
             {
-                return RedirectToPage("/Account/AccessDenied");
-            }
-
-            // Managers are not permitted to submit customer reviews
-            if (User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.Manager))
-            {
-                ErrorMessage = "Managers are not permitted to submit reviews.";
-                return RedirectToPage();
-            }
-
-            if (ReviewInput.Rating < 1 || ReviewInput.Rating > 5 || string.IsNullOrWhiteSpace(ReviewInput.ReviewComment))
-            {
-                ErrorMessage = "Please provide both a star rating and written feedback.";
-                return RedirectToPage();
-            }
-
-            string? customerId = null;
-            string reviewerName = ReviewInput.ReviewerName?.Trim() ?? string.Empty;
-
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                var user = await _userManager.GetUserAsync(User);
-                customerId = user?.Id;
-                if (string.IsNullOrWhiteSpace(reviewerName))
+                // Kitchen staff are not permitted to submit reviews
+                if (User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.KitchenStaff))
                 {
-                    if (user != null && !string.IsNullOrWhiteSpace(user.FirstName))
+                    _logger.LogWarning("Kitchen staff {UserName} attempted to submit a review", User.Identity.Name);
+                    return RedirectToPage("/Account/AccessDenied");
+                }
+
+                // Managers are not permitted to submit customer reviews
+                if (User.Identity?.IsAuthenticated == true && User.IsInRole(RoleNames.Manager))
+                {
+                    _logger.LogWarning("Manager {UserName} attempted to submit a customer review", User.Identity.Name);
+                    ErrorMessage = "Managers are not permitted to submit reviews.";
+                    return RedirectToPage();
+                }
+
+                if (ReviewInput.Rating < 1 || ReviewInput.Rating > 5 || string.IsNullOrWhiteSpace(ReviewInput.ReviewComment))
+                {
+                    _logger.LogWarning("Review submission validation failed: Rating {Rating}, Comment length {Length}",
+                        ReviewInput.Rating, ReviewInput.ReviewComment?.Length ?? 0);
+                    ErrorMessage = "Please provide both a star rating and written feedback.";
+                    return RedirectToPage();
+                }
+
+                string? customerId = null;
+                string reviewerName = ReviewInput.ReviewerName?.Trim() ?? string.Empty;
+
+                if (User.Identity?.IsAuthenticated == true)
+                {
+                    var user = await _userManager.GetUserAsync(User);
+                    customerId = user?.Id;
+                    if (string.IsNullOrWhiteSpace(reviewerName))
                     {
-                        reviewerName = $"{user.FirstName} {user.LastName}".Trim();
-                    }
-                    else
-                    {
-                        reviewerName = User.Identity.Name ?? "Customer";
+                        if (user != null && !string.IsNullOrWhiteSpace(user.FirstName))
+                        {
+                            reviewerName = $"{user.FirstName} {user.LastName}".Trim();
+                        }
+                        else
+                        {
+                            reviewerName = User.Identity.Name ?? "Customer";
+                        }
                     }
                 }
-            }
-            else
-            {
-                if (string.IsNullOrWhiteSpace(reviewerName))
+                else
                 {
-                    reviewerName = "Guest";
+                    if (string.IsNullOrWhiteSpace(reviewerName))
+                    {
+                        reviewerName = "Guest";
+                    }
                 }
+
+                var review = new Review
+                {
+                    CustomerId = customerId,
+                    CustomerName = reviewerName,
+                    Rating = ReviewInput.Rating,
+                    ReviewText = ReviewInput.ReviewComment.Trim(),
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _reviewRepo.AddAsync(review);
+                _logger.LogInformation("Successfully submitted review {ReviewId} by '{ReviewerName}'", review.Id, reviewerName);
+                SuccessMessage = "Thank you! Your review has been submitted successfully.";
+                return RedirectToPage();
             }
-
-            var review = new Review
+            catch (Exception ex)
             {
-                CustomerId = customerId,
-                CustomerName = reviewerName,
-                Rating = ReviewInput.Rating,
-                ReviewText = ReviewInput.ReviewComment.Trim(),
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _reviewRepo.AddAsync(review);
-            SuccessMessage = "Thank you! Your review has been submitted successfully.";
-            return RedirectToPage();
+                _logger.LogError(ex, "Error occurred while submitting review");
+                throw;
+            }
         }
 
         public async Task<IActionResult> OnPostAddCommentAsync()
         {
-            // Only managers can comment on reviews
-            if (User.Identity?.IsAuthenticated != true || !User.IsInRole(RoleNames.Manager))
+            _logger.LogInformation("Manager comment submission received for review {ReviewId}", CommentInput.ReviewId);
+            try
             {
-                return Forbid();
-            }
+                // Only managers can comment on reviews
+                if (User.Identity?.IsAuthenticated != true || !User.IsInRole(RoleNames.Manager))
+                {
+                    _logger.LogWarning("Unauthorized attempt to post manager comment by {UserName}", User.Identity?.Name);
+                    return Forbid();
+                }
 
-            if (CommentInput.ReviewId <= 0 || string.IsNullOrWhiteSpace(CommentInput.CommentText))
-            {
-                ErrorMessage = "Please enter comment text before submitting.";
-                return RedirectToPage();
-            }
+                if (CommentInput.ReviewId <= 0 || string.IsNullOrWhiteSpace(CommentInput.CommentText))
+                {
+                    _logger.LogWarning("Invalid comment submission for review {ReviewId}", CommentInput.ReviewId);
+                    ErrorMessage = "Please enter comment text before submitting.";
+                    return RedirectToPage();
+                }
 
-            var review = await _reviewRepo.GetByIdAsync(CommentInput.ReviewId);
-            if (review == null)
-            {
-                ErrorMessage = "Review not found.";
-                return RedirectToPage();
-            }
+                var review = await _reviewRepo.GetByIdAsync(CommentInput.ReviewId);
+                if (review == null)
+                {
+                    _logger.LogWarning("Cannot add comment: review {ReviewId} not found", CommentInput.ReviewId);
+                    ErrorMessage = "Review not found.";
+                    return RedirectToPage();
+                }
 
-            var manager = await _userManager.GetUserAsync(User);
-            string managerName = "Store Manager";
-            if (manager != null && !string.IsNullOrWhiteSpace(manager.FirstName))
-            {
-                managerName = $"{manager.FirstName} {manager.LastName}".Trim();
-            }
-            else if (!string.IsNullOrWhiteSpace(User.Identity?.Name))
-            {
-                managerName = User.Identity.Name;
-            }
+                var manager = await _userManager.GetUserAsync(User);
+                string managerName = "Store Manager";
+                if (manager != null && !string.IsNullOrWhiteSpace(manager.FirstName))
+                {
+                    managerName = $"{manager.FirstName} {manager.LastName}".Trim();
+                }
+                else if (!string.IsNullOrWhiteSpace(User.Identity?.Name))
+                {
+                    managerName = User.Identity.Name;
+                }
 
-            var comment = new ReviewComment
-            {
-                ReviewId = CommentInput.ReviewId,
-                ManagerId = manager?.Id,
-                ManagerName = managerName,
-                CommentText = CommentInput.CommentText.Trim(),
-                CreatedAt = DateTime.UtcNow
-            };
+                var comment = new ReviewComment
+                {
+                    ReviewId = CommentInput.ReviewId,
+                    ManagerId = manager?.Id,
+                    ManagerName = managerName,
+                    CommentText = CommentInput.CommentText.Trim(),
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            await _reviewRepo.AddCommentAsync(comment);
-            SuccessMessage = "Your manager response has been posted.";
-            return RedirectToPage(null, null, $"review-{CommentInput.ReviewId}");
+                await _reviewRepo.AddCommentAsync(comment);
+                _logger.LogInformation("Successfully added comment {CommentId} to review {ReviewId} by manager {ManagerName}",
+                    comment.Id, CommentInput.ReviewId, managerName);
+
+                SuccessMessage = "Your manager response has been posted.";
+                return RedirectToPage(null, null, $"review-{CommentInput.ReviewId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while adding manager comment to review {ReviewId}", CommentInput.ReviewId);
+                throw;
+            }
         }
     }
 }

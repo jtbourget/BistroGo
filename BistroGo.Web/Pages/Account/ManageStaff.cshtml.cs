@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BistroGo.Web.Pages.Account
 {
@@ -23,14 +25,17 @@ namespace BistroGo.Web.Pages.Account
     public class ManageStaffModel : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<ManageStaffModel> _logger;
 
         /// <summary>
         /// Constructor for ManageStaffModel.
         /// </summary>
         /// <param name="userManager">The ASP.NET Core Identity user manager.</param>
-        public ManageStaffModel(UserManager<ApplicationUser> userManager)
+        /// <param name="logger">Optional logger instance.</param>
+        public ManageStaffModel(UserManager<ApplicationUser> userManager, ILogger<ManageStaffModel>? logger = null)
         {
             _userManager = userManager;
+            _logger = logger ?? NullLogger<ManageStaffModel>.Instance;
         }
 
         public List<StaffMemberViewModel> StaffMembers { get; set; } = new();
@@ -134,7 +139,16 @@ namespace BistroGo.Web.Pages.Account
 
         public async Task OnGetAsync()
         {
-            await LoadStaffMembersAsync();
+            _logger.LogInformation("Manage staff page accessed by {UserName}", User.Identity?.Name);
+            try
+            {
+                await LoadStaffMembersAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while loading staff members");
+                throw;
+            }
         }
 
         /// <summary>
@@ -150,58 +164,72 @@ namespace BistroGo.Web.Pages.Account
         /// </summary>
         public async Task<IActionResult> OnPostCreateAsync()
         {
-            // Remove validation errors not belonging to the create form
-            foreach (var key in ModelState.Keys.Where(k => !k.StartsWith(nameof(CreateInput)) && !k.StartsWith("Input.")).ToList())
+            _logger.LogInformation("Creating staff account for {Email} with role {Role}", CreateInput.Email, CreateInput.Role);
+            try
             {
-                ModelState.Remove(key);
-            }
-
-            if (CreateInput.Role != Roles.KitchenStaff && CreateInput.Role != Roles.Manager)
-            {
-                ModelState.AddModelError("CreateInput.Role", "Invalid role selected.");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                await LoadStaffMembersAsync();
-                ViewData["OpenCreateModal"] = true;
-                return Page();
-            }
-
-            var existing = await _userManager.FindByEmailAsync(CreateInput.Email);
-            if (existing != null)
-            {
-                ModelState.AddModelError("CreateInput.Email", $"A user with email '{CreateInput.Email}' already exists.");
-                await LoadStaffMembersAsync();
-                ViewData["OpenCreateModal"] = true;
-                return Page();
-            }
-
-            var user = new ApplicationUser
-            {
-                UserName = CreateInput.Email,
-                Email = CreateInput.Email,
-                FirstName = CreateInput.FirstName,
-                LastName = CreateInput.LastName,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            var result = await _userManager.CreateAsync(user, CreateInput.Password);
-            if (!result.Succeeded)
-            {
-                foreach (var error in result.Errors)
+                // Remove validation errors not belonging to the create form
+                foreach (var key in ModelState.Keys.Where(k => !k.StartsWith(nameof(CreateInput)) && !k.StartsWith("Input.")).ToList())
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    ModelState.Remove(key);
                 }
-                await LoadStaffMembersAsync();
-                ViewData["OpenCreateModal"] = true;
-                return Page();
+
+                if (CreateInput.Role != Roles.KitchenStaff && CreateInput.Role != Roles.Manager)
+                {
+                    ModelState.AddModelError("CreateInput.Role", "Invalid role selected.");
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Validation failed for staff account creation form");
+                    await LoadStaffMembersAsync();
+                    ViewData["OpenCreateModal"] = true;
+                    return Page();
+                }
+
+                var existing = await _userManager.FindByEmailAsync(CreateInput.Email);
+                if (existing != null)
+                {
+                    _logger.LogWarning("Staff creation rejected: email '{Email}' already exists", CreateInput.Email);
+                    ModelState.AddModelError("CreateInput.Email", $"A user with email '{CreateInput.Email}' already exists.");
+                    await LoadStaffMembersAsync();
+                    ViewData["OpenCreateModal"] = true;
+                    return Page();
+                }
+
+                var user = new ApplicationUser
+                {
+                    UserName = CreateInput.Email,
+                    Email = CreateInput.Email,
+                    FirstName = CreateInput.FirstName,
+                    LastName = CreateInput.LastName,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var result = await _userManager.CreateAsync(user, CreateInput.Password);
+                if (!result.Succeeded)
+                {
+                    _logger.LogWarning("Staff creation failed for {Email}: {Errors}",
+                        CreateInput.Email, string.Join("; ", result.Errors.Select(e => e.Description)));
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    await LoadStaffMembersAsync();
+                    ViewData["OpenCreateModal"] = true;
+                    return Page();
+                }
+
+                await _userManager.AddToRoleAsync(user, CreateInput.Role);
+                _logger.LogInformation("Staff account for {Email} ({Role}) created successfully", user.Email, CreateInput.Role);
+
+                StatusMessage = $"Staff account for {user.FirstName} {user.LastName} was successfully created.";
+                return RedirectToPage();
             }
-
-            await _userManager.AddToRoleAsync(user, CreateInput.Role);
-
-            StatusMessage = $"Staff account for {user.FirstName} {user.LastName} was successfully created.";
-            return RedirectToPage();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while creating staff account for {Email}", CreateInput.Email);
+                throw;
+            }
         }
 
         /// <summary>
@@ -209,91 +237,112 @@ namespace BistroGo.Web.Pages.Account
         /// </summary>
         public async Task<IActionResult> OnPostEditAsync()
         {
-            // Remove validation errors not belonging to the edit form
-            foreach (var key in ModelState.Keys.Where(k => !k.StartsWith(nameof(EditInput))).ToList())
+            _logger.LogInformation("Editing staff account {StaffId}", EditInput.Id);
+            try
             {
-                ModelState.Remove(key);
-            }
-
-            if (EditInput.Role != Roles.KitchenStaff && EditInput.Role != Roles.Manager)
-            {
-                ModelState.AddModelError("EditInput.Role", "Invalid role selected.");
-            }
-
-            if (!string.IsNullOrWhiteSpace(EditInput.NewPassword))
-            {
-                if (EditInput.NewPassword.Length < 8)
+                // Remove validation errors not belonging to the edit form
+                foreach (var key in ModelState.Keys.Where(k => !k.StartsWith(nameof(EditInput))).ToList())
                 {
-                    ModelState.AddModelError("EditInput.NewPassword", "The password must be at least 8 characters long.");
+                    ModelState.Remove(key);
                 }
-                if (EditInput.NewPassword != EditInput.ConfirmNewPassword)
+
+                if (EditInput.Role != Roles.KitchenStaff && EditInput.Role != Roles.Manager)
                 {
-                    ModelState.AddModelError("EditInput.ConfirmNewPassword", "Passwords don't match.");
+                    ModelState.AddModelError("EditInput.Role", "Invalid role selected.");
                 }
-            }
 
-            if (!ModelState.IsValid)
-            {
-                await LoadStaffMembersAsync();
-                ViewData["OpenEditModal"] = true;
-                return Page();
-            }
-
-            var user = await _userManager.FindByIdAsync(EditInput.Id);
-            if (user == null)
-            {
-                ErrorMessage = "Staff account not found.";
-                return RedirectToPage();
-            }
-
-            var currentRoles = await _userManager.GetRolesAsync(user);
-            if (!currentRoles.Contains(Roles.KitchenStaff) && !currentRoles.Contains(Roles.Manager))
-            {
-                ErrorMessage = "Only staff accounts can be edited from this page.";
-                return RedirectToPage();
-            }
-
-            if (!string.Equals(user.Email, EditInput.Email, StringComparison.OrdinalIgnoreCase))
-            {
-                var existing = await _userManager.FindByEmailAsync(EditInput.Email);
-                if (existing != null && existing.Id != user.Id)
+                if (!string.IsNullOrWhiteSpace(EditInput.NewPassword))
                 {
-                    ModelState.AddModelError("EditInput.Email", $"A user with email '{EditInput.Email}' already exists.");
+                    if (EditInput.NewPassword.Length < 8)
+                    {
+                        ModelState.AddModelError("EditInput.NewPassword", "The password must be at least 8 characters long.");
+                    }
+                    if (EditInput.NewPassword != EditInput.ConfirmNewPassword)
+                    {
+                        ModelState.AddModelError("EditInput.ConfirmNewPassword", "Passwords don't match.");
+                    }
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Validation failed for staff edit form {StaffId}", EditInput.Id);
                     await LoadStaffMembersAsync();
                     ViewData["OpenEditModal"] = true;
                     return Page();
                 }
 
-                user.Email = EditInput.Email;
-                user.UserName = EditInput.Email;
-                user.NormalizedEmail = EditInput.Email.ToUpperInvariant();
-                user.NormalizedUserName = EditInput.Email.ToUpperInvariant();
-            }
-
-            user.FirstName = EditInput.FirstName;
-            user.LastName = EditInput.LastName;
-
-            if (!currentRoles.Contains(EditInput.Role))
-            {
-                if (currentRoles.Contains(Roles.Manager) && EditInput.Role != Roles.Manager)
+                var user = await _userManager.FindByIdAsync(EditInput.Id);
+                if (user == null)
                 {
-                    var managers = await _userManager.GetUsersInRoleAsync(Roles.Manager);
-                    if (managers.Count <= 1 && managers.Any(m => m.Id == user.Id))
+                    _logger.LogWarning("Staff edit failed: account {StaffId} not found", EditInput.Id);
+                    ErrorMessage = "Staff account not found.";
+                    return RedirectToPage();
+                }
+
+                var currentRoles = await _userManager.GetRolesAsync(user);
+                if (!currentRoles.Contains(Roles.KitchenStaff) && !currentRoles.Contains(Roles.Manager))
+                {
+                    _logger.LogWarning("Staff edit rejected: user {StaffId} is not a staff member", EditInput.Id);
+                    ErrorMessage = "Only staff accounts can be edited from this page.";
+                    return RedirectToPage();
+                }
+
+                if (!string.Equals(user.Email, EditInput.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    var existing = await _userManager.FindByEmailAsync(EditInput.Email);
+                    if (existing != null && existing.Id != user.Id)
                     {
-                        ModelState.AddModelError("EditInput.Role", "Cannot change the role of the only manager in the system.");
+                        _logger.LogWarning("Staff edit rejected: email '{Email}' already in use", EditInput.Email);
+                        ModelState.AddModelError("EditInput.Email", $"A user with email '{EditInput.Email}' already exists.");
                         await LoadStaffMembersAsync();
                         ViewData["OpenEditModal"] = true;
                         return Page();
                     }
+
+                    user.Email = EditInput.Email;
+                    user.UserName = EditInput.Email;
+                    user.NormalizedEmail = EditInput.Email.ToUpperInvariant();
+                    user.NormalizedUserName = EditInput.Email.ToUpperInvariant();
                 }
 
-                var rolesToRemove = currentRoles.Where(r => r == Roles.KitchenStaff || r == Roles.Manager).ToList();
-                if (rolesToRemove.Count > 0)
+                user.FirstName = EditInput.FirstName;
+                user.LastName = EditInput.LastName;
+
+                if (!currentRoles.Contains(EditInput.Role))
                 {
-                    var removeResult = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
-                    if (!removeResult.Succeeded)
+                    if (currentRoles.Contains(Roles.Manager) && EditInput.Role != Roles.Manager)
                     {
-                        foreach (var error in removeResult.Errors)
+                        var managers = await _userManager.GetUsersInRoleAsync(Roles.Manager);
+                        if (managers.Count <= 1 && managers.Any(m => m.Id == user.Id))
+                        {
+                            _logger.LogWarning("Staff edit rejected: cannot demote the only manager");
+                            ModelState.AddModelError("EditInput.Role", "Cannot change the role of the only manager in the system.");
+                            await LoadStaffMembersAsync();
+                            ViewData["OpenEditModal"] = true;
+                            return Page();
+                        }
+                    }
+
+                    var rolesToRemove = currentRoles.Where(r => r == Roles.KitchenStaff || r == Roles.Manager).ToList();
+                    if (rolesToRemove.Count > 0)
+                    {
+                        var removeResult = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+                        if (!removeResult.Succeeded)
+                        {
+                            foreach (var error in removeResult.Errors)
+                            {
+                                ModelState.AddModelError(string.Empty, error.Description);
+                            }
+                            await LoadStaffMembersAsync();
+                            ViewData["OpenEditModal"] = true;
+                            return Page();
+                        }
+                    }
+
+                    var addResult = await _userManager.AddToRoleAsync(user, EditInput.Role);
+                    if (!addResult.Succeeded)
+                    {
+                        foreach (var error in addResult.Errors)
                         {
                             ModelState.AddModelError(string.Empty, error.Description);
                         }
@@ -303,10 +352,27 @@ namespace BistroGo.Web.Pages.Account
                     }
                 }
 
-                var addResult = await _userManager.AddToRoleAsync(user, EditInput.Role);
-                if (!addResult.Succeeded)
+                if (!string.IsNullOrWhiteSpace(EditInput.NewPassword))
                 {
-                    foreach (var error in addResult.Errors)
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    var passwordResult = await _userManager.ResetPasswordAsync(user, token, EditInput.NewPassword);
+                    if (!passwordResult.Succeeded)
+                    {
+                        foreach (var error in passwordResult.Errors)
+                        {
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
+                        await LoadStaffMembersAsync();
+                        ViewData["OpenEditModal"] = true;
+                        return Page();
+                    }
+                    _logger.LogInformation("Password reset for staff account {StaffId}", user.Id);
+                }
+
+                var updateResult = await _userManager.UpdateAsync(user);
+                if (!updateResult.Succeeded)
+                {
+                    foreach (var error in updateResult.Errors)
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
                     }
@@ -314,38 +380,16 @@ namespace BistroGo.Web.Pages.Account
                     ViewData["OpenEditModal"] = true;
                     return Page();
                 }
-            }
 
-            if (!string.IsNullOrWhiteSpace(EditInput.NewPassword))
+                _logger.LogInformation("Staff account {StaffId} successfully updated", user.Id);
+                StatusMessage = $"Staff account for {user.FirstName} {user.LastName} was successfully updated.";
+                return RedirectToPage();
+            }
+            catch (Exception ex)
             {
-                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var passwordResult = await _userManager.ResetPasswordAsync(user, token, EditInput.NewPassword);
-                if (!passwordResult.Succeeded)
-                {
-                    foreach (var error in passwordResult.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error.Description);
-                    }
-                    await LoadStaffMembersAsync();
-                    ViewData["OpenEditModal"] = true;
-                    return Page();
-                }
+                _logger.LogError(ex, "Error occurred while editing staff account {StaffId}", EditInput.Id);
+                throw;
             }
-
-            var updateResult = await _userManager.UpdateAsync(user);
-            if (!updateResult.Succeeded)
-            {
-                foreach (var error in updateResult.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-                await LoadStaffMembersAsync();
-                ViewData["OpenEditModal"] = true;
-                return Page();
-            }
-
-            StatusMessage = $"Staff account for {user.FirstName} {user.LastName} was successfully updated.";
-            return RedirectToPage();
         }
 
         /// <summary>
@@ -353,8 +397,10 @@ namespace BistroGo.Web.Pages.Account
         /// </summary>
         public async Task<IActionResult> OnPostDeleteAsync(string id)
         {
+            _logger.LogInformation("Deleting staff account {StaffId}", id);
             if (string.IsNullOrWhiteSpace(id))
             {
+                _logger.LogWarning("Staff deletion rejected: empty id");
                 ErrorMessage = "Invalid staff account ID.";
                 return RedirectToPage();
             }
@@ -362,6 +408,7 @@ namespace BistroGo.Web.Pages.Account
             var currentUserId = _userManager.GetUserId(User) ?? User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!string.IsNullOrEmpty(currentUserId) && id == currentUserId)
             {
+                _logger.LogWarning("Staff deletion rejected: manager attempted to delete their own account ({UserId})", currentUserId);
                 ErrorMessage = "You cannot delete your own account.";
                 return RedirectToPage();
             }
@@ -369,6 +416,7 @@ namespace BistroGo.Web.Pages.Account
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
+                _logger.LogWarning("Staff deletion failed: account {StaffId} not found", id);
                 ErrorMessage = "Staff account not found.";
                 return RedirectToPage();
             }
@@ -376,6 +424,7 @@ namespace BistroGo.Web.Pages.Account
             var currentRoles = await _userManager.GetRolesAsync(user);
             if (!currentRoles.Contains(Roles.KitchenStaff) && !currentRoles.Contains(Roles.Manager))
             {
+                _logger.LogWarning("Staff deletion rejected: user {StaffId} is not a staff member", id);
                 ErrorMessage = "Only staff accounts can be deleted from this page.";
                 return RedirectToPage();
             }
@@ -385,6 +434,7 @@ namespace BistroGo.Web.Pages.Account
                 var managers = await _userManager.GetUsersInRoleAsync(Roles.Manager);
                 if (managers.Count <= 1 && managers.Any(m => m.Id == user.Id))
                 {
+                    _logger.LogWarning("Staff deletion rejected: cannot delete the only manager account in the system");
                     ErrorMessage = "Cannot delete the only manager account in the system.";
                     return RedirectToPage();
                 }
@@ -395,15 +445,19 @@ namespace BistroGo.Web.Pages.Account
                 var result = await _userManager.DeleteAsync(user);
                 if (!result.Succeeded)
                 {
+                    _logger.LogWarning("Staff deletion failed for {StaffId}: {Errors}",
+                        id, string.Join("; ", result.Errors.Select(e => e.Description)));
                     ErrorMessage = string.Join("; ", result.Errors.Select(e => e.Description));
                 }
                 else
                 {
+                    _logger.LogInformation("Staff account '{Email}' ({StaffId}) successfully deleted", user.Email, id);
                     StatusMessage = $"Staff account '{user.Email}' was successfully deleted.";
                 }
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex)
             {
+                _logger.LogError(ex, "DbUpdateException occurred while deleting staff member {StaffId}", id);
                 ErrorMessage = "Cannot delete this staff member because they have associated records in the system.";
             }
 
@@ -448,6 +502,8 @@ namespace BistroGo.Web.Pages.Account
                     IsCurrentUser = !string.IsNullOrEmpty(currentUserId) && staff.Id == currentUserId
                 });
             }
+
+            _logger.LogDebug("Loaded {Count} staff members", StaffMembers.Count);
         }
     }
 }
