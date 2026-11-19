@@ -18,16 +18,15 @@ public class CheckoutModel : PageModel
     private readonly IOrderService _orderService;
     private readonly IPickupSlotService _slotService;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly TaxRateApiClient _taxRateApiClient;
+    private readonly TaxRateApiClient? _taxRateApiClient;
 
-    
     public CheckoutModel(
         ICartService cart,
         IOrderRepository orderRepo,
         IOrderService orderService,
         IPickupSlotService slotService,
-        TaxRateApiClient taxRateApiClient,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        TaxRateApiClient? taxRateApiClient = null)
     {
         _cart = cart;
         _orderRepo = orderRepo;
@@ -424,6 +423,7 @@ public class CheckoutModel : PageModel
     /// </summary>
     private async Task<decimal?> GetCurrentTaxRateAsync()
     {
+        if (_taxRateApiClient == null) return null;
         try
         {
             // Fetch from the API (authoritative source)

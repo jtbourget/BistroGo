@@ -73,7 +73,7 @@
                                     <span class="thin-card-icon">🧾</span>
                                     <div>
                                         <span class="thin-card-title d-block fs-6">#@order.Id — @order.CustomerName</span>
-                                        <span class="thin-card-sub text-muted">@(order.PickupSlotId.HasValue ? $"Pickup Slot #{order.PickupSlotId} · " : "")Placed at @order.PlacedAt.ToString("h:mm tt")</span>
+                                        <span class="thin-card-sub text-muted">@(order.PickupTime != null ? $"Pickup at {order.PickupTime} · " : (order.PickupSlotId.HasValue ? $"Pickup Slot #{order.PickupSlotId} · " : ""))Placed at @order.PlacedAt.ToString("h:mm tt")</span>
                                         @if (!string.IsNullOrEmpty(order.ConfirmationCode))
                                         {
                                             <span class="badge bg-light text-dark border ms-1 small">@order.ConfirmationCode</span>

@@ -81,7 +81,7 @@ public class CheckoutPageModelTests
             ViewData = viewData
         };
 
-        return new CheckoutModel(_cart, _orderRepo, _orderService, _pickupSlotService, _taxRateApiClient, _userManager)
+        return new CheckoutModel(_cart, _orderRepo, _orderService, _pickupSlotService, _userManager, _taxRateApiClient)
         {
             PageContext = pageContext,
             TempData = tempData
