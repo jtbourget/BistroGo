@@ -78,6 +78,13 @@ public class OrdersIndexPageModelTests
                 GuestName = "Bob Smith",
                 GuestPhone = "555-1111",
                 PickupSlotId = 2,
+                PickupSlot = new PickupTimeSlot
+                {
+                    Id = 2,
+                    SlotDate = DateOnly.FromDateTime(DateTime.Today),
+                    StartTime = new TimeOnly(11, 30),
+                    EndTime = new TimeOnly(11, 45)
+                },
                 ConfirmationCode = "BG-ABC123",
                 StatusId = OrderStatusIds.Received,
                 Status = new OrderStatus { Id = OrderStatusIds.Received, Name = "Received" },
@@ -118,6 +125,9 @@ public class OrdersIndexPageModelTests
         Assert.Equal("Received", orderDto.Status);
         Assert.Equal("BG-ABC123", orderDto.ConfirmationCode);
         Assert.Equal(2, orderDto.PickupSlotId);
+        Assert.Equal("11:30 AM", orderDto.PickupTime);
+        Assert.Equal(orders[0].LocalPlacedAt, orderDto.PlacedAt);
+        Assert.Equal(DateTimeKind.Local, orderDto.PlacedAt.Kind);
         Assert.Equal(28.00m, orderDto.Total);
 
         // Verify Order Items and Customizations
@@ -239,5 +249,53 @@ public class OrdersIndexPageModelTests
         Assert.NotNull(orderSummaryType);
         Assert.Null(orderSummaryType.GetProperty("TableNumber"));
         Assert.NotNull(orderSummaryType.GetProperty("PickupSlotId"));
+        Assert.NotNull(orderSummaryType.GetProperty("PickupTime"));
+    }
+
+    [Fact]
+    public void Order_LocalPlacedAt_ConvertsUtcAndUnspecifiedCorrectly()
+    {
+        var utcNow = DateTime.UtcNow;
+        var orderWithUtc = new Order
+        {
+            CreatedAt = utcNow.AddMinutes(-10),
+            FinalizedAt = utcNow
+        };
+
+        Assert.Equal(DateTimeKind.Local, orderWithUtc.LocalPlacedAt.Kind);
+        Assert.Equal(utcNow.ToLocalTime(), orderWithUtc.LocalPlacedAt);
+        Assert.Equal(utcNow.ToLocalTime(), orderWithUtc.LocalFinalizedAt);
+
+        // SQLite returns Unspecified DateTimeKind
+        var unspecifiedTime = new DateTime(2026, 11, 19, 14, 0, 0, DateTimeKind.Unspecified);
+        var orderWithUnspecified = new Order
+        {
+            CreatedAt = unspecifiedTime,
+            FinalizedAt = unspecifiedTime
+        };
+
+        var expectedLocal = DateTime.SpecifyKind(unspecifiedTime, DateTimeKind.Utc).ToLocalTime();
+        Assert.Equal(DateTimeKind.Local, orderWithUnspecified.LocalPlacedAt.Kind);
+        Assert.Equal(expectedLocal, orderWithUnspecified.LocalPlacedAt);
+        Assert.Equal(expectedLocal, orderWithUnspecified.LocalFinalizedAt);
+
+        // When FinalizedAt is null, falls back to LocalCreatedAt
+        var orderNotFinalized = new Order
+        {
+            CreatedAt = unspecifiedTime,
+            FinalizedAt = null
+        };
+        Assert.Null(orderNotFinalized.LocalFinalizedAt);
+        Assert.Equal(expectedLocal, orderNotFinalized.LocalPlacedAt);
+
+        // When already Local kind
+        var localTime = DateTime.Now;
+        var orderWithLocal = new Order
+        {
+            CreatedAt = localTime,
+            FinalizedAt = localTime
+        };
+        Assert.Equal(DateTimeKind.Local, orderWithLocal.LocalPlacedAt.Kind);
+        Assert.Equal(localTime, orderWithLocal.LocalPlacedAt);
     }
 }

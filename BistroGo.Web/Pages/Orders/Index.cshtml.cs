@@ -104,7 +104,8 @@ public class IndexModel : PageModel
                 CustomerPhone = o.GuestPhone,
                 CustomerEmail = o.GuestEmail,
                 PickupSlotId = o.PickupSlotId,
-                PlacedAt = o.FinalizedAt ?? o.CreatedAt,
+                PickupTime = o.PickupSlot?.StartTime.ToString("h:mm tt"),
+                PlacedAt = o.LocalPlacedAt,
                 Status = o.Status?.Name ?? "Received",
                 Total = o.Total,
                 ConfirmationCode = o.ConfirmationCode,
@@ -146,6 +147,7 @@ public class IndexModel : PageModel
         public string? CustomerPhone { get; set; }
         public string? CustomerEmail { get; set; }
         public int? PickupSlotId { get; set; }
+        public string? PickupTime { get; set; }
         public DateTime PlacedAt { get; set; }
         public string Status { get; set; } = "";
         public decimal Total { get; set; }
