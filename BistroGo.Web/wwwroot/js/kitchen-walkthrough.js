@@ -73,11 +73,11 @@
     }
 
     /**
-     * Builds the four steps that explain a single order: its details, its items,
-     * the status dropdown and the Complete button.
+     * Builds the five steps that explain a single order: its details, its items,
+     * the status dropdown, what each status means, and the Complete button.
      
      * @param {Element} card - The order card to point at (the first one in the list).
-     * @returns {object[]} The four steps, in order.
+     * @returns {object[]} The five steps, in order.
      */
     function buildOrderSteps(card) {
         const steps = [];
@@ -99,20 +99,28 @@
             'If the customer asked for something special, a red <strong>⚠️ Note</strong> appears ' +
             'under that item. Check these notes before you start cooking.'));
 
-        // The status dropdown and what each status means (the order lifecycle).
-        // Positioned above the dropdown because the list of statuses makes this box tall.
+        // How to change the status. Kept short so the box fits beside the dropdown, which
+        // sits near the top of the screen once Intro.js scrolls the card into view.
         steps.push(makeStep(
             findTourElement('order-status', card),
             'Update the status',
-            'Click the status badge to choose a new status. It saves straight away; there\'s no Save button.' +
+            'Click the status badge to choose a new status. It saves straight away; there\'s no Save button. ' +
+            'The next step explains what each status means.'));
+
+        // What each status means (the order lifecycle). No element, so it's centered: the
+        // list is too tall to fit beside the small dropdown, especially on a phone, and
+        // pinned there it ran off the top of the screen.
+        steps.push(makeStep(
+            null,
+            'What each status means',
+            'Orders move through these statuses from top to bottom:' +
             '<ul class="mb-0 mt-2 ps-3">' +
-            '<li><strong>Received</strong>: a new order, not started yet.</li>' +
-            '<li><strong>Preparing</strong>: you\'re cooking it.</li>' +
-            '<li><strong>Ready</strong>: finished and waiting for the customer.</li>' +
-            '<li><strong>Picked Up / Completed</strong>: the customer has it. It moves to the Done tab.</li>' +
-            '<li><strong>Cancelled</strong>: it won\'t be made. It only shows under All, and its pickup spot is freed for another customer.</li>' +
-            '</ul>',
-            'top'));
+            '<li><strong>Received</strong>: new, not started yet.</li>' +
+            '<li><strong>Preparing</strong>: being cooked.</li>' +
+            '<li><strong>Ready</strong>: finished, waiting for pickup.</li>' +
+            '<li><strong>Picked Up / Completed</strong>: collected. Moves to the Done tab.</li>' +
+            '<li><strong>Cancelled</strong>: won\'t be made. Shows under All only, and frees its pickup spot.</li>' +
+            '</ul>'));
 
         // The Complete button is hidden on orders that are already picked up or cancelled,
         // so the first card may not have one. Use the first card's button if it has one,
@@ -159,11 +167,11 @@
             'and <strong>Done</strong> (Picked Up). The number on each tab is how many orders it holds. ' +
             '<strong>All</strong> shows everything, including cancelled orders, which have no tab of their own.'));
 
-        // 3–6. Walk through the first order card, or explain the empty queue.
+        // 3–7. Walk through the first order card, or explain the empty queue.
         const firstCard = findTourElement('order-card');
 
         if (firstCard) {
-            // The spread (...) adds each of the four order steps to this list.
+            // The spread (...) adds each of the five order steps to this list.
             steps.push(...buildOrderSteps(firstCard));
         } else {
             steps.push(makeStep(
@@ -174,7 +182,7 @@
                 'to update its status. Run this tour again when orders are showing to see each part.'));
         }
 
-        // 7. Finish on the button that starts the tour, so staff know how to run it again.
+        // 8. Finish on the button that starts the tour, so staff know how to run it again.
         steps.push(makeStep(
             findTourElement('walkthrough-button'),
             'You\'re all set',
@@ -219,7 +227,8 @@
                     scrollToElement: true,      // on small screens, scroll each highlighted part into view
                     nextLabel: 'Next →',
                     prevLabel: '← Back',
-                    doneLabel: 'Finish'         // Intro.js shows its own × button for leaving early
+                    doneLabel: 'Finish',        // Intro.js shows its own × button for leaving early
+                    tooltipClass: 'kitchen-walkthrough-tooltip'  // wider boxes for this tour only; see site.css
                 })
                 .oncomplete(showCompletionMessage)  // fires on Finish only
                 .start();
