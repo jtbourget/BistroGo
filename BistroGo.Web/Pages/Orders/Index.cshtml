@@ -145,6 +145,21 @@
     </div>
 </div>
 
+<!-- Shown by kitchen-walkthrough.js when staff click Finish on the last step of the tour.
+     Hidden until then; fixed to the bottom-right so it doesn't cover the order queue. -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="kitchenWalkthroughCompleteToast" class="toast" role="status" aria-live="polite" aria-atomic="true" data-bs-delay="6000">
+        <div class="toast-header">
+            <strong class="me-auto">✅ Walkthrough complete</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            You've finished the kitchen walkthrough. Click <strong>Kitchen Walkthrough</strong> at the top of this page anytime to run it again.
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/js/orders.js" asp-append-version="true"></script>
+    <script src="~/js/kitchen-walkthrough.js" asp-append-version="true"></script>
 }
