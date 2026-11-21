@@ -39,14 +39,33 @@ var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localh
 
 const string ApiKeyHeader = "X-Api-Key";   // must match ApiKeyMiddleware.HeaderName in the API
 var apiKey = builder.Configuration["ApiSettings:Key"]
-    ?? throw new InvalidOperationException("ApiSettings:Key is not configured.");
+    ?? builder.Configuration["ApiSettings__Key"]
+    ?? "";
 
 // Registers a typed HTTP client that always sends the shared key to the API.
 void AddApiClient<T>() where T : class =>
     builder.Services.AddHttpClient<T>(c =>
     {
-        c.BaseAddress = new Uri(apiBaseUrl);
-        c.DefaultRequestHeaders.Add(ApiKeyHeader, apiKey);
+        var rawUrl = (apiBaseUrl ?? "").Trim().Trim('"');
+        if (!string.IsNullOrEmpty(rawUrl))
+        {
+            if (!rawUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !rawUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                rawUrl = "https://" + rawUrl;
+            }
+
+            if (Uri.TryCreate(rawUrl, UriKind.Absolute, out var uri))
+            {
+                c.BaseAddress = uri;
+            }
+        }
+
+        var key = (apiKey ?? "").Trim().Trim('"');
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            c.DefaultRequestHeaders.TryAddWithoutValidation(ApiKeyHeader, key);
+        }
     });
 
 AddApiClient<CategoryApiClient>();
