@@ -4,9 +4,15 @@
     ViewData["Title"] = "Orders";
 }
 
-<div class="page-header">
+<div class="page-header flex-wrap gap-2">
     <h1>📋 Cook Dashboard</h1>
-    <span class="text-muted">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="text-muted">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</span>
+        <!-- Starts (or restarts) the guided tour of this page; see wwwroot/js/kitchen-walkthrough.js -->
+        <button type="button" id="startKitchenWalkthroughBtn" class="btn btn-sm btn-outline-primary" data-tour="walkthrough-button">
+            🧭 Kitchen Walkthrough
+        </button>
+    </div>
 </div>
 
 @if (TempData["Message"] != null)
@@ -30,7 +36,7 @@
             </div>
 
             <!-- Status Filter Tabs -->
-            <div class="btn-group btn-group-sm mb-3 w-100" role="group">
+            <div class="btn-group btn-group-sm mb-3 w-100" role="group" data-tour="status-filters">
                 <a asp-page="/Orders/Index" asp-route-statusFilter="" class="btn @(string.IsNullOrEmpty(Model.StatusFilter) || Model.StatusFilter == "All" ? "btn-primary" : "btn-outline-primary")">All (@Model.AllCount)</a>
                 <a asp-page="/Orders/Index" asp-route-statusFilter="Received" class="btn @(Model.StatusFilter == "Received" ? "btn-primary" : "btn-outline-primary")">New (@Model.ReceivedCount)</a>
                 <a asp-page="/Orders/Index" asp-route-statusFilter="Preparing" class="btn @(Model.StatusFilter == "Preparing" ? "btn-primary" : "btn-outline-primary")">Prep (@Model.PreparingCount)</a>
@@ -40,7 +46,7 @@
 
             @if (!Model.CurrentOrders.Any())
             {
-                <div class="dashboard-empty">
+                <div class="dashboard-empty" data-tour="order-empty">
                     No orders matching this view. <a asp-page="/Menu/Index">Start one from the menu</a>.
                 </div>
             }
@@ -67,8 +73,8 @@
                             _ => ""
                         };
 
-                        <div class="thin-card mb-3 flex-column align-items-stretch p-3">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="thin-card mb-3 flex-column align-items-stretch p-3" data-tour="order-card">
+                            <div class="d-flex align-items-center justify-content-between mb-2" data-tour="order-header">
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="thin-card-icon">🧾</span>
                                     <div>
@@ -84,7 +90,7 @@
                             </div>
 
                             <!-- Order Items Section for Kitchen Staff -->
-                            <div class="order-items-box bg-light p-2 rounded mb-2 border" style="font-size: 0.85rem;">
+                            <div class="order-items-box bg-light p-2 rounded mb-2 border" style="font-size: 0.85rem;" data-tour="order-items">
                                 @if (order.Items.Any())
                                 {
                                     @foreach (var item in order.Items)
@@ -111,7 +117,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <form method="post" asp-page-handler="SetStatus" class="d-flex align-items-center mb-0">
                                     <input type="hidden" name="id" value="@order.Id" />
-                                    <div class="status-dropdown-wrapper @shadowClass">
+                                    <div class="status-dropdown-wrapper @shadowClass" data-tour="order-status">
                                         <span class="badge @badgeClass">@order.Status</span>
                                         <select name="status" class="status-dropdown" onchange="this.form.submit()">
                                             <option value="Received" selected="@(order.Status == "Received")">Received</option>
@@ -127,7 +133,7 @@
                                 {
                                     <form method="post" asp-page-handler="Complete" class="mb-0">
                                         <input type="hidden" name="id" value="@order.Id" />
-                                        <button type="submit" class="btn btn-sm btn-outline-success">✓ Complete</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-success" data-tour="order-complete">✓ Complete</button>
                                     </form>
                                 }
                             </div>
@@ -139,6 +145,21 @@
     </div>
 </div>
 
+<!-- Shown by kitchen-walkthrough.js when staff click Finish on the last step of the tour.
+     Hidden until then; fixed to the bottom-right so it doesn't cover the order queue. -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="kitchenWalkthroughCompleteToast" class="toast" role="status" aria-live="polite" aria-atomic="true" data-bs-delay="6000">
+        <div class="toast-header">
+            <strong class="me-auto">✅ Walkthrough complete</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            You've finished the kitchen walkthrough. Click <strong>Kitchen Walkthrough</strong> at the top of this page anytime to run it again.
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/js/orders.js" asp-append-version="true"></script>
+    <script src="~/js/kitchen-walkthrough.js" asp-append-version="true"></script>
 }

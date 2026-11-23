@@ -1107,3 +1107,23 @@ input[type="file"].form-control {
     min-width: 20px;
     text-align: center;
 }
+
+/* ═══════════════════════════════════════════════════
+   KITCHEN WALKTHROUGH (OC-21)
+   Wider tour boxes for the Cook Dashboard tour only. The class is added
+   by kitchen-walkthrough.js (tooltipClass), so the customer walkthrough
+   keeps Intro.js's default size. Intro.js caps boxes at 300px, which
+   made the longer kitchen steps too tall to fit on screen.
+   ═══════════════════════════════════════════════════ */
+.introjs-tooltip.kitchen-walkthrough-tooltip {
+    min-width: 320px;
+    max-width: 460px;
+}
+
+/* Phones: never wider than the screen, with a small margin on each side. */
+@media (max-width: 576px) {
+    .introjs-tooltip.kitchen-walkthrough-tooltip {
+        min-width: 0;
+        max-width: calc(100vw - 32px);
+    }
+}
