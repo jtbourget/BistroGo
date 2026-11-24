@@ -99,6 +99,38 @@
     -->
     @await Component.InvokeAsync("Cart", new { part = "Modal" })
 
+    @*
+        First-visit prompt (OC-11). Hidden until first-visit.js finds no earlier visit recorded in this
+        browser. Left out for kitchen staff, who are offered the Cook Dashboard tour on that page instead.
+        The data-* attributes tell the script which browser storage key to use and which existing
+        walkthrough button to click when the user accepts.
+    *@
+    @if (User.Identity?.IsAuthenticated != true || !User.IsInRole(Roles.KitchenStaff))
+    {
+        <div class="modal fade" id="walkthroughPromptModal" tabindex="-1" aria-labelledby="walkthroughPromptTitle" aria-hidden="true"
+             data-first-visit-prompt
+             data-storage-key="bistroGo_hasVisited"
+             data-start-button="startWalkthroughBtn">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="walkthroughPromptTitle">🧭 Welcome to BistroGo!</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">
+                            First time here? Take a quick guided tour of the menu and your cart.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No thanks</button>
+                        <button type="button" class="btn btn-primary" data-first-visit-accept>Start the tour</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <!-- CSRF token for the cart AJAX POSTs -->
     <form id="csrfForm" method="post" style="display:none;">
         @Html.AntiForgeryToken()
