@@ -11,6 +11,7 @@ on:
 
 env:
   DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '22.x'
 
 jobs:
   build-and-test:
@@ -33,6 +34,15 @@ jobs:
 
       - name: Run Unit Tests
         run: dotnet test BistroGo.Tests/BistroGo.Tests.csproj --configuration Release --no-build --verbosity normal
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Uses Node's built-in test runner, so there are no packages to install.
+      - name: Run JavaScript Unit Tests
+        run: node --test "BistroGo.Tests/JavaScript/*.test.js"
 
       - name: Publish API
         run: dotnet publish BistroGo.Api/BistroGo.Api.csproj --configuration Release --no-restore -o ./publish/api
