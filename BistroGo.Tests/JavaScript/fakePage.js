@@ -1,10 +1,11 @@
 // ════════════════════════════════════════════════════════════════════════════════
-// Test helpers for the JavaScript tests (OC-21)
+// Test helpers for the JavaScript tests (OC-21, extended for OC-11)
 // ════════════════════════════════════════════════════════════════════════════════
 //
-// Runs a real script from BistroGo.Web/wwwroot/js inside an isolated sandbox with:
-//   - a small fake page (only the parts the script looks at), and
-//   - fake Intro.js and Bootstrap objects that record what the script asks them to do.
+// Runs real scripts from BistroGo.Web/wwwroot/js inside an isolated sandbox with:
+//   - a small fake page (only the parts the scripts look at), and
+//   - fake Intro.js, Bootstrap, browser storage and console objects that record what the
+//     scripts ask them to do.
 //
 // Uses only Node's built-in modules, so the tests need no npm packages.
 // ════════════════════════════════════════════════════════════════════════════════
@@ -20,8 +21,9 @@ const repoRoot = path.resolve(__dirname, '..', '..');
 
 /**
  * A pretend HTML element: just enough for the scripts under test.
- * Supports ids, data-tour markers, child elements, click listeners and
- * querySelector('[data-tour="..."]').
+ * Supports ids, data-* attributes, child elements, event listeners, click() and
+ * querySelector / querySelectorAll for [data-...] selectors (plus any extra selectors an
+ * element is given).
  */
 class FakeElement {
     constructor(options) {
@@ -30,6 +32,8 @@ class FakeElement {
         this.id = settings.id || '';
         this.tour = settings.tour || '';
         this.label = settings.label || '';
+        this.dataset = settings.dataset || {};       // data-storage-key becomes dataset.storageKey
+        this.selectors = settings.selectors || [];   // other selectors this element answers to
         this.children = [];
         this.parent = null;
         this.listeners = {};
@@ -51,13 +55,40 @@ class FakeElement {
         this.listeners[type].push(handler);
     }
 
-    /** Runs every listener for the event, like a real click would. */
+    /** Runs every listener for the event, like a real event would. */
     dispatch(type) {
         const handlers = this.listeners[type] || [];
 
         handlers.forEach(function (handler) {
             handler({ type: type, preventDefault: function () { } });
         });
+    }
+
+    /** Runs the click listeners, like element.click() in a browser. */
+    click() {
+        this.dispatch('click');
+    }
+
+    /**
+     * True when this element answers to the selector: [data-x], [data-x="value"], or one
+     * of the extra selectors it was given.
+     */
+    matches(selector) {
+        const match = /^\[data-([a-z-]+)(?:="([^"]*)")?\]$/.exec(selector);
+        let result = this.selectors.includes(selector);
+
+        if (!result && match) {
+            const name = match[1].replace(/-([a-z])/g, function (whole, letter) {
+                return letter.toUpperCase();
+            });
+            const actual = name === 'tour'
+                ? this.tour || undefined
+                : this.dataset[name];
+
+            result = actual !== undefined && (match[2] === undefined || actual === match[2]);
+        }
+
+        return result;
     }
 
     /** Every element below this one, depth first, in page order. */
@@ -72,19 +103,35 @@ class FakeElement {
         return found;
     }
 
-    /** Supports the one selector shape the scripts use: [data-tour="name"]. */
-    querySelector(selector) {
-        const match = /^\[data-tour="([^"]+)"\]$/.exec(selector);
-        let result = null;
-
-        if (match) {
-            result = this.descendants().find(function (element) {
-                return element.tour === match[1];
-            }) || null;
-        }
-
-        return result;
+    /** Every element below this one that matches the selector, in page order. */
+    querySelectorAll(selector) {
+        return this.descendants().filter(function (element) {
+            return element.matches(selector);
+        });
     }
+
+    /** The first element below this one that matches the selector, or null. */
+    querySelector(selector) {
+        return this.querySelectorAll(selector)[0] || null;
+    }
+}
+
+/**
+ * Builds an empty fake document with a body, ready for elements to be added.
+ * @returns {object} { document, body }
+ */
+function buildDocument() {
+    const body = new FakeElement({ label: 'body' });
+    const document = new FakeElement({ label: 'document' });
+
+    document.add(body);
+    document.getElementById = function (id) {
+        return document.descendants().find(function (element) {
+            return element.id === id;
+        }) || null;
+    };
+
+    return { document: document, body: body };
 }
 
 /**
@@ -100,7 +147,7 @@ class FakeElement {
 function buildCookDashboard(options) {
     const settings = options || {};
     const cards = settings.cards || [];
-    const body = new FakeElement({ label: 'body' });
+    const { document, body } = buildDocument();
     const elements = {};
 
     if (settings.withButton !== false) {
@@ -137,14 +184,6 @@ function buildCookDashboard(options) {
             label: 'completion toast'
         }));
     }
-
-    const document = new FakeElement({ label: 'document' });
-    document.add(body);
-    document.getElementById = function (id) {
-        return document.descendants().find(function (element) {
-            return element.id === id;
-        }) || null;
-    };
 
     return { document: document, body: body, cards: cardElements, elements: elements };
 }
@@ -195,11 +234,18 @@ function createFakeIntroJs() {
 }
 
 /**
- * Creates a fake Bootstrap that records which toast elements were shown.
- * @returns {object} { bootstrap, shownToasts }
+ * Creates a fake Bootstrap that records which toasts were shown and which modals were
+ * shown or hidden. Hiding does not fire hidden.bs.modal by itself: in a real browser that
+ * happens after the closing animation, so tests dispatch it when they want it.
+ * @param {object} [options]
+ * @param {function} [options.onModalShow] - Called as each modal is shown.
+ * @returns {object} { bootstrap, shownToasts, shownModals, hiddenModals }
  */
-function createFakeBootstrap() {
+function createFakeBootstrap(options) {
+    const settings = options || {};
     const shownToasts = [];
+    const shownModals = [];
+    const hiddenModals = [];
     const bootstrap = {
         Toast: {
             getOrCreateInstance: function (element) {
@@ -209,25 +255,107 @@ function createFakeBootstrap() {
                     }
                 };
             }
+        },
+        Modal: {
+            getOrCreateInstance: function (element) {
+                return {
+                    show: function () {
+                        if (settings.onModalShow) {
+                            settings.onModalShow(element);
+                        }
+
+                        shownModals.push(element);
+                    },
+                    hide: function () {
+                        hiddenModals.push(element);
+                    }
+                };
+            }
         }
     };
 
-    return { bootstrap: bootstrap, shownToasts: shownToasts };
+    return { bootstrap: bootstrap, shownToasts: shownToasts, shownModals: shownModals, hiddenModals: hiddenModals };
 }
 
 /**
- * Loads a script from BistroGo.Web/wwwroot/js into a fresh sandbox, then fires
- * DOMContentLoaded the way a browser does once the page has loaded.
- * @param {string} scriptName - File name, e.g. "kitchen-walkthrough.js".
- * @param {object} globals - What the sandbox can see: document, introJs, bootstrap, console.
+ * Creates a fake localStorage. Reuse the same one across page loads to act like a
+ * returning visit in the same browser.
+ * @param {object} [options]
+ * @param {boolean} [options.failRead] - getItem throws, as when storage is blocked.
+ * @param {boolean} [options.failWrite] - setItem throws, as when storage is full.
+ * @returns {object} { storage, entries } where entries is a Map of what was saved.
  */
-function loadScript(scriptName, globals) {
-    const scriptPath = path.join(repoRoot, 'BistroGo.Web', 'wwwroot', 'js', scriptName);
-    const code = fs.readFileSync(scriptPath, 'utf8');
+function createFakeStorage(options) {
+    const settings = options || {};
+    const entries = new Map();
+
+    function storageError(name) {
+        const error = new Error('storage is not available');
+        error.name = name;
+
+        return error;
+    }
+
+    const storage = {
+        getItem: function (key) {
+            if (settings.failRead) {
+                throw storageError('SecurityError');
+            }
+
+            return entries.has(key)
+                ? entries.get(key)
+                : null;
+        },
+        setItem: function (key, value) {
+            if (settings.failWrite) {
+                throw storageError('QuotaExceededError');
+            }
+
+            entries.set(key, String(value));
+        }
+    };
+
+    return { storage: storage, entries: entries };
+}
+
+/**
+ * Creates a fake console that keeps every message by level.
+ * @returns {object} { console, messages } — messages.debug, messages.warn, messages.error
+ */
+function createFakeConsole() {
+    const messages = { debug: [], warn: [], error: [] };
+    const fakeConsole = {};
+
+    Object.keys(messages).forEach(function (level) {
+        fakeConsole[level] = function (message) {
+            messages[level].push(message);
+        };
+    });
+
+    return { console: fakeConsole, messages: messages };
+}
+
+/**
+ * Loads scripts from BistroGo.Web/wwwroot/js into one fresh sandbox, in order, then fires
+ * DOMContentLoaded the way a browser does once the page has loaded.
+ * @param {string[]} scriptNames - File names, e.g. ["walkthrough.js", "first-visit.js"].
+ * @param {object} globals - What the sandbox can see: document, introJs, bootstrap, console...
+ */
+function loadScripts(scriptNames, globals) {
     const sandbox = vm.createContext(Object.assign({}, globals));
 
-    vm.runInContext(code, sandbox, { filename: scriptPath });
+    scriptNames.forEach(function (scriptName) {
+        const scriptPath = path.join(repoRoot, 'BistroGo.Web', 'wwwroot', 'js', scriptName);
+        const code = fs.readFileSync(scriptPath, 'utf8');
+
+        vm.runInContext(code, sandbox, { filename: scriptPath });
+    });
     globals.document.dispatch('DOMContentLoaded');
+}
+
+/** Loads a single script; see loadScripts. */
+function loadScript(scriptName, globals) {
+    loadScripts([scriptName], globals);
 }
 
 /** Reads any repo file as text, by path from the repo root. */
@@ -236,9 +364,14 @@ function readRepoFile(relativePath) {
 }
 
 module.exports = {
+    FakeElement,
+    buildDocument,
     buildCookDashboard,
     createFakeIntroJs,
     createFakeBootstrap,
+    createFakeStorage,
+    createFakeConsole,
     loadScript,
+    loadScripts,
     readRepoFile
 };
