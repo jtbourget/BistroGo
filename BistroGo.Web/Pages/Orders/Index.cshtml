@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Orders";
 
-    // Lets the first-visit prompt below be remembered separately for each cook on a shared device.
+    // Lets the first-visit prompt below be remembered separately for each staff member on a shared device.
     string? currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 }
 
@@ -164,12 +164,11 @@
 </div>
 
 @*
-    First-visit prompt (OC-11): offers the kitchen walkthrough the first time each cook opens this
-    dashboard on this device. Shown by wwwroot/js/first-visit.js, which clicks the Kitchen
-    Walkthrough button above when the cook accepts. Managers also use this page but already get
-    the customer prompt, so this one is for kitchen staff only.
+    First-visit prompt (OC-11): offers the kitchen walkthrough the first time each cook or manager
+    opens this dashboard on this device. Shown by wwwroot/js/first-visit.js, which clicks the
+    Kitchen Walkthrough button above when they accept.
 *@
-@if (User.IsInRole(Roles.KitchenStaff))
+@if (User.IsInRole(Roles.KitchenStaff) || User.IsInRole(Roles.Manager))
 {
     <div class="modal fade" id="kitchenWalkthroughPromptModal" tabindex="-1" aria-labelledby="kitchenWalkthroughPromptTitle" aria-hidden="true"
          data-first-visit-prompt

@@ -101,11 +101,11 @@
 
     @*
         First-visit prompt (OC-11). Hidden until first-visit.js finds no earlier visit recorded in this
-        browser. Left out for kitchen staff, who are offered the Cook Dashboard tour on that page instead.
-        The data-* attributes tell the script which browser storage key to use and which existing
-        walkthrough button to click when the user accepts.
+        browser. Left out for kitchen staff and managers, who are offered the Cook Dashboard tour on that
+        page instead. The data-* attributes tell the script which browser storage key to use and which
+        existing walkthrough button to click when the user accepts.
     *@
-    @if (User.Identity?.IsAuthenticated != true || !User.IsInRole(Roles.KitchenStaff))
+    @if (User.Identity?.IsAuthenticated != true || (!User.IsInRole(Roles.KitchenStaff) && !User.IsInRole(Roles.Manager)))
     {
         <div class="modal fade" id="walkthroughPromptModal" tabindex="-1" aria-labelledby="walkthroughPromptTitle" aria-hidden="true"
              data-first-visit-prompt

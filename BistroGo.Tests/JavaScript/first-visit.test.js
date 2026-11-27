@@ -484,12 +484,12 @@ describe('The pages declare the prompts correctly', function () {
         assert.match(layout, /data-first-visit-accept/);
     });
 
-    it('leaves the customer prompt out for kitchen staff', function () {
-        assert.match(layout, /!User\.IsInRole\(Roles\.KitchenStaff\)\)\s*\{\s*<div class="modal fade" id="walkthroughPromptModal"/);
+    it('leaves the customer prompt out for kitchen staff and managers', function () {
+        assert.match(layout, /\(!User\.IsInRole\(Roles\.KitchenStaff\) && !User\.IsInRole\(Roles\.Manager\)\)\)\s*\{\s*<div class="modal fade" id="walkthroughPromptModal"/);
     });
 
-    it('declares the kitchen prompt for kitchen staff, with their user id', function () {
-        assert.match(orders, /@if \(User\.IsInRole\(Roles\.KitchenStaff\)\)\s*\{\s*<div class="modal fade" id="kitchenWalkthroughPromptModal"/);
+    it('declares the kitchen prompt for kitchen staff and managers, with their user id', function () {
+        assert.match(orders, /@if \(User\.IsInRole\(Roles\.KitchenStaff\) \|\| User\.IsInRole\(Roles\.Manager\)\)\s*\{\s*<div class="modal fade" id="kitchenWalkthroughPromptModal"/);
         assert.ok(orders.includes('data-storage-key="' + KITCHEN_KEY + '"'));
         assert.match(orders, /data-user-id="@currentUserId"/);
         assert.match(orders, /data-start-button="startKitchenWalkthroughBtn"/);
