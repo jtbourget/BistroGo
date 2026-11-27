@@ -1127,3 +1127,155 @@ input[type="file"].form-control {
         max-width: calc(100vw - 32px);
     }
 }
+
+/* ═══════════════════════════════════════════════════
+   MOBILE & RESPONSIVE LAYOUT
+   ═══════════════════════════════════════════════════ */
+
+/* 1. Sidebar & Hamburger Menu (Below 992px for tablets and phones) */
+@media (max-width: 992px) {
+    /* Hide the sidebar off-screen */
+    .sidebar {
+        transform: translateX(-100%);
+        width: 280px; /* Slightly wider for easier tapping on touch screens */
+        box-shadow: none;
+    }
+
+    /* Remove the left margin so content fills the screen */
+    .main-area {
+        margin-left: 0;
+    }
+
+    /* Show the hamburger button */
+    .sidebar-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background-color: #fdfaf6;
+        border: 1px solid #e8d9c5;
+        border-radius: 8px;
+        margin-right: 0.5rem;
+    }
+
+    /* When the hamburger is clicked, slide the sidebar in */
+    .app-wrapper.sidebar-collapsed .sidebar {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(74, 44, 23, 0.15); /* Add shadow back for depth */
+        z-index: 1050;
+    }
+
+    /* Dark overlay behind the sidebar when open on mobile */
+    .app-wrapper.sidebar-collapsed::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.4);
+        z-index: 1040;
+        transition: opacity 0.3s ease;
+    }
+}
+
+/* 2. Content Stacking (Below 768px for phones) */
+@media (max-width: 768px) {
+    /* Reduce padding to give content more room */
+    .content {
+        padding: 1rem;
+    }
+
+    /* Make page headers stack instead of squeezing horizontally */
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    /* --- MENU PAGE CARDS --- */
+    /* Force menu cards to be 1 per row and remove the fixed right padding */
+    .menu-card {
+        margin-bottom: 0.5rem;
+    }
+
+    .menu-card-text {
+        padding-right: 7rem; /* Keep space for the image, but... */
+    }
+
+    .menu-card-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+        .menu-card-actions form {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+    /* --- INVENTORY PAGE CARDS --- */
+    /* Force inventory cards to stack and make the bottom row wrap */
+    .card-body .d-flex.justify-content-between.align-items-center {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* --- ORDERS DASHBOARD --- */
+    .dashboard-list {
+        max-height: none; /* Let the list grow naturally on mobile */
+    }
+
+    .thin-card {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .thin-card-meta {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+    }
+
+    /* --- CART MODAL --- */
+    .modal-body table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+/* 3. Extreme Small Screens (Below 576px) */
+@media (max-width: 576px) {
+    /* Make the menu images smaller so text isn't squeezed */
+    .menu-card-image {
+        width: 70px;
+        height: 70px;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+
+    .menu-card-text {
+        padding-right: 5rem;
+    }
+
+    /* Make the info card in the Home page full width */
+    .info-card {
+        max-width: 100%;
+    }
+
+    /* Shrink headings slightly */
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    h3 {
+        font-size: 1.2rem;
+    }
+}
