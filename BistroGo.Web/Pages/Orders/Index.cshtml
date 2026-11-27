@@ -1,7 +1,11 @@
 @page
 @model BistroGo.Web.Pages.Orders.IndexModel
+@using System.Security.Claims
 @{
     ViewData["Title"] = "Orders";
+
+    // Lets the first-visit prompt below be remembered separately for each staff member on a shared device.
+    string? currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 }
 
 <div class="page-header flex-wrap gap-2">
@@ -158,6 +162,38 @@
         </div>
     </div>
 </div>
+
+@*
+    First-visit prompt (OC-11): offers the kitchen walkthrough the first time each cook or manager
+    opens this dashboard on this device. Shown by wwwroot/js/first-visit.js, which clicks the
+    Kitchen Walkthrough button above when they accept.
+*@
+@if (User.IsInRole(Roles.KitchenStaff) || User.IsInRole(Roles.Manager))
+{
+    <div class="modal fade" id="kitchenWalkthroughPromptModal" tabindex="-1" aria-labelledby="kitchenWalkthroughPromptTitle" aria-hidden="true"
+         data-first-visit-prompt
+         data-storage-key="bistroGo_kitchenTourPrompted"
+         data-user-id="@currentUserId"
+         data-start-button="startKitchenWalkthroughBtn">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="kitchenWalkthroughPromptTitle">🧭 New to the Cook Dashboard?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">
+                        Take a quick guided tour to learn how to read incoming orders and update their status.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No thanks</button>
+                    <button type="button" class="btn btn-primary" data-first-visit-accept>Start the tour</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @section Scripts {
     <script src="~/js/orders.js" asp-append-version="true"></script>
